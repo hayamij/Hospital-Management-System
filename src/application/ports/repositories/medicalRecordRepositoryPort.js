@@ -7,4 +7,8 @@ export class MedicalRecordRepositoryPort {
 	async save(record) {
 		throw new Error('MedicalRecordRepositoryPort.save not implemented');
 	}
+
+	async findByPatientId(patientId) {
+		throw new Error('MedicalRecordRepositoryPort.findByPatientId not implemented');
+	}
 }

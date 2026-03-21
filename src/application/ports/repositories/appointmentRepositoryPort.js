@@ -7,4 +7,8 @@ export class AppointmentRepositoryPort {
 	async save(appointment) {
 		throw new Error('AppointmentRepositoryPort.save not implemented');
 	}
+
+	async listByDoctor(doctorId, { from, to } = {}) {
+		throw new Error('AppointmentRepositoryPort.listByDoctor not implemented');
+	}
 }
