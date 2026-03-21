@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { Billing } from '../../../src/domain/entities/billing.js';
 import { DomainError } from '../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 async function expectThrows(fn, message) {
   let threw = false;
@@ -46,9 +47,5 @@ async function run() {
   await expectThrows(() => Promise.resolve(bill2.markPaid()), 'Cannot pay a void invoice.');
 }
 
-run()
-  .then(() => console.log('billing tests passed'))
-  .catch((err) => {
-    console.error('billing tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'billing');
+

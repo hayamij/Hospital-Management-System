@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { AccessPatientChartUseCase } from '../../../../src/application/use-cases/doctor/accessPatientChart.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeDoctorRepository {
   constructor(doctor) {
@@ -109,9 +110,5 @@ async function run() {
   }
 }
 
-run()
-  .then(() => console.log('accessPatientChart.usecase tests passed'))
-  .catch((err) => {
-    console.error('accessPatientChart.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'accessPatientChart.usecase');
+

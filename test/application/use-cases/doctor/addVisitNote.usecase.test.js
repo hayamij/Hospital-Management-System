@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { AddVisitNoteUseCase } from '../../../../src/application/use-cases/doctor/addVisitNote.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeMedicalRecord {
   constructor(patientId) {
@@ -111,9 +112,5 @@ async function run() {
   assert.strictEqual(medRepo.saved.getEntries()[0].authorDoctorId, doctor.id);
 }
 
-run()
-  .then(() => console.log('addVisitNote.usecase tests passed'))
-  .catch((err) => {
-    console.error('addVisitNote.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'addVisitNote.usecase');
+

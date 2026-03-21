@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ViewAppointmentsUseCase } from '../../../../src/application/use-cases/patient/viewAppointments.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePatientRepository {
   constructor(patients) { this.patients = patients; }
@@ -42,9 +43,5 @@ async function run() {
   assert.deepStrictEqual(repo.lastQuery.patientId, patient.id);
 }
 
-run()
-  .then(() => console.log('viewAppointments.usecase tests passed'))
-  .catch((err) => {
-    console.error('viewAppointments.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'viewAppointments.usecase');
+

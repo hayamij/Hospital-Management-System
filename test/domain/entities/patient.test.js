@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { Patient } from '../../../src/domain/entities/patient.js';
 import { DomainError } from '../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 async function expectThrows(fn, message) {
   let threw = false;
@@ -32,9 +33,5 @@ async function run() {
   assert.strictEqual(patient.getStatus(), 'active');
 }
 
-run()
-  .then(() => console.log('patient tests passed'))
-  .catch((err) => {
-    console.error('patient tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'patient');
+

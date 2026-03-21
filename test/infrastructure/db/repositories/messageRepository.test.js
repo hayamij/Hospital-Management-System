@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { SqlMessageRepository } from '../../../../src/infrastructure/db/repositories/messageRepository.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePool {
   constructor(rows = []) { this.rows = rows; this.calls = []; }
@@ -15,9 +16,5 @@ async function run() {
   assert.deepStrictEqual(pool.calls[0].params.slice(0, 2), ['p1', 'd1']);
 }
 
-run()
-  .then(() => console.log('messageRepository tests passed'))
-  .catch((err) => {
-    console.error('messageRepository tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'messageRepository');
+

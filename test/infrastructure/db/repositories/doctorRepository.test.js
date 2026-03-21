@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { SqlDoctorRepository } from '../../../../src/infrastructure/db/repositories/doctorRepository.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePool {
   constructor(rows = []) { this.rows = rows; this.calls = []; }
@@ -44,9 +45,5 @@ async function run() {
   assert.ok(poolSearch.calls[0].text.includes('specialization ILIKE'));
 }
 
-run()
-  .then(() => console.log('doctorRepository tests passed'))
-  .catch((err) => {
-    console.error('doctorRepository tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'doctorRepository');
+

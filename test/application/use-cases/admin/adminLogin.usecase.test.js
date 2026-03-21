@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { AdminLoginUseCase } from '../../../../src/application/use-cases/admin/adminLogin.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeUserRepository {
   constructor(user) {
@@ -91,9 +92,5 @@ async function run() {
   assert.ok(result.expiresAt instanceof Date);
 }
 
-run().then(() => {
-  console.log('adminLogin.usecase tests passed');
-}).catch((err) => {
-  console.error('adminLogin.usecase tests failed', err);
-  process.exit(1);
-});
+wrapLegacyRun(run, 'adminLogin.usecase');
+

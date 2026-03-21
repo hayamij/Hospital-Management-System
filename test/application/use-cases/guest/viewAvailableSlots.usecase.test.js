@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ViewAvailableSlotsUseCase } from '../../../../src/application/use-cases/guest/viewAvailableSlots.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeDoctorRepository {
   constructor(doctors) {
@@ -68,9 +69,5 @@ async function run() {
   assert.deepStrictEqual(resultNull.slots, []);
 }
 
-run()
-  .then(() => console.log('viewAvailableSlots.usecase tests passed'))
-  .catch((err) => {
-    console.error('viewAvailableSlots.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'viewAvailableSlots.usecase');
+

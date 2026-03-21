@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { AuditMedicalRecordsUseCase } from '../../../../src/application/use-cases/admin/auditMedicalRecords.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeUserRepository {
   constructor(users) {
@@ -105,9 +106,5 @@ async function run() {
   assert.strictEqual(deps.auditLogRepository.lastEntry.reason, 'compliance');
 }
 
-run()
-  .then(() => console.log('auditMedicalRecords.usecase tests passed'))
-  .catch((err) => {
-    console.error('auditMedicalRecords.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'auditMedicalRecords.usecase');
+

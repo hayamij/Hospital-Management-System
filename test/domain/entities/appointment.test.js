@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { Appointment } from '../../../src/domain/entities/appointment.js';
 import { DomainError } from '../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 async function expectThrows(fn, message) {
   let threw = false;
@@ -41,9 +42,5 @@ async function run() {
   assert.strictEqual(appt.getStatus(), 'no_show');
 }
 
-run()
-  .then(() => console.log('appointment tests passed'))
-  .catch((err) => {
-    console.error('appointment tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'appointment');
+

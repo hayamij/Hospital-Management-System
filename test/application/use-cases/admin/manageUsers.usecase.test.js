@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ManageUsersUseCase } from '../../../../src/application/use-cases/admin/manageUsers.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeUser {
   constructor(id) {
@@ -99,9 +100,5 @@ async function run() {
   assert.strictEqual(repoEnable.saved.status, 'active');
 }
 
-run()
-  .then(() => console.log('manageUsers.usecase tests passed'))
-  .catch((err) => {
-    console.error('manageUsers.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'manageUsers.usecase');
+

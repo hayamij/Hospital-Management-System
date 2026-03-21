@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { SqlPaymentRepository } from '../../../../src/infrastructure/db/repositories/paymentRepository.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePool {
   constructor(rows = []) { this.rows = rows; this.calls = []; }
@@ -14,9 +15,5 @@ async function run() {
   assert.ok(pool.calls[0].text.includes('FROM payments'));
 }
 
-run()
-  .then(() => console.log('paymentRepository tests passed'))
-  .catch((err) => {
-    console.error('paymentRepository tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'paymentRepository');
+

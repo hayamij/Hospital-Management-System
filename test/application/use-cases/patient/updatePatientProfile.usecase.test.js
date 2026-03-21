@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { UpdatePatientProfileUseCase } from '../../../../src/application/use-cases/patient/updatePatientProfile.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePatientRepository {
   constructor(patients) { this.patients = patients; this.saved = null; }
@@ -35,9 +36,5 @@ async function run() {
   assert.strictEqual(repo.saved.contactInfo.address, '123 Street');
 }
 
-run()
-  .then(() => console.log('updatePatientProfile.usecase tests passed'))
-  .catch((err) => {
-    console.error('updatePatientProfile.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'updatePatientProfile.usecase');
+

@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { BaseEntity } from '../../../src/domain/entities/baseEntity.js';
 import { DomainError } from '../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class ConcreteEntity extends BaseEntity {}
 
@@ -34,9 +35,5 @@ async function run() {
   assert.ok(entity.getUpdatedAt().getTime() >= beforeTouch);
 }
 
-run()
-  .then(() => console.log('baseEntity tests passed'))
-  .catch((err) => {
-    console.error('baseEntity tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'baseEntity');
+

@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { BrowsePublicInfoUseCase } from '../../../../src/application/use-cases/guest/browsePublicInfo.usecase.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeServiceCatalogRepository {
   constructor(services) {
@@ -43,9 +44,5 @@ async function run() {
   }
 }
 
-run()
-  .then(() => console.log('browsePublicInfo.usecase tests passed'))
-  .catch((err) => {
-    console.error('browsePublicInfo.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'browsePublicInfo.usecase');
+

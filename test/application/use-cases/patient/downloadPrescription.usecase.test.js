@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { DownloadPrescriptionUseCase } from '../../../../src/application/use-cases/patient/downloadPrescription.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePatientRepository {
   constructor(patients) {
@@ -78,9 +79,5 @@ async function run() {
   assert.strictEqual(result2.content, 'PDF-BLOB');
 }
 
-run()
-  .then(() => console.log('downloadPrescription.usecase tests passed'))
-  .catch((err) => {
-    console.error('downloadPrescription.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'downloadPrescription.usecase');
+

@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ResetPasswordUseCase } from '../../../../src/application/use-cases/auth/resetPassword.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeUser {
   constructor({ id, email, passwordHash }) {
@@ -105,9 +106,5 @@ async function run() {
   assert.strictEqual(auth.hashed, 'hash-newPass123');
 }
 
-run()
-  .then(() => console.log('resetPassword.usecase tests passed'))
-  .catch((err) => {
-    console.error('resetPassword.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'resetPassword.usecase');
+

@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { SearchDoctorsUseCase } from '../../../../src/application/use-cases/patient/searchDoctors.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeDoctorRepository {
   constructor(results) {
@@ -42,9 +43,5 @@ async function run() {
   assert.deepStrictEqual(repo.lastQuery, { name: 'Alice', specialization: 'Cardio' });
 }
 
-run()
-  .then(() => console.log('searchDoctors.usecase tests passed'))
-  .catch((err) => {
-    console.error('searchDoctors.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'searchDoctors.usecase');
+

@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ViewDoctorScheduleUseCase } from '../../../../src/application/use-cases/doctor/viewDoctorSchedule.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeDoctorRepository {
   constructor(doctors) {
@@ -63,9 +64,5 @@ async function run() {
   assert.ok(apptRepo.lastArgs.range.to instanceof Date);
 }
 
-run()
-  .then(() => console.log('viewDoctorSchedule.usecase tests passed'))
-  .catch((err) => {
-    console.error('viewDoctorSchedule.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'viewDoctorSchedule.usecase');
+

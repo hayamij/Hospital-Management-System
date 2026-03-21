@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { RescheduleAppointmentUseCase } from '../../../../src/application/use-cases/patient/rescheduleAppointment.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePatientRepository {
   constructor(patients) {
@@ -127,9 +128,5 @@ async function run() {
   assert.strictEqual(deps.notificationService.sent.recipientId, 'doc-1');
 }
 
-run()
-  .then(() => console.log('rescheduleAppointment.usecase tests passed'))
-  .catch((err) => {
-    console.error('rescheduleAppointment.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'rescheduleAppointment.usecase');
+
