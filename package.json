@@ -1,0 +1,24 @@
+{
+  "name": "hospital-management-system",
+  "version": "1.0.0",
+  "description": "A full-stack web application for managing hospital operations including patient registration, appointment scheduling, doctor management, medical records, and billing.",
+  "homepage": "https://github.com/hayamij/Hospital-Management-System#readme",
+  "bugs": {
+    "url": "https://github.com/hayamij/Hospital-Management-System/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hayamij/Hospital-Management-System.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "vue": "^3.5.30"
+  }
+}
