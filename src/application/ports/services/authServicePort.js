@@ -7,4 +7,12 @@ export class AuthServicePort {
 	async generateTokens({ userId, role }) {
 		throw new Error('AuthServicePort.generateTokens not implemented');
 	}
+
+	async revokeTokens({ userId, refreshToken, accessToken }) {
+		throw new Error('AuthServicePort.revokeTokens not implemented');
+	}
+
+	async hashPassword(plain) {
+		throw new Error('AuthServicePort.hashPassword not implemented');
+	}
 }
