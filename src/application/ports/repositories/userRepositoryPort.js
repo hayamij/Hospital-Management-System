@@ -7,4 +7,8 @@ export class UserRepositoryPort {
 	async findById(id) {
 		throw new Error('UserRepositoryPort.findById not implemented');
 	}
+
+	async save(user) {
+		throw new Error('UserRepositoryPort.save not implemented');
+	}
 }
