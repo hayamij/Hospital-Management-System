@@ -7,4 +7,8 @@ export class PatientRepositoryPort {
 	async save(patient) {
 		throw new Error('PatientRepositoryPort.save not implemented');
 	}
+
+	async create(patient) {
+		throw new Error('PatientRepositoryPort.create not implemented');
+	}
 }

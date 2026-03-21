@@ -7,4 +7,8 @@ export class DoctorRepositoryPort {
 	async save(doctor) {
 		throw new Error('DoctorRepositoryPort.save not implemented');
 	}
+
+	async search({ name, specialization } = {}) {
+		throw new Error('DoctorRepositoryPort.search not implemented');
+	}
 }

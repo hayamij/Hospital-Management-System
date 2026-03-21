@@ -3,4 +3,8 @@ export class ContactLeadRepositoryPort {
 	async listPending() {
 		throw new Error('ContactLeadRepositoryPort.listPending not implemented');
 	}
+
+	async create(lead) {
+		throw new Error('ContactLeadRepositoryPort.create not implemented');
+	}
 }

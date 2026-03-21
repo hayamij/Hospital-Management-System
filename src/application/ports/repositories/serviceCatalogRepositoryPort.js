@@ -7,4 +7,8 @@ export class ServiceCatalogRepositoryPort {
 	async removeService(serviceId) {
 		throw new Error('ServiceCatalogRepositoryPort.removeService not implemented');
 	}
+
+	async listServices() {
+		throw new Error('ServiceCatalogRepositoryPort.listServices not implemented');
+	}
 }
