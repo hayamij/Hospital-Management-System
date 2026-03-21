@@ -7,4 +7,7 @@ export class BillingRepositoryPort {
 	async save(billing) {
 		throw new Error('BillingRepositoryPort.save not implemented');
 	}
+	async listByPatient(patientId) {
+		throw new Error('BillingRepositoryPort.listByPatient not implemented');
+	}
 }
