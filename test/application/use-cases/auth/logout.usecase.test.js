@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { LogoutUseCase } from '../../../../src/application/use-cases/auth/logout.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeUserRepository {
   constructor(users) {
@@ -68,9 +69,5 @@ async function run() {
   assert.deepStrictEqual(authService2.revoked, { userId: user.id, refreshToken: undefined, accessToken: 'a1' });
 }
 
-run()
-  .then(() => console.log('logout.usecase tests passed'))
-  .catch((err) => {
-    console.error('logout.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'logout.usecase');
+

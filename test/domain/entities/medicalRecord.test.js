@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { MedicalRecord } from '../../../src/domain/entities/medicalRecord.js';
 import { DomainError } from '../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 async function expectThrows(fn, message) {
   let threw = false;
@@ -24,9 +25,5 @@ async function run() {
   assert.strictEqual(rec.getEntries()[1].note, 'Follow up');
 }
 
-run()
-  .then(() => console.log('medicalRecord tests passed'))
-  .catch((err) => {
-    console.error('medicalRecord tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'medicalRecord');
+

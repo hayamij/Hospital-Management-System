@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ReviewTestResultsUseCase } from '../../../../src/application/use-cases/doctor/reviewTestResults.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeDoctorRepository {
   constructor(doctors) {
@@ -77,9 +78,5 @@ async function run() {
   assert.strictEqual(repo.saved.notes, 'All good');
 }
 
-run()
-  .then(() => console.log('reviewTestResults.usecase tests passed'))
-  .catch((err) => {
-    console.error('reviewTestResults.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'reviewTestResults.usecase');
+

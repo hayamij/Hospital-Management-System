@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { SubmitContactFormUseCase } from '../../../../src/application/use-cases/guest/submitContactForm.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeContactLeadRepository {
   constructor(created) {
@@ -63,9 +64,5 @@ async function run() {
   assert.strictEqual(resultId.leadId, 'lead-99');
 }
 
-run()
-  .then(() => console.log('submitContactForm.usecase tests passed'))
-  .catch((err) => {
-    console.error('submitContactForm.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'submitContactForm.usecase');
+

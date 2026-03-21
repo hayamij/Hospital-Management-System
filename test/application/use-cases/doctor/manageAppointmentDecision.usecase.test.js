@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ManageAppointmentDecisionUseCase } from '../../../../src/application/use-cases/doctor/manageAppointmentDecision.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeAppointment {
   constructor({ id, doctorId }) {
@@ -117,9 +118,5 @@ async function run() {
   assert.ok(repoReject.saved.touched);
 }
 
-run()
-  .then(() => console.log('manageAppointmentDecision.usecase tests passed'))
-  .catch((err) => {
-    console.error('manageAppointmentDecision.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'manageAppointmentDecision.usecase');
+

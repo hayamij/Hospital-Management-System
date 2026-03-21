@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { OverrideAppointmentUseCase } from '../../../../src/application/use-cases/admin/overrideAppointment.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeAppointment {
   constructor({ id, status = 'scheduled', startAt = new Date('2025-01-01T10:00:00Z'), endAt = new Date('2025-01-01T11:00:00Z'), doctorId = 'doc-1' }) {
@@ -164,9 +165,5 @@ async function run() {
   assert.ok(repoAssign.saved.touched);
 }
 
-run()
-  .then(() => console.log('overrideAppointment.usecase tests passed'))
-  .catch((err) => {
-    console.error('overrideAppointment.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'overrideAppointment.usecase');
+

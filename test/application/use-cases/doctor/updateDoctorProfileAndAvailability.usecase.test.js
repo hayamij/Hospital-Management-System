@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { UpdateDoctorProfileAndAvailabilityUseCase } from '../../../../src/application/use-cases/doctor/updateDoctorProfileAndAvailability.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeDoctor {
   constructor({ id, fullName = 'Dr A', specialization = 'Cardio', department = 'Heart', status = 'active' }) {
@@ -103,9 +104,5 @@ async function run() {
   assert.ok(repo.saved.touched);
 }
 
-run()
-  .then(() => console.log('updateDoctorProfileAndAvailability.usecase tests passed'))
-  .catch((err) => {
-    console.error('updateDoctorProfileAndAvailability.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'updateDoctorProfileAndAvailability.usecase');
+

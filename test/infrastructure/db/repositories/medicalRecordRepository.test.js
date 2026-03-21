@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { SqlMedicalRecordRepository } from '../../../../src/infrastructure/db/repositories/medicalRecordRepository.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePool {
   constructor(rows = []) { this.rows = rows; this.calls = []; }
@@ -43,9 +44,5 @@ async function run() {
   assert.ok(poolUpdate.calls[0].text.startsWith('UPDATE medical_records'));
 }
 
-run()
-  .then(() => console.log('medicalRecordRepository tests passed'))
-  .catch((err) => {
-    console.error('medicalRecordRepository tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'medicalRecordRepository');
+

@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { RunReportsUseCase } from '../../../../src/application/use-cases/admin/runReports.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeReportRepository {
   constructor() {
@@ -64,9 +65,5 @@ async function run() {
   assert.deepStrictEqual(result.data, { rows: 2 });
 }
 
-run()
-  .then(() => console.log('runReports.usecase tests passed'))
-  .catch((err) => {
-    console.error('runReports.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'runReports.usecase');
+

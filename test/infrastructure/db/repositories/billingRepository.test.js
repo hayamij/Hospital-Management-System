@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { SqlBillingRepository } from '../../../../src/infrastructure/db/repositories/billingRepository.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePool {
   constructor(rows = []) { this.rows = rows; this.calls = []; }
@@ -47,9 +48,5 @@ async function run() {
   assert.ok(poolUpdate.calls[0].text.startsWith('UPDATE billings'));
 }
 
-run()
-  .then(() => console.log('billingRepository tests passed'))
-  .catch((err) => {
-    console.error('billingRepository tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'billingRepository');
+

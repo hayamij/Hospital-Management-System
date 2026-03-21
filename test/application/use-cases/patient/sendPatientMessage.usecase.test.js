@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { SendPatientMessageUseCase } from '../../../../src/application/use-cases/patient/sendPatientMessage.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePatientRepository {
   constructor(patients) { this.patients = patients; }
@@ -54,9 +55,5 @@ async function run() {
   assert.strictEqual(notifier.sent.recipientId, doctor.id);
 }
 
-run()
-  .then(() => console.log('sendPatientMessage.usecase tests passed'))
-  .catch((err) => {
-    console.error('sendPatientMessage.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'sendPatientMessage.usecase');
+

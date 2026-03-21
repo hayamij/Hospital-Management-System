@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { StartRegistrationUseCase } from '../../../../src/application/use-cases/guest/startRegistration.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePatientRepository {
   constructor(created) {
@@ -63,9 +64,5 @@ async function run() {
   assert.strictEqual(resultId.patientId, 'pat-42');
 }
 
-run()
-  .then(() => console.log('startRegistration.usecase tests passed'))
-  .catch((err) => {
-    console.error('startRegistration.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'startRegistration.usecase');
+

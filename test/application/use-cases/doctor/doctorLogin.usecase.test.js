@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { DoctorLoginUseCase } from '../../../../src/application/use-cases/doctor/doctorLogin.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeUserRepository {
   constructor(user) {
@@ -98,9 +99,5 @@ async function run() {
   assert.ok(result.expiresAt instanceof Date);
 }
 
-run()
-  .then(() => console.log('doctorLogin.usecase tests passed'))
-  .catch((err) => {
-    console.error('doctorLogin.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'doctorLogin.usecase');
+

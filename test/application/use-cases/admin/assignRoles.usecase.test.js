@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { AssignRolesUseCase } from '../../../../src/application/use-cases/admin/assignRoles.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeUserRepository {
   constructor(users) {
@@ -74,9 +75,5 @@ async function run() {
   assert.ok(repo.savedUser === repo.users[user.id]);
 }
 
-run()
-  .then(() => console.log('assignRoles.usecase tests passed'))
-  .catch((err) => {
-    console.error('assignRoles.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'assignRoles.usecase');
+

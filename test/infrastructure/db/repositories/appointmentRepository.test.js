@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { SqlAppointmentRepository } from '../../../../src/infrastructure/db/repositories/appointmentRepository.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePool {
   constructor(rows = []) { this.rows = rows; this.calls = []; }
@@ -62,9 +63,5 @@ async function run() {
   assert.ok(poolSlot.calls[0].text.includes('doctor_id'));
 }
 
-run()
-  .then(() => console.log('appointmentRepository tests passed'))
-  .catch((err) => {
-    console.error('appointmentRepository tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'appointmentRepository');
+

@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ManageSystemSettingsUseCase } from '../../../../src/application/use-cases/admin/manageSystemSettings.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeSettingsRepository {
   constructor(settings) {
@@ -70,9 +71,5 @@ async function run() {
   assert.strictEqual(result.error, null);
 }
 
-run()
-  .then(() => console.log('manageSystemSettings.usecase tests passed'))
-  .catch((err) => {
-    console.error('manageSystemSettings.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'manageSystemSettings.usecase');
+

@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { DomainError } from '../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 async function run() {
   const err = new DomainError('boom');
@@ -8,9 +9,5 @@ async function run() {
   assert.ok(err instanceof Error);
 }
 
-run()
-  .then(() => console.log('domainError tests passed'))
-  .catch((err) => {
-    console.error('domainError tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'domainError');
+

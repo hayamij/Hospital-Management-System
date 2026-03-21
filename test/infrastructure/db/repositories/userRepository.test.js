@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { SqlUserRepository } from '../../../../src/infrastructure/db/repositories/userRepository.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePool {
   constructor(rows = []) { this.rows = rows; this.calls = []; }
@@ -48,9 +49,5 @@ async function run() {
   assert.ok(poolUpdate.calls[0].text.startsWith('UPDATE users'));
 }
 
-run()
-  .then(() => console.log('userRepository tests passed'))
-  .catch((err) => {
-    console.error('userRepository tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'userRepository');
+

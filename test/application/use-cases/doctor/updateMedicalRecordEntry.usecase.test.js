@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { UpdateMedicalRecordEntryUseCase } from '../../../../src/application/use-cases/doctor/updateMedicalRecordEntry.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeMedicalRecord {
   constructor(id) {
@@ -95,9 +96,5 @@ async function run() {
   assert.strictEqual(repo.saved.getEntries()[0].authorDoctorId, doctor.id);
 }
 
-run()
-  .then(() => console.log('updateMedicalRecordEntry.usecase tests passed'))
-  .catch((err) => {
-    console.error('updateMedicalRecordEntry.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'updateMedicalRecordEntry.usecase');
+

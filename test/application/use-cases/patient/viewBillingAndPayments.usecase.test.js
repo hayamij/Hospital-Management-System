@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ViewBillingAndPaymentsUseCase } from '../../../../src/application/use-cases/patient/viewBillingAndPayments.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePatientRepository {
   constructor(patients) { this.patients = patients; }
@@ -53,9 +54,5 @@ async function run() {
   assert.strictEqual(paymentRepo.lastQuery.patientId, patient.id);
 }
 
-run()
-  .then(() => console.log('viewBillingAndPayments.usecase tests passed'))
-  .catch((err) => {
-    console.error('viewBillingAndPayments.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'viewBillingAndPayments.usecase');
+

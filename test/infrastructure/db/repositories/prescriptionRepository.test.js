@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { SqlPrescriptionRepository } from '../../../../src/infrastructure/db/repositories/prescriptionRepository.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePool {
   constructor(rows = []) { this.rows = rows; this.calls = []; }
@@ -19,9 +20,5 @@ async function run() {
   assert.ok(poolList.calls[0].text.includes('FROM prescriptions'));
 }
 
-run()
-  .then(() => console.log('prescriptionRepository tests passed'))
-  .catch((err) => {
-    console.error('prescriptionRepository tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'prescriptionRepository');
+

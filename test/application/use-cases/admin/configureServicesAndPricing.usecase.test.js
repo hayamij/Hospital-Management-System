@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ConfigureServicesAndPricingUseCase } from '../../../../src/application/use-cases/admin/configureServicesAndPricing.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeServiceCatalogRepository {
   constructor() {
@@ -98,9 +99,5 @@ async function run() {
   assert.deepStrictEqual(upsertRepo.upserted, { id: 'svc-2', name: 'MRI', price: 150.5 });
 }
 
-run()
-  .then(() => console.log('configureServicesAndPricing.usecase tests passed'))
-  .catch((err) => {
-    console.error('configureServicesAndPricing.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'configureServicesAndPricing.usecase');
+

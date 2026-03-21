@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { Identifier } from '../../../src/domain/value-objects/identifier.js';
 import { DomainError } from '../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 async function expectThrows(fn, message) {
   let threw = false;
@@ -24,9 +25,5 @@ async function run() {
   assert.ok(!id1.equals(id3));
 }
 
-run()
-  .then(() => console.log('identifier tests passed'))
-  .catch((err) => {
-    console.error('identifier tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'identifier');
+

@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { MarkAppointmentStatusUseCase } from '../../../../src/application/use-cases/doctor/markAppointmentStatus.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeAppointment {
   constructor({ id, doctorId }) {
@@ -124,9 +125,5 @@ async function run() {
   assert.strictEqual(repoCancelled.saved.getStatus(), 'cancelled');
 }
 
-run()
-  .then(() => console.log('markAppointmentStatus.usecase tests passed'))
-  .catch((err) => {
-    console.error('markAppointmentStatus.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'markAppointmentStatus.usecase');
+

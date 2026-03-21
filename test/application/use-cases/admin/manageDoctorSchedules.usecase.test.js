@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ManageDoctorSchedulesUseCase } from '../../../../src/application/use-cases/admin/manageDoctorSchedules.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeDoctor {
   constructor(id) {
@@ -100,9 +101,5 @@ async function run() {
   assert.strictEqual(repo.saved.getAvailableSlotsPerDay(), 6);
 }
 
-run()
-  .then(() => console.log('manageDoctorSchedules.usecase tests passed'))
-  .catch((err) => {
-    console.error('manageDoctorSchedules.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'manageDoctorSchedules.usecase');
+

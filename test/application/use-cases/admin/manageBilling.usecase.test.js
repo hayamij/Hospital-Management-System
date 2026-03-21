@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { ManageBillingUseCase } from '../../../../src/application/use-cases/admin/manageBilling.usecase.js';
 import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeBilling {
   constructor({ id, total = 200 }) {
@@ -131,9 +132,5 @@ async function run() {
   assert.strictEqual(repoVoid.saved.getStatus(), 'void');
 }
 
-run()
-  .then(() => console.log('manageBilling.usecase tests passed'))
-  .catch((err) => {
-    console.error('manageBilling.usecase tests failed', err);
-    process.exit(1);
-  });
+wrapLegacyRun(run, 'manageBilling.usecase');
+
