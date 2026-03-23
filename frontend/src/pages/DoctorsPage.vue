@@ -1,126 +1,81 @@
 <template>
-  <section class="page">
-    <header class="page__header">
-      <h1>Doctors</h1>
-      <small>Search, schedule, and communication</small>
-    </header>
+	<div class="page">
+		<header class="panel">
+			<h1>Doctors</h1>
+			<p>Search doctors by keyword and specialization.</p>
+			<form class="search" @submit.prevent="search">
+				<input v-model="filters.query" placeholder="Name or keyword" />
+				<input v-model="filters.specialty" placeholder="Specialty" />
+				<button type="submit">Search</button>
+				<button type="button" @click="search">Refresh</button>
+			</form>
+		</header>
 
-    <div class="panel two-col">
-      <DoctorSearch v-model="searchQuery" :doctors="doctors" @change="onSearch" />
-      <DoctorProfileForm v-model="updateForm" :loading="loading" @submit="onUpdateProfile" />
-    </div>
+		<section class="panel">
+			<h2>Doctor list</h2>
+			<p v-if="doctors.loading">Loading...</p>
+			<p v-if="!doctors.loading && doctors.list.length === 0">No doctors found.</p>
+			<div class="grid two-col">
+				<article v-for="doc in doctors.list" :key="doc.id || doc.doctorId" class="item">
+					<p><strong>{{ doc.fullName || doc.name }}</strong></p>
+					<p>{{ doc.specialization || doc.specialty }}</p>
+					<p>Status: {{ doc.status || 'active' }}</p>
+				</article>
+			</div>
+		</section>
 
-    <div class="panel two-col">
-      <DoctorScheduleTable :schedule="schedule" v-model:doctorId="scheduleDoctorId" @change="onScheduleChange" />
-      <DoctorMessageForm v-model="messageForm" :loading="loading" :last-message="lastMessage" @submit="onSendMessage" />
-    </div>
-  </section>
+		<section v-if="auth.role === 'admin'" class="panel">
+			<h2>Service catalog actions (admin)</h2>
+			<form class="grid admin-grid" @submit.prevent="upsertService">
+				<input v-model="service.id" placeholder="Service ID" />
+				<input v-model="service.name" placeholder="Service name" required />
+				<input v-model.number="service.price" type="number" min="0" placeholder="Price" required />
+				<button type="submit">Upsert service</button>
+			</form>
+			<form class="row" @submit.prevent="removeService">
+				<input v-model="removeServiceId" placeholder="Service ID to remove" required />
+				<button type="submit">Remove service</button>
+			</form>
+		</section>
+
+		<p v-if="status" class="msg ok">{{ status }}</p>
+		<p v-if="doctors.error" class="msg err">{{ doctors.error }}</p>
+	</div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue';
-import DoctorMessageForm from '../components/doctors/DoctorMessageForm.vue';
-import DoctorProfileForm from '../components/doctors/DoctorProfileForm.vue';
-import DoctorScheduleTable from '../components/doctors/DoctorScheduleTable.vue';
-import DoctorSearch from '../components/doctors/DoctorSearch.vue';
+import { reactive, onMounted, ref } from 'vue';
 import { useDoctorsStore } from '../stores/doctors.js';
+import { useAuthStore } from '../stores/auth.js';
 
-const store = useDoctorsStore();
+const doctors = useDoctorsStore();
+const auth = useAuthStore();
+const filters = reactive({ query: '', specialty: '' });
+const service = reactive({ id: '', name: '', price: 0 });
+const removeServiceId = ref('');
+const status = ref('');
 
-const searchQuery = ref('');
-const updateForm = reactive({ id: 'doc-1', name: '', specialty: '', availability: '' });
-const scheduleDoctorId = ref('doc-1');
-const messageForm = reactive({ patientId: 'pat-1', text: '' });
-const lastMessage = ref(null);
+const search = () => doctors.search(filters);
 
-const loading = computed(() => store.loading);
-const doctors = computed(() => store.doctors);
-const schedule = computed(() => store.schedule);
-
-const onSearch = async (q) => { await store.searchDoctors(q); };
-const onScheduleChange = async (doctorId) => { await store.viewDoctorSchedule(doctorId); };
-
-const onUpdateProfile = async ({ id, profile, slotsPerDay }) => {
-  await store.updateDoctorProfileAndAvailability(id, { profile, slotsPerDay });
-  await store.searchDoctors(searchQuery.value);
+const upsertService = async () => {
+  status.value = '';
+  await doctors.upsertService({ ...service });
+  status.value = 'Service upsert completed.';
 };
 
-const onSendMessage = async ({ patientId, text }) => {
-  lastMessage.value = await store.sendDoctorMessage(patientId, text, scheduleDoctorId.value);
+const removeService = async () => {
+  status.value = '';
+  await doctors.removeService(removeServiceId.value);
+  status.value = 'Service removal completed.';
 };
 
-watch(searchQuery, onSearch, { immediate: true });
-watch(scheduleDoctorId, onScheduleChange, { immediate: true });
-onMounted(() => onScheduleChange(scheduleDoctorId.value));
+onMounted(search);
 </script>
 
 <style scoped>
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.page__header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.panel {
-  padding: 1rem;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-}
-
-.two-col {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1rem;
-}
-
-.form {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.form--inline {
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-}
-
-input,
-textarea,
-button {
-  padding: 0.45rem 0.6rem;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-}
-
-button {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-}
-
-.list {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0;
-  list-style: none;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: 0.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  text-align: left;
-}
+.search { display: grid; gap: 14px; grid-template-columns: 1fr 1fr auto auto; }
+.two-col { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.admin-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.row { margin-top: 14px; }
+@media (max-width: 900px) { .search { grid-template-columns: 1fr; } }
 </style>

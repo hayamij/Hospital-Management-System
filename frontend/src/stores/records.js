@@ -1,51 +1,41 @@
 import { defineStore } from 'pinia';
-import * as api from '../services/api.js';
+import { patientApi, doctorApi } from '../services/api.js';
+import { useAuthStore } from './auth.js';
 
-// Medical records store
 export const useRecordsStore = defineStore('records', {
-  state: () => ({
-    records: [],
-    loading: false,
-    error: null,
-  }),
-  actions: {
-    async viewMedicalRecords(patientId) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.viewMedicalRecords({ patientId });
-        this.records = res?.records ?? [];
-        return res;
-      } catch (err) { this.error = err; throw err; } finally { this.loading = false; }
-    },
-    async addVisitNote(patientId, note, doctorId) {
-      this.loading = true; this.error = null;
-      try { return await api.addVisitNote(patientId, { patientId, doctorId, note }); }
-      catch (err) { this.error = err; throw err; }
-      finally { this.loading = false; }
-    },
-    async reviewTestResults(labResultId, notes, doctorId) {
-      this.loading = true; this.error = null;
-      try { return await api.reviewTestResults(labResultId, { notes, doctorId }); }
-      catch (err) { this.error = err; throw err; }
-      finally { this.loading = false; }
-    },
-    async updateMedicalRecordEntry(recordId, entry, doctorId) {
-      this.loading = true; this.error = null;
-      try { return await api.updateMedicalRecordEntry(recordId, { note: entry, doctorId }); }
-      catch (err) { this.error = err; throw err; }
-      finally { this.loading = false; }
-    },
-    async auditMedicalRecords(recordId, payload) {
-      this.loading = true; this.error = null;
-      try { return await api.auditRecord(recordId, payload); }
-      catch (err) { this.error = err; throw err; }
-      finally { this.loading = false; }
-    },
-    async accessPatientChart(patientId, doctorId) {
-      this.loading = true; this.error = null;
-      try { return await api.accessPatientChart({ patientId, doctorId }); }
-      catch (err) { this.error = err; throw err; }
-      finally { this.loading = false; }
-    },
-  },
+	state: () => ({
+		list: [],
+		loading: false,
+		error: null,
+	}),
+	actions: {
+		async fetchRecords(filters = {}) {
+			const auth = useAuthStore();
+			this.loading = true;
+			this.error = null;
+			try {
+				if (auth.role === 'patient') {
+					const response = await patientApi.listRecords(auth.token, { ...filters, patientId: auth.userId });
+					this.list = response.records || [];
+					return response;
+				}
+				if (auth.role === 'doctor' && filters.patientId) {
+					const response = await doctorApi.viewPatientRecords(auth.token, filters.patientId, filters);
+					this.list = response.records || [];
+					return response;
+				}
+			} catch (error) {
+				this.error = error.message;
+				throw error;
+			} finally {
+				this.loading = false;
+			}
+		},
+		async addEntry(patientId, note) {
+			const auth = useAuthStore();
+			if (auth.role !== 'doctor') return;
+			await doctorApi.addVisitNote(auth.token, patientId, { note, doctorId: auth.userId });
+			await this.fetchRecords({ patientId });
+		},
+	},
 });

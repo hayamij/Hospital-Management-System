@@ -1,62 +1,58 @@
 import { defineStore } from 'pinia';
-import * as api from '../services/api.js';
+import { patientApi, doctorApi } from '../services/api.js';
+import { useAuthStore } from './auth.js';
 
-// Patients domain store
 export const usePatientsStore = defineStore('patients', {
-  state: () => ({
-    patients: [],
-    services: [],
-    loading: false,
-    error: null,
-  }),
-  actions: {
-    async browsePublicInfo() {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.browsePublicInfo();
-        this.services = res?.services ?? res?.items ?? this.services;
-        return res;
-      } catch (err) { this.error = err; throw err; } finally { this.loading = false; }
-    },
-    async guestSearchDoctors(params) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.guestSearchDoctors(params);
-        return res;
-      } catch (err) { this.error = err; throw err; } finally { this.loading = false; }
-    },
-    async startRegistration(payload) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.startRegistration(payload);
-        this.patients.push({ id: res?.patientId ?? `pat-${Math.random().toString(36).slice(2, 8)}`, name: payload?.name ?? 'New Patient', profile: payload });
-        return res;
-      } catch (err) { this.error = err; throw err; } finally { this.loading = false; }
-    },
-    async registerPatientAccount(payload) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.registerPatientAccount(payload);
-        this.patients.push({ id: res?.patientId ?? `pat-${Math.random().toString(36).slice(2, 8)}`, name: payload?.name ?? 'Patient', profile: payload });
-        return res;
-      } catch (err) { this.error = err; throw err; } finally { this.loading = false; }
-    },
-    async updatePatientProfile(patientId, profile) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.updatePatientProfile({ patientId, ...profile });
-        const patient = this.patients.find((p) => p.id === (res?.patientId ?? patientId));
-        if (patient) patient.profile = { ...patient.profile, ...profile };
-        return res;
-      } catch (err) { this.error = err; throw err; } finally { this.loading = false; }
-    },
-    async sendPatientMessage(payload) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.sendPatientMessage({ patientId: payload.patientId, doctorId: payload.doctorId, subject: payload.subject ?? 'Message', message: payload.text ?? payload.message });
-        return res;
-      } catch (err) { this.error = err; throw err; }
-      finally { this.loading = false; }
-    },
-  },
+	state: () => ({
+		profile: null,
+		records: [],
+		loading: false,
+		error: null,
+	}),
+	actions: {
+		async updateProfile(payload) {
+			const auth = useAuthStore();
+			if (auth.role !== 'patient') return;
+			this.loading = true;
+			this.error = null;
+			try {
+				const response = await patientApi.updateProfile(auth.token, { ...payload, patientId: auth.userId });
+				this.profile = { ...(this.profile || {}), ...payload };
+				return response;
+			} catch (error) {
+				this.error = error.message;
+				throw error;
+			} finally {
+				this.loading = false;
+			}
+		},
+		async loadRecords(filters = {}) {
+			const auth = useAuthStore();
+			this.loading = true;
+			this.error = null;
+			try {
+				if (auth.role === 'patient') {
+					const response = await patientApi.listRecords(auth.token, { ...filters, patientId: auth.userId });
+					this.records = response.records || [];
+					return response;
+				}
+				if (auth.role === 'doctor' && filters.patientId) {
+					const response = await doctorApi.viewPatientRecords(auth.token, filters.patientId, filters);
+					this.records = response.records || [];
+					return response;
+				}
+			} catch (error) {
+				this.error = error.message;
+				throw error;
+			} finally {
+				this.loading = false;
+			}
+		},
+		async addVisitNote(patientId, note) {
+			const auth = useAuthStore();
+			if (auth.role !== 'doctor') return;
+			await doctorApi.addVisitNote(auth.token, patientId, { note, doctorId: auth.userId });
+			await this.loadRecords({ patientId });
+		},
+	},
 });

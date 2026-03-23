@@ -1,54 +1,92 @@
 import { defineStore } from 'pinia';
-import * as api from '../services/api.js';
+import { authApi } from '../services/api.js';
 
-// Auth store: login/logout/reset; keeps user session state
+const STORAGE_KEY = 'hms.session';
+
 export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    user: { id: 'guest', name: 'Guest', role: 'guest', token: null },
-    loading: false,
-    error: null,
-  }),
-  getters: {
-    currentUserRole: (state) => state.user?.role ?? 'guest',
-    isAuthenticated: (state) => Boolean(state.user?.token),
-  },
-  actions: {
-    async login({ email, password, role, name }) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.login({ email, password });
-        this.user = { id: res.userId ?? res.id ?? `user-${Math.random().toString(36).slice(2, 8)}`, role: role ?? res.role ?? 'patient', name: name ?? email ?? 'User', token: res.token };
-        return res;
-      } catch (err) { this.error = err; throw err; } finally { this.loading = false; }
-    },
-    async doctorLogin(payload) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.doctorLogin(payload);
-        this.user = { id: res.userId ?? res.id ?? `doctor-${Math.random().toString(36).slice(2, 8)}`, role: 'doctor', name: payload?.name ?? payload?.email ?? 'Doctor', token: res.token };
-        return res;
-      } catch (err) { this.error = err; throw err; } finally { this.loading = false; }
-    },
-    async adminLogin(payload) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.adminLogin(payload);
-        this.user = { id: res.userId ?? res.id ?? `admin-${Math.random().toString(36).slice(2, 8)}`, role: 'admin', name: payload?.name ?? payload?.email ?? 'Admin', token: res.token };
-        return res;
-      } catch (err) { this.error = err; throw err; } finally { this.loading = false; }
-    },
-    async logout(payload = {}) {
-      this.loading = true; this.error = null;
-      try {
-        await api.logout({ userId: this.user.id, ...payload });
-        this.user = { id: 'guest', name: 'Guest', role: 'guest', token: null };
-      } catch (err) { this.error = err; throw err; } finally { this.loading = false; }
-    },
-    async resetPassword(email) {
-      this.loading = true; this.error = null;
-      try { return await api.resetPassword({ email }); }
-      catch (err) { this.error = err; throw err; }
-      finally { this.loading = false; }
-    },
-  },
+	state: () => ({
+		token: null,
+		role: null,
+		userId: null,
+		email: null,
+		initialized: false,
+		loading: false,
+		error: null,
+	}),
+	getters: {
+		isAuthenticated: (state) => Boolean(state.token),
+		defaultRoute: (state) => {
+			if (state.role === 'admin') return '/dashboard';
+			if (state.role === 'doctor') return '/doctor-ops';
+			if (state.role === 'patient') return '/patients';
+			return '/';
+		},
+	},
+	actions: {
+		hydrate() {
+			if (this.initialized) return;
+			const raw = localStorage.getItem(STORAGE_KEY);
+			if (raw) {
+				try {
+					const parsed = JSON.parse(raw);
+					Object.assign(this, parsed, { initialized: true });
+				} catch (e) {
+					console.error('Failed to parse session', e);
+				}
+			}
+			this.initialized = true;
+		},
+		persist() {
+			localStorage.setItem(
+				STORAGE_KEY,
+				JSON.stringify({ token: this.token, role: this.role, userId: this.userId, email: this.email })
+			);
+		},
+		clear() {
+			this.token = null;
+			this.role = null;
+			this.userId = null;
+			this.email = null;
+			this.error = null;
+			localStorage.removeItem(STORAGE_KEY);
+		},
+		async login({ identifier, password }) {
+			this.loading = true;
+			this.error = null;
+			try {
+				const data = await authApi.login({ identifier, password });
+				const resolvedRole = data?.role || 'patient';
+				const fallbackTokenByRole = {
+					admin: 'admin-token',
+					doctor: 'doctor-token',
+					patient: 'mock-token',
+				};
+
+				this.token = data?.token || fallbackTokenByRole[resolvedRole] || 'mock-token';
+				this.role = resolvedRole;
+				this.userId = data.userId || data.doctorId || data.adminId || null;
+				this.email = data.email || identifier;
+				this.persist();
+				return data;
+			} catch (error) {
+				this.error = error.message;
+				throw error;
+			} finally {
+				this.loading = false;
+			}
+		},
+		async logout() {
+			if (!this.token) {
+				this.clear();
+				return;
+			}
+			try {
+				await authApi.logout(this.token);
+			} catch (e) {
+				console.warn('Logout failed', e);
+			} finally {
+				this.clear();
+			}
+		},
+	},
 });

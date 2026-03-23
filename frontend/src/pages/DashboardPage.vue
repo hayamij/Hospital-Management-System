@@ -1,57 +1,87 @@
 <template>
-  <section class="page">
-    <header class="page__header">
-      <div>
-        <h1>Dashboard</h1>
-        <small>Snapshot across patients, doctors, appointments, billing</small>
+  <div class="page">
+    <header class="panel">
+      <h1>Dashboard</h1>
+      <p>{{ greeting }}</p>
+      <div class="actions">
+        <RouterLink to="/appointments">Appointments</RouterLink>
+        <RouterLink to="/records">Records</RouterLink>
+        <button type="button" @click="reload">Reload</button>
       </div>
-      <button :disabled="loading" @click="runReport">{{ loading ? 'Running…' : 'Run Report' }}</button>
     </header>
 
-    <SummaryCards :stats="stats" :loading="loading" />
-    <ReportPreview :report="lastReport" :loading="loading" />
-  </section>
+    <section class="grid stats">
+      <article class="panel">
+        <h2>Upcoming appointments</h2>
+        <strong>{{ snapshot.upcomingAppointments.length }}</strong>
+      </article>
+      <article class="panel">
+        <h2>Invoices</h2>
+        <strong>{{ snapshot.invoices.length }}</strong>
+      </article>
+      <article class="panel">
+        <h2>Records</h2>
+        <strong>{{ snapshot.records.length }}</strong>
+      </article>
+    </section>
+
+    <section class="grid two-col">
+      <article class="panel">
+        <h2>Recent appointments</h2>
+        <ul v-if="snapshot.upcomingAppointments.length" class="list">
+          <li v-for="item in snapshot.upcomingAppointments" :key="item.id || item.appointmentId">
+            <strong>{{ item.reason || 'Appointment' }}</strong>
+            <p>{{ item.startAt }} -> {{ item.endAt }}</p>
+            <small>Status: {{ item.status }}</small>
+          </li>
+        </ul>
+        <p v-else>No appointments found.</p>
+      </article>
+
+      <article class="panel">
+        <h2>Recent invoices</h2>
+        <ul v-if="snapshot.invoices.length" class="list">
+          <li v-for="invoice in snapshot.invoices" :key="invoice.id || invoice.invoiceNumber">
+            <strong>Invoice {{ invoice.invoiceNumber || invoice.id }}</strong>
+            <p>Status: {{ invoice.status }}</p>
+          </li>
+        </ul>
+        <p v-else>No invoices found.</p>
+      </article>
+    </section>
+
+    <p v-if="dashboard.error" class="msg err">{{ dashboard.error }}</p>
+  </div>
 </template>
 
 <script setup>
 import { computed, onMounted } from 'vue';
-import SummaryCards from '../components/dashboard/SummaryCards.vue';
-import ReportPreview from '../components/dashboard/ReportPreview.vue';
 import { useDashboardStore } from '../stores/dashboard.js';
-import { useAppointmentsStore } from '../stores/appointments.js';
-import { useDoctorsStore } from '../stores/doctors.js';
-import { usePatientsStore } from '../stores/patients.js';
-import { useBillingStore } from '../stores/billing.js';
+import { useAuthStore } from '../stores/auth.js';
 
-const dashboardStore = useDashboardStore();
-const appointmentsStore = useAppointmentsStore();
-const doctorsStore = useDoctorsStore();
-const patientsStore = usePatientsStore();
-const billingStore = useBillingStore();
+const auth = useAuthStore();
+const dashboard = useDashboardStore();
 
-const stats = computed(() => dashboardStore.stats);
-const lastReport = computed(() => dashboardStore.lastReport);
-const loading = computed(() => dashboardStore.loading);
+const snapshot = computed(() => dashboard.snapshot || { upcomingAppointments: [], invoices: [], records: [] });
+const greeting = computed(() => {
+	if (!auth.role) return 'Hello guest';
+	return `Hello ${auth.role}`;
+});
 
-const runReport = async () => {
-  try {
-    await dashboardStore.runReport({ span: '7d' });
-  } catch (err) {
-    dashboardStore.hydrateFromCollections({
-      patients: patientsStore.patients,
-      doctors: doctorsStore.doctors,
-      appointments: appointmentsStore.items,
-      billing: billingStore.items,
-    });
-  }
+onMounted(() => {
+	dashboard.load();
+});
+
+const reload = () => {
+  dashboard.load();
 };
-
-onMounted(runReport);
 </script>
 
 <style scoped>
-.page { display: flex; flex-direction: column; gap: 1rem; }
-.page__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
-button { padding: 0.45rem 0.75rem; border: none; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; }
-button:disabled { opacity: 0.7; cursor: not-allowed; }
+.actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; }
+.actions a, .actions button { color: #111827; text-decoration: none; }
+.stats { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.two-col { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.list { margin: 0; padding-left: 18px; }
+.list li { margin: 12px 0; }
 </style>

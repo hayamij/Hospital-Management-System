@@ -1,5 +1,9 @@
+import crypto from 'node:crypto';
 import { DoctorRepositoryPort } from '../../../application/ports/repositories/doctorRepositoryPort.js';
 import { Doctor } from '../../../domain/entities/doctor.js';
+
+const ensureId = (id) => id || crypto.randomUUID();
+const toDate = (value) => (value ? new Date(value) : null);
 
 const toEntity = (row) => {
   if (!row) return null;
@@ -11,8 +15,8 @@ const toEntity = (row) => {
     availableSlotsPerDay: row.available_slots_per_day ?? 0,
     contactInfo: { email: row.contact_email, phone: row.contact_phone },
     status: row.status,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    createdAt: toDate(row.created_at),
+    updatedAt: toDate(row.updated_at),
   });
 };
 
@@ -28,7 +32,21 @@ export class SqlDoctorRepository extends DoctorRepositoryPort {
   }
 
   async save(doctor) {
-    const { rows } = await this.pool.query(
+    const id = ensureId(doctor.id);
+    const updatePayload = [
+      doctor.fullName,
+      doctor.specialization,
+      doctor.department ?? '',
+      doctor.availableSlotsPerDay ?? 0,
+      doctor.contactInfo?.email ?? null,
+      doctor.contactInfo?.phone ?? null,
+      doctor.status,
+      id,
+    ];
+
+    const existing = await this.findById(id);
+    if (existing) {
+      await this.pool.query(
         `UPDATE doctors
          SET full_name = $1,
              specialization = $2,
@@ -38,9 +56,17 @@ export class SqlDoctorRepository extends DoctorRepositoryPort {
              contact_phone = $6,
              status = $7,
              updated_at = now()
-       WHERE id = $8
-       RETURNING *`,
+       WHERE id = $8`,
+        updatePayload,
+      );
+      return this.findById(id);
+    }
+
+    await this.pool.query(
+      `INSERT INTO doctors (id, full_name, specialization, department, available_slots_per_day, contact_email, contact_phone, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
       [
+        id,
         doctor.fullName,
         doctor.specialization,
         doctor.department ?? '',
@@ -48,10 +74,9 @@ export class SqlDoctorRepository extends DoctorRepositoryPort {
         doctor.contactInfo?.email ?? null,
         doctor.contactInfo?.phone ?? null,
         doctor.status,
-        doctor.id,
       ],
     );
-    return toEntity(rows[0]);
+    return this.findById(id);
   }
 
   async search({ name, specialization } = {}) {
@@ -59,11 +84,11 @@ export class SqlDoctorRepository extends DoctorRepositoryPort {
     const values = [];
     if (name) {
       values.push(`%${name}%`);
-      conditions.push(`full_name ILIKE $${values.length}`);
+      conditions.push(`LOWER(full_name) LIKE LOWER($${values.length})`);
     }
     if (specialization) {
       values.push(`%${specialization}%`);
-      conditions.push(`specialization ILIKE $${values.length}`);
+      conditions.push(`LOWER(specialization) LIKE LOWER($${values.length})`);
     }
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const query = `SELECT * FROM doctors ${where} ORDER BY full_name ASC`;

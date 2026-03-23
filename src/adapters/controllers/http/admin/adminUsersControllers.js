@@ -2,7 +2,7 @@ import { createHandler } from '../createHandler.js';
 import { AssignRolesViewModel } from '../../../viewmodels/adminViewModels.js';
 
 // Admin user & role management
-export function buildAdminUsersControllers({ assignRolesUseCase, manageUsersUseCase }) {
+export function buildAdminUsersControllers({ assignRolesUseCase, manageUserStatusUseCase }) {
   return {
     assignRoles: createHandler({
       useCase: assignRolesUseCase,
@@ -14,7 +14,7 @@ export function buildAdminUsersControllers({ assignRolesUseCase, manageUsersUseC
       mapOutput: (result) => new AssignRolesViewModel(result),
     }),
     manageUserStatus: createHandler({
-      useCase: manageUsersUseCase,
+      useCase: manageUserStatusUseCase,
       mapInput: (req) => ({
         adminId: req.user?.id,
         userId: req.params?.userId,

@@ -1,6 +1,13 @@
+import jwt from 'jsonwebtoken';
+import { ViewPublicServiceDetailUseCase } from '../../application/use-cases/guest/viewPublicServiceDetail.usecase.js';
+
 const now = () => new Date().toISOString();
 const makeUseCase = (fn) => ({ execute: fn });
 const uid = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
+const normalizeIdentifier = (value = '') => String(value || '').trim().toLowerCase();
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+
+const issueToken = (user) => jwt.sign({ role: user.role, email: user.email }, JWT_SECRET, { expiresIn: '15m', subject: user.id });
 
 // In-memory mock data (mutated by use cases to mimic a lightweight DB)
 const doctors = [
@@ -9,9 +16,9 @@ const doctors = [
 ];
 
 const users = [
-  { id: 'admin-1', email: 'admin@example.com', role: 'admin', status: 'active' },
-  { id: 'doc-1', email: 'doc1@example.com', role: 'doctor', status: 'active' },
-  { id: 'pat-1', email: 'pat1@example.com', role: 'patient', status: 'active' },
+  { id: 'admin-1', email: 'admin@example.com', role: 'admin', status: 'active', password: '123' },
+  { id: 'doc-1', email: 'doc1@example.com', role: 'doctor', status: 'active', password: 'password' },
+  { id: 'pat-1', email: 'pat1@example.com', role: 'patient', status: 'active', password: 'password' },
 ];
 
 const patients = [{ id: 'pat-1', name: 'Alice Patient', contact: { email: 'pat1@example.com' } }];
@@ -24,16 +31,74 @@ const billings = [
 const payments = [];
 const medicalRecords = [{ id: 'rec-1', patientId: 'pat-1', summary: 'Checkup', createdAt: now() }];
 const services = [
-  { id: 'svc-1', name: 'Consultation', price: 50 },
-  { id: 'svc-2', name: 'Lab Test', price: 70 },
+  { id: 'svc-1', name: 'Consultation', price: 50, description: 'Initial doctor consultation and symptom assessment.' },
+  { id: 'svc-2', name: 'Lab Test', price: 70, description: 'Basic and advanced diagnostics handled by our lab team.' },
+];
+const insurancePlans = [
+  {
+    id: 'ins-1',
+    provider: 'Blue Health',
+    planName: 'Standard Care',
+    coverageSummary: 'Outpatient consultation and basic lab coverage up to 80%.',
+    copayAmount: 15,
+  },
+  {
+    id: 'ins-2',
+    provider: 'Sunrise Insurance',
+    planName: 'Family Plus',
+    coverageSummary: 'Family package with pediatric and maternity service support.',
+    copayAmount: 10,
+  },
+];
+const bookingConstraints = [
+  {
+    id: 'bc-1',
+    code: 'MAX_ACTIVE_APPOINTMENTS',
+    title: 'Active booking limit',
+    description: 'Each patient can keep at most 3 active appointments.',
+    appliesToRole: 'patient',
+    value: 3,
+  },
+  {
+    id: 'bc-2',
+    code: 'MIN_BOOKING_NOTICE_HOURS',
+    title: 'Minimum booking notice',
+    description: 'Appointments must be scheduled at least 24 hours in advance.',
+    appliesToRole: 'patient',
+    value: 24,
+  },
 ];
 const settings = { timezone: 'UTC', currency: 'USD', updatedAt: now() };
 const contacts = [];
 
+const mockServiceCatalogRepository = {
+  async findServiceById(serviceId) {
+    return services.find((svc) => svc.id === serviceId) ?? null;
+  },
+};
+
 export function createMockDeps() {
   return {
     // Auth
-    loginUseCase: makeUseCase(async (input) => ({ userId: input.email ?? 'user-1', accessToken: 'mock-token', role: 'patient' })),
+    loginUseCase: makeUseCase(async (input) => {
+      const identifier = normalizeIdentifier(input.identifier ?? input.email);
+      const password = input.password ?? '';
+
+      if (identifier === 'admin' && password === '123') {
+        const admin = users.find((u) => u.id === 'admin-1');
+        return { userId: admin.id, token: issueToken(admin), role: admin.role, email: admin.email };
+      }
+
+      const user = users.find((u) => normalizeIdentifier(u.email) === identifier);
+      if (!user || password !== user.password) {
+        const err = new Error('Invalid credentials');
+        err.status = 401;
+        err.code = 'invalid_credentials';
+        throw err;
+      }
+
+      return { userId: user.id, token: issueToken(user), role: user.role, email: user.email };
+    }),
     logoutUseCase: makeUseCase(async () => ({ success: true })),
     resetPasswordUseCase: makeUseCase(async () => ({ success: true })),
 
@@ -79,15 +144,32 @@ export function createMockDeps() {
     // Patient discovery/profile
     searchDoctorsUseCase: makeUseCase(async () => ({ page: 1, pageSize: doctors.length, total: doctors.length, doctors })),
     registerPatientAccountUseCase: makeUseCase(async (input) => {
+      const email = normalizeIdentifier(input.email);
+      const exists = users.some((u) => normalizeIdentifier(u.email) === email);
+      if (exists) {
+        const err = new Error('Email already exists');
+        err.status = 409;
+        err.code = 'email_exists';
+        throw err;
+      }
+
       const id = uid('pat');
-      patients.push({ id, name: input.name ?? 'New Patient', contact: { email: input.email } });
-      users.push({ id, email: input.email, role: 'patient', status: 'active' });
+      patients.push({ id, name: input.name ?? input.fullName ?? 'New Patient', contact: { email } });
+      users.push({ id, email, role: 'patient', status: 'active', password: input.password ?? 'password' });
       return { patientId: id, userId: id, status: 'registered' };
     }),
     updatePatientProfileUseCase: makeUseCase(async (input) => ({ patientId: input.patientId, updatedAt: now() })),
 
     // Guest
-    browsePublicInfoUseCase: makeUseCase(async () => ({ services })),
+    browsePublicInfoUseCase: makeUseCase(async () => ({
+      services,
+      insurancePlans,
+      bookingConstraints,
+      hospitalInfo: settings,
+    })),
+    viewPublicServiceDetailUseCase: new ViewPublicServiceDetailUseCase({
+      serviceCatalogRepository: mockServiceCatalogRepository,
+    }),
     guestSearchDoctorsUseCase: makeUseCase(async () => ({ page: 1, pageSize: doctors.length, total: doctors.length, doctors })),
     startRegistrationUseCase: makeUseCase(async (input) => {
       const registrationId = uid('reg');
@@ -131,8 +213,18 @@ export function createMockDeps() {
     adminLoginUseCase: makeUseCase(async () => ({ adminId: 'admin-1', accessToken: 'admin-token' })),
     assignRolesUseCase: makeUseCase(async (input) => {
       const user = users.find((u) => u.id === input.userId);
-      if (user) user.role = input.role ?? user.role;
-      return { updatedAt: now(), userId: input.userId, role: user?.role ?? input.role };
+      if (user) {
+        user.role = input.role ?? user.role;
+        if (user.role === 'doctor' && !doctors.some((d) => d.id === user.id)) {
+          doctors.push({
+            id: user.id,
+            name: user.fullName || user.email || `Doctor ${user.id}`,
+            specialization: 'General',
+            slotsPerDay: 8,
+          });
+        }
+      }
+      return { updatedAt: now(), userId: input.userId, role: user?.role ?? input.role, doctorId: user?.role === 'doctor' ? user?.id : null };
     }),
     manageUserStatusUseCase: makeUseCase(async (input) => {
       const user = users.find((u) => u.id === input.userId);

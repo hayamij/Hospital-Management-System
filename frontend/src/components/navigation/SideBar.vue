@@ -1,51 +1,92 @@
 <template>
-  <aside class="side-bar">
-    <div class="side-bar__title">Navigation</div>
-    <nav class="side-bar__links">
-      <RouterLink to="/dashboard">Dashboard</RouterLink>
-      <RouterLink to="/appointments">Appointments</RouterLink>
-      <RouterLink to="/patients">Patients</RouterLink>
-      <RouterLink to="/doctors">Doctors</RouterLink>
-      <RouterLink to="/medical-records">Medical Records</RouterLink>
-      <RouterLink to="/billing">Billing</RouterLink>
-    </nav>
-  </aside>
+	<aside class="sidebar">
+		<nav class="menu">
+			<template v-for="item in items" :key="item.path">
+				<RouterLink
+					:to="item.path"
+					class="menu-item"
+					:class="{ active: route.path === item.path }"
+				>
+					<span class="icon">{{ item.icon }}</span>
+					<span>{{ item.label }}</span>
+				</RouterLink>
+			</template>
+		</nav>
+	</aside>
 </template>
 
 <script setup>
-import { RouterLink } from 'vue-router';
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+import { useAuthStore } from '../../stores/auth.js';
+
+const auth = useAuthStore();
+const route = useRoute();
+
+const navByRole = {
+	doctor: [
+		{ label: 'Use Cases', path: '/usecases', icon: 'UC' },
+		{ label: 'Doctor Ops', path: '/doctor-ops', icon: 'DO' },
+		{ label: 'Schedule', path: '/appointments', icon: 'SC' },
+		{ label: 'Patients', path: '/patients', icon: 'PT' },
+		{ label: 'Records', path: '/records', icon: 'MR' },
+		{ label: 'Messages', path: '/communications', icon: 'MS' },
+	],
+	admin: [
+		{ label: 'Use Cases', path: '/usecases', icon: 'UC' },
+		{ label: 'Dashboard', path: '/dashboard', icon: 'DB' },
+		{ label: 'Appointments', path: '/appointments', icon: 'AP' },
+		{ label: 'Doctors', path: '/doctors', icon: 'DR' },
+		{ label: 'Patients', path: '/patients', icon: 'PT' },
+		{ label: 'Billing', path: '/billing', icon: 'BL' },
+		{ label: 'Records', path: '/records', icon: 'MR' },
+		{ label: 'Admin Ops', path: '/admin-ops', icon: 'AO' },
+	],
+};
+
+const items = computed(() => navByRole[auth.role] || []);
 </script>
 
 <style scoped>
-.side-bar {
-  width: 220px;
-  padding: 1rem;
-  background: #0b1021;
-  color: #e2e8f0;
-  min-height: calc(100vh - 56px);
+.sidebar {
+	border: 1px solid #d1d5db;
+	background: #fff;
+	height: fit-content;
 }
 
-.side-bar__title {
-  font-weight: 700;
-  margin-bottom: 0.75rem;
+.menu {
+	display: grid;
+	gap: 6px;
+	padding: 10px;
 }
 
-.side-bar__links {
-  display: grid;
-  gap: 0.5rem;
+.menu-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	border: 1px solid #d1d5db;
+	padding: 8px;
+	text-decoration: none;
+	color: #111827;
+	background: #f9fafb;
 }
 
-a {
-  color: #e2e8f0;
-  text-decoration: none;
-  padding: 0.45rem 0.6rem;
-  border-radius: 6px;
-  background: #11182f;
-  border: 1px solid #1e293b;
+.menu-item.active {
+	border-color: #6b7280;
+	background: #eef2ff;
 }
 
-a.router-link-active {
-  background: #2563eb;
-  border-color: #2563eb;
+.icon {
+	font-size: 12px;
+	border: 1px solid #d1d5db;
+	padding: 2px 4px;
+	min-width: 24px;
+	text-align: center;
+}
+
+@media (max-width: 1100px) {
+	.sidebar {
+		display: none;
+	}
 }
 </style>

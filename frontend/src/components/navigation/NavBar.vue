@@ -1,115 +1,70 @@
 <template>
-  <nav class="nav-bar">
-    <div class="nav-bar__brand">Hospital Management</div>
-    <div class="nav-bar__controls">
-      <label class="nav-bar__label">
-        Role
-        <select v-model="selectedRole">
-          <option value="guest">Guest</option>
-          <option value="patient">Patient</option>
-          <option value="doctor">Doctor</option>
-          <option value="admin">Admin</option>
-        </select>
-      </label>
-      <input v-model="displayName" placeholder="Name" class="nav-bar__input" />
-      <button @click="handleLogin">Login</button>
-      <button @click="handleLogout" class="secondary">Logout</button>
-      <span class="nav-bar__user">User: {{ store.user.name }} ({{ store.currentUserRole }})</span>
+  <header class="topbar">
+    <div class="topbar-center">
+      <div>
+        <p class="title">Hospital Management</p>
+        <p class="meta">Backoffice for doctor and admin</p>
+      </div>
+      <div class="right">
+        <div>
+          <p>{{ auth.email || 'unknown' }}</p>
+          <small>{{ auth.role || 'unauthenticated' }}</small>
+        </div>
+				<RouterLink class="user-link" :to="userRoute">User</RouterLink>
+        <button v-if="auth.isAuthenticated" type="button" @click="handleLogout">Logout</button>
+      </div>
     </div>
-  </nav>
+  </header>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { useAppStore } from '../../stores/index.js';
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../stores/auth.js';
 
-const store = useAppStore();
-const selectedRole = ref('guest');
-const displayName = ref('Guest');
+const auth = useAuthStore();
+const router = useRouter();
 
-const handleLogin = async () => {
-  const name = displayName.value || selectedRole.value;
-  const email = `${selectedRole.value}@demo.local`;
-  const password = 'password';
-  if (selectedRole.value === 'doctor') {
-    await store.doctorLogin({ name, email, password });
-    return;
-  }
-  if (selectedRole.value === 'admin') {
-    await store.adminLogin({ name, email, password });
-    return;
-  }
-  await store.login({ role: selectedRole.value, name, email, password });
-};
+const userRoute = computed(() => {
+	if (auth.role === 'admin') return '/admin-ops';
+	if (auth.role === 'doctor') return '/doctor-ops';
+	return '/patients';
+});
 
 const handleLogout = async () => {
-  await store.logout();
+	await auth.logout();
+	router.push('/login');
 };
-
-watch(
-  () => store.user,
-  (user) => {
-    selectedRole.value = user.role;
-    displayName.value = user.name;
-  },
-  { deep: true }
-);
 </script>
 
 <style scoped>
-.nav-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: #0f172a;
-  color: #f8fafc;
+.topbar {
+	position: sticky;
+	top: 0;
+	z-index: 20;
+	background: #fff;
+	border-bottom: 1px solid #d1d5db;
 }
 
-.nav-bar__brand {
-  font-weight: 700;
-  letter-spacing: 0.5px;
+.topbar-center {
+	width: min(1500px, 60vw);
+	margin: 0 auto;
+	min-height: 72px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
 }
 
-.nav-bar__controls {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
+.title { margin: 0; font-weight: 700; }
+.meta { margin: 2px 0 0; font-size: 12px; color: #4b5563; }
+.right { display: flex; gap: 16px; align-items: center; text-align: right; }
+.right p { margin: 0; }
+.right small { color: #4b5563; }
+.user-link { border: 1px solid #9ca3af; background: #f9fafb; padding: 8px 12px; color: #111827; text-decoration: none; }
+.right button { border: 1px solid #9ca3af; background: #f9fafb; padding: 8px 12px; cursor: pointer; }
 
-select,
-input,
-button {
-  padding: 0.35rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #0f172a;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  background: #2563eb;
-  color: #fff;
-}
-
-button.secondary {
-  background: #475569;
-}
-
-.nav-bar__user {
-  font-size: 0.9rem;
-}
-
-.nav-bar__label {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.9rem;
-}
-
-.nav-bar__input {
-  min-width: 140px;
+@media (max-width: 1100px) {
+	.topbar-center { width: min(1500px, 92vw); }
 }
 </style>

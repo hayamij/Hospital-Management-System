@@ -1,40 +1,41 @@
 import { defineStore } from 'pinia';
-import * as api from '../services/api.js';
+import { useAppointmentsStore } from './appointments.js';
+import { useBillingStore } from './billing.js';
+import { useRecordsStore } from './records.js';
+import { useAuthStore } from './auth.js';
 
-// Dashboard aggregate store: pulls summary metrics and last report
 export const useDashboardStore = defineStore('dashboard', {
-  state: () => ({
-    stats: { patients: 0, doctors: 0, appointments: 0, revenue: 0 },
-    lastReport: null,
-    loading: false,
-    error: null,
-  }),
-  actions: {
-    async runReport(params = {}) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.runReport(params);
-        const report = res?.report ?? res;
-        this.lastReport = report ?? null;
-        const counts = report?.counts ?? report ?? {};
-        const totals = report?.totals ?? report ?? {};
-        this.stats = {
-          patients: counts.patients ?? 0,
-          doctors: counts.doctors ?? 0,
-          appointments: counts.appointments ?? 0,
-          revenue: totals.revenue ?? counts.revenue ?? 0,
-        };
-        return res;
-      } catch (err) { this.error = err; throw err; }
-      finally { this.loading = false; }
-    },
-    hydrateFromCollections({ patients = [], doctors = [], appointments = [], billing = [] } = {}) {
-      this.stats = {
-        patients: patients.length,
-        doctors: doctors.length,
-        appointments: appointments.length,
-        revenue: billing.reduce((sum, b) => sum + (b.total ?? 0), 0),
-      };
-    },
-  },
+	state: () => ({
+		loading: false,
+		snapshot: null,
+		error: null,
+	}),
+	actions: {
+		async load() {
+			this.loading = true;
+			this.error = null;
+			try {
+				const auth = useAuthStore();
+				const appointments = useAppointmentsStore();
+				const billing = useBillingStore();
+				const records = useRecordsStore();
+
+				await Promise.allSettled([
+					appointments.fetchAppointments({ pageSize: 5 }),
+					auth.role === 'patient' ? billing.fetchBilling({ pageSize: 5 }) : Promise.resolve(),
+					auth.role === 'patient' ? records.fetchRecords({}) : Promise.resolve(),
+				]);
+
+				this.snapshot = {
+					upcomingAppointments: appointments.items.slice(0, 5),
+					invoices: billing.invoices?.slice(0, 5) || [],
+					records: records.list?.slice(0, 5) || [],
+				};
+			} catch (error) {
+				this.error = error.message;
+			} finally {
+				this.loading = false;
+			}
+		},
+	},
 });

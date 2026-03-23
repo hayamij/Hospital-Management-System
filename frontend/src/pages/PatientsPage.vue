@@ -1,97 +1,67 @@
 <template>
-  <section class="page">
-    <header class="page__header">
-      <h1>Patients</h1>
-      <small>Registration, profile, and messaging</small>
-    </header>
+	<div class="page">
+		<header class="panel">
+			<h1>Patients</h1>
+			<p>Patient profile and chart access.</p>
+			<button type="button" @click="loadRecords">Refresh</button>
+		</header>
 
-    <div class="panel two-col">
-      <PatientRegisterForm v-model="registerForm" :loading="loading" :last-registered="lastRegistered" @submit="onRegister" />
-      <PatientProfileForm v-model="updateForm" :loading="loading" @submit="onUpdateProfile" />
-    </div>
+		<section v-if="auth.role === 'patient'" class="panel">
+			<h2>Update profile</h2>
+			<form class="grid two" @submit.prevent="updateProfile">
+				<input v-model="profile.name" placeholder="Full name" />
+				<input v-model="profile.phone" placeholder="Phone" />
+				<input v-model="profile.address" placeholder="Address" />
+				<input v-model="profile.dateOfBirth" type="date" />
+				<input v-model="profile.emergencyContact" placeholder="Emergency contact" />
+				<button type="submit">Save profile</button>
+			</form>
+		</section>
 
-    <div class="panel two-col">
-      <PatientMessageForm v-model="messageForm" :loading="loading" :last-message="lastMessage" @submit="onSendMessage" />
-      <PatientsList :patients="patients" />
-    </div>
-  </section>
+		<section v-if="auth.role === 'doctor'" class="panel">
+			<h2>Patient chart</h2>
+			<div class="row">
+				<input v-model="patientId" placeholder="Patient ID" />
+				<button type="button" @click="loadRecords">Load chart</button>
+			</div>
+			<div class="list-grid">
+				<article v-for="rec in patients.records" :key="rec.id || rec.recordId" class="item">
+					<p><strong>{{ rec.note || 'Entry' }}</strong></p>
+					<p>{{ rec.recordedAt }} | Doctor {{ rec.doctorId || '-' }}</p>
+				</article>
+			</div>
+		</section>
+
+		<p v-if="patients.error" class="msg err">{{ patients.error }}</p>
+	</div>
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue';
-import PatientMessageForm from '../components/patients/PatientMessageForm.vue';
-import PatientProfileForm from '../components/patients/PatientProfileForm.vue';
-import PatientRegisterForm from '../components/patients/PatientRegisterForm.vue';
-import PatientsList from '../components/patients/PatientsList.vue';
+import { reactive, ref } from 'vue';
 import { usePatientsStore } from '../stores/patients.js';
+import { useAuthStore } from '../stores/auth.js';
 
-const store = usePatientsStore();
+const auth = useAuthStore();
+const patients = usePatientsStore();
+const patientId = ref('');
+const profile = reactive({ name: '', phone: '', address: '', dateOfBirth: '', emergencyContact: '' });
 
-const registerForm = reactive({ name: '', age: '', phone: '' });
-const updateForm = reactive({ id: 'pat-1', age: '', phone: '' });
-const messageForm = reactive({ patientId: 'pat-1', doctorId: 'doc-1', text: '' });
+const updateProfile = async () => {
+	await patients.updateProfile(profile);
+};
 
-const lastRegistered = ref(null);
-const lastMessage = ref(null);
-
-const loading = computed(() => store.loading);
-const patients = computed(() => store.patients);
-
-const onRegister = async (payload) => { lastRegistered.value = await store.registerPatientAccount(payload); };
-const onUpdateProfile = async (payload) => { await store.updatePatientProfile(payload.id, { age: payload.age, phone: payload.phone }); };
-const onSendMessage = async (payload) => { lastMessage.value = await store.sendPatientMessage(payload); };
+const loadRecords = () => {
+	if (auth.role === 'doctor' && patientId.value) {
+		return patients.loadRecords({ patientId: patientId.value });
+	}
+	if (auth.role === 'patient') {
+		return patients.loadRecords();
+	}
+	return Promise.resolve();
+};
 </script>
 
 <style scoped>
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.page__header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.panel {
-  padding: 1rem;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-}
-
-.two-col {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-}
-
-.form {
-  display: grid;
-  gap: 0.5rem;
-}
-
-input,
-textarea,
-button {
-  padding: 0.45rem 0.6rem;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-}
-
-button {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-}
-
-.list {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0;
-  list-style: none;
-}
+.two { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.list-grid { margin-top: 14px; }
 </style>

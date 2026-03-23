@@ -1,38 +1,48 @@
 import { defineStore } from 'pinia';
-import * as api from '../services/api.js';
+import { patientApi, adminApi } from '../services/api.js';
+import { useAuthStore } from './auth.js';
 
-// Billing store
 export const useBillingStore = defineStore('billing', {
-  state: () => ({
-    items: [],
-    loading: false,
-    error: null,
-  }),
-  actions: {
-    async viewBillingAndPayments(patientId) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.viewBillingAndPayments({ patientId });
-        this.items = res?.billings ?? [];
-        return res;
-      } catch (err) { this.error = err; throw err; }
-      finally { this.loading = false; }
-    },
-    async manageBilling({ invoiceId, action, dueDate, patientId }) {
-      this.loading = true; this.error = null;
-      try {
-        const res = await api.manageBilling(invoiceId ?? 'new', { action, dueDate });
-        if (patientId) await this.viewBillingAndPayments(patientId);
-        return res;
-      } catch (err) { this.error = err; throw err; }
-      finally { this.loading = false; }
-    },
-    async downloadPrescription(prescriptionId, patientId) {
-      this.loading = true; this.error = null;
-      try {
-        return await api.downloadPrescription(prescriptionId, { patientId });
-      } catch (err) { this.error = err; throw err; }
-      finally { this.loading = false; }
-    },
-  },
+	state: () => ({
+		invoices: [],
+		payments: [],
+		loading: false,
+		error: null,
+		page: 1,
+		pageSize: 10,
+		total: 0,
+	}),
+	actions: {
+		async fetchBilling(filters = {}) {
+			const auth = useAuthStore();
+			if (auth.role !== 'patient') return;
+			this.loading = true;
+			this.error = null;
+			try {
+				const response = await patientApi.listBilling(auth.token, {
+					...filters,
+					page: filters.page || this.page,
+					pageSize: filters.pageSize || this.pageSize,
+					patientId: auth.userId,
+				});
+				this.invoices = response.billings || [];
+				this.payments = response.payments || [];
+				this.total = response.total || 0;
+				this.page = response.page || 1;
+				this.pageSize = response.pageSize || this.pageSize;
+				return response;
+			} catch (error) {
+				this.error = error.message;
+				throw error;
+			} finally {
+				this.loading = false;
+			}
+		},
+		async manageInvoice(invoiceId, payload) {
+			const auth = useAuthStore();
+			if (auth.role !== 'admin') return;
+			await adminApi.manageBilling(auth.token, invoiceId, payload);
+			await this.fetchBilling();
+		},
+	},
 });

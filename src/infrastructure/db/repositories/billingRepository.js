@@ -1,5 +1,9 @@
+import crypto from 'node:crypto';
 import { BillingRepositoryPort } from '../../../application/ports/repositories/billingRepositoryPort.js';
 import { Billing } from '../../../domain/entities/billing.js';
+
+const ensureId = (id) => id || crypto.randomUUID();
+const toDate = (value) => (value ? new Date(value) : null);
 
 const toEntity = (row) => {
   if (!row) return null;
@@ -7,11 +11,11 @@ const toEntity = (row) => {
     id: row.id,
     invoiceNumber: row.invoice_number,
     patientId: row.patient_id,
-    charges: row.charges,
+    charges: typeof row.charges === 'string' ? JSON.parse(row.charges) : row.charges,
     status: row.status,
-    dueDate: row.due_date,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    dueDate: row.due_date ? new Date(row.due_date) : null,
+    createdAt: toDate(row.created_at),
+    updatedAt: toDate(row.updated_at),
   });
 };
 
@@ -32,8 +36,14 @@ export class SqlBillingRepository extends BillingRepositoryPort {
   }
 
   async save(billing) {
-    if (billing.id) {
-      const { rows } = await this.pool.query(
+    const id = ensureId(billing.id);
+    const charges = Array.isArray(billing.charges) ? JSON.stringify(billing.charges) : billing.charges;
+    const status = billing.status ?? 'draft';
+    const dueDate = billing.dueDate ? new Date(billing.dueDate).toISOString() : null;
+
+    const existing = await this.findById(id);
+    if (existing) {
+      await this.pool.query(
         `UPDATE billings
            SET invoice_number = $1,
                patient_id = $2,
@@ -41,19 +51,17 @@ export class SqlBillingRepository extends BillingRepositoryPort {
                status = $4,
                due_date = $5,
                updated_at = now()
-         WHERE id = $6
-         RETURNING *`,
-        [billing.invoiceNumber, billing.patientId, billing.charges, billing.status, billing.dueDate ?? null, billing.id],
+         WHERE id = $6`,
+        [billing.invoiceNumber, billing.patientId, charges, status, dueDate, id],
       );
-      return toEntity(rows[0]);
+      return this.findById(id);
     }
 
-    const { rows } = await this.pool.query(
-      `INSERT INTO billings (invoice_number, patient_id, charges, status, due_date)
-       VALUES ($1,$2,$3,$4,$5)
-       RETURNING *`,
-      [billing.invoiceNumber, billing.patientId, billing.charges, billing.status ?? 'draft', billing.dueDate ?? null],
+    await this.pool.query(
+      `INSERT INTO billings (id, invoice_number, patient_id, charges, status, due_date)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [id, billing.invoiceNumber, billing.patientId, charges, status, dueDate],
     );
-    return toEntity(rows[0]);
+    return this.findById(id);
   }
 }

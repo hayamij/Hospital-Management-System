@@ -12,8 +12,21 @@ export class BrowsePublicInfoUseCase {
 		void input;
 
 		const services = await this.serviceCatalogRepository.listServices();
+		const insurancePlans =
+			typeof this.serviceCatalogRepository.listInsurancePlans === 'function'
+				? await this.serviceCatalogRepository.listInsurancePlans()
+				: [];
+		const bookingConstraints =
+			typeof this.serviceCatalogRepository.listBookingConstraints === 'function'
+				? await this.serviceCatalogRepository.listBookingConstraints()
+				: [];
 		const hospitalInfo = await this.settingsRepository.getSettings();
 
-		return new BrowsePublicInfoOutput({ services: services ?? [], hospitalInfo: hospitalInfo ?? {} });
+		return new BrowsePublicInfoOutput({
+			services: services ?? [],
+			insurancePlans: insurancePlans ?? [],
+			bookingConstraints: bookingConstraints ?? [],
+			hospitalInfo: hospitalInfo ?? {},
+		});
 	}
 }

@@ -421,3 +421,4 @@ FodyWeavers.xsd
 .docs/
 package-lock.json
 dist/
+.env

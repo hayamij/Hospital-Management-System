@@ -1,159 +1,133 @@
 <template>
-  <section class="page">
-    <header class="page__header">
-      <h1>Appointments</h1>
-      <small>Schedule, reschedule, cancel, and review</small>
-    </header>
+	<div class="page">
+		<header class="panel">
+			<h1>Appointments</h1>
+			<p>Request, schedule, reschedule, cancel and update appointment status.</p>
+			<div class="row">
+				<select v-model="filters.status" @change="refresh">
+					<option value="">All statuses</option>
+					<option value="scheduled">Scheduled</option>
+					<option value="completed">Completed</option>
+					<option value="cancelled">Cancelled</option>
+					<option value="no_show">No show</option>
+				</select>
+				<button type="button" @click="refresh">Refresh</button>
+			</div>
+		</header>
 
-    <ScheduleForm
-      v-model="scheduleForm"
-      :last-scheduled="lastScheduled"
-      :loading="loading"
-      @submit="onSchedule"
-    />
+		<div v-if="auth.role === 'patient'" class="panel">
+			<h2>Schedule new appointment</h2>
+			<form class="grid four" @submit.prevent="handleSchedule">
+				<input v-model="createForm.doctorId" required placeholder="Doctor ID" />
+				<input v-model="createForm.startAt" required type="datetime-local" />
+				<input v-model="createForm.endAt" required type="datetime-local" />
+				<input v-model="createForm.reason" required placeholder="Reason" />
+				<button type="submit" :disabled="appointments.loading">Schedule</button>
+			</form>
+		</div>
 
-    <div class="panel two-col">
-      <RescheduleForm v-model="rescheduleForm" :loading="loading" @submit="onReschedule" />
-      <CancelAction v-model="cancelId" :loading="loading" @submit="onCancel" />
-    </div>
+		<div class="panel">
+			<h2>Appointments list ({{ appointments.items.length }})</h2>
+			<div v-if="appointments.items.length === 0">No appointments found.</div>
+			<div class="list-grid">
+				<div
+					v-for="item in appointments.items"
+					:key="item.id || item.appointmentId"
+					class="item"
+				>
+					<div>
+						<p><strong>{{ item.reason || 'Appointment' }}</strong></p>
+						<p>{{ item.startAt }} -> {{ item.endAt }}</p>
+						<p>Status: {{ item.status }}</p>
+						<p>Doctor: {{ item.doctorId || item.doctor?.id || 'TBD' }}</p>
+					</div>
+					<div class="row">
+						<template v-if="auth.role === 'patient'">
+							<button type="button" @click="cancel(item)">Cancel</button>
+							<button type="button" @click="openReschedule(item)">Reschedule</button>
+						</template>
+						<template v-else-if="auth.role === 'doctor'">
+							<select v-model="item.statusUpdate" @change="updateStatus(item)">
+								<option disabled value="">Update</option>
+								<option value="completed">Completed</option>
+								<option value="no_show">No show</option>
+								<option value="cancelled">Cancelled</option>
+							</select>
+						</template>
+					</div>
+				</div>
+			</div>
+		</div>
 
-    <div class="panel two-col">
-      <DecisionForm v-model="decisionForm" :loading="loading" @submit="onDecision" />
-      <AppointmentFilters v-model="filter" @change="onFilterChange" />
-    </div>
+		<div v-if="showReschedule" class="panel">
+			<h2>Reschedule appointment</h2>
+			<form class="grid three" @submit.prevent="handleReschedule">
+				<input v-model="rescheduleForm.startAt" required type="datetime-local" />
+				<input v-model="rescheduleForm.endAt" required type="datetime-local" />
+				<div class="row">
+					<button type="submit" :disabled="appointments.loading">Update</button>
+					<button type="button" @click="showReschedule = null">Close</button>
+				</div>
+			</form>
+		</div>
 
-    <AppointmentTable :appointments="filteredAppointments" />
-  </section>
+		<p v-if="appointments.error" class="msg err">{{ appointments.error }}</p>
+	</div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue';
-import AppointmentFilters from '../components/appointments/AppointmentFilters.vue';
-import AppointmentTable from '../components/appointments/AppointmentTable.vue';
-import CancelAction from '../components/appointments/CancelAction.vue';
-import DecisionForm from '../components/appointments/DecisionForm.vue';
-import RescheduleForm from '../components/appointments/RescheduleForm.vue';
-import ScheduleForm from '../components/appointments/ScheduleForm.vue';
+import { onMounted, reactive, ref } from 'vue';
+import { useAuthStore } from '../stores/auth.js';
 import { useAppointmentsStore } from '../stores/appointments.js';
 
-const store = useAppointmentsStore();
+const auth = useAuthStore();
+const appointments = useAppointmentsStore();
+const filters = reactive({ status: '' });
 
-const scheduleForm = reactive({ patientId: 'pat-1', doctorId: 'doc-1', startAt: '', endAt: '', reason: '' });
-const rescheduleForm = reactive({ id: 'app-1', startAt: '', endAt: '' });
-const cancelId = ref('app-1');
-const decisionForm = reactive({ id: 'app-1', decision: 'approved' });
-const filter = reactive({ patientId: '', doctorId: '' });
-const lastScheduled = ref(null);
+const createForm = reactive({ doctorId: '', startAt: '', endAt: '', reason: '' });
+const rescheduleForm = reactive({ startAt: '', endAt: '' });
+const showReschedule = ref(null);
 
-const loading = computed(() => store.loading);
+const refresh = () => appointments.fetchAppointments({ status: filters.status });
 
-const loadAppointments = async () => {
-  await store.viewAppointments({ ...filter });
+onMounted(() => {
+	refresh();
+});
+
+const handleSchedule = async () => {
+	await appointments.schedule({ ...createForm });
+	Object.assign(createForm, { doctorId: '', startAt: '', endAt: '', reason: '' });
 };
 
-const onSchedule = async () => {
-  lastScheduled.value = await store.scheduleAppointment({
-    patientId: scheduleForm.patientId,
-    doctorId: scheduleForm.doctorId,
-    startAt: scheduleForm.startAt,
-    endAt: scheduleForm.endAt,
-    reason: scheduleForm.reason,
-  });
-  await loadAppointments();
+const openReschedule = (item) => {
+	showReschedule.value = item;
+	rescheduleForm.startAt = item.startAt;
+	rescheduleForm.endAt = item.endAt;
 };
 
-const onReschedule = async ({ id, startAt, endAt }) => {
-  await store.rescheduleAppointment(id, startAt, endAt);
-  await loadAppointments();
+const handleReschedule = async () => {
+	if (!showReschedule.value) return;
+	await appointments.reschedule(showReschedule.value.id || showReschedule.value.appointmentId, {
+		startAt: rescheduleForm.startAt,
+		endAt: rescheduleForm.endAt,
+	});
+	showReschedule.value = null;
 };
 
-const onCancel = async (id) => {
-  await store.cancelAppointment(id);
-  await loadAppointments();
+const cancel = async (item) => {
+	await appointments.cancel(item.id || item.appointmentId);
 };
 
-const onDecision = async ({ id, decision }) => {
-  await store.manageAppointmentDecision(id, decision);
+const updateStatus = async (item) => {
+	if (!item.statusUpdate) return;
+	await appointments.updateStatus(item.id || item.appointmentId, { status: item.statusUpdate });
+	item.statusUpdate = '';
 };
-
-const onFilterChange = async () => {
-  await loadAppointments();
-};
-
-const filteredAppointments = computed(() => store.items.filter((a) => {
-  if (filter.patientId && a.patientId !== filter.patientId) return false;
-  if (filter.doctorId && a.doctorId !== filter.doctorId) return false;
-  return true;
-}));
-
-watch(filter, onFilterChange, { deep: true });
-onMounted(loadAppointments);
 </script>
 
-<style>
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.page__header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.panel {
-  padding: 1rem;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-}
-
-.two-col {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-}
-
-.form {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.form--inline {
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-}
-
-input,
-select,
-button {
-  padding: 0.45rem 0.6rem;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-}
-
-button {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-}
-
-button.danger {
-  background: #dc2626;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: 0.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  text-align: left;
-}
+<style scoped>
+.four { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.three { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.item { display: grid; gap: 14px; grid-template-columns: 1fr auto; }
+@media (max-width: 800px) { .item { grid-template-columns: 1fr; } }
 </style>

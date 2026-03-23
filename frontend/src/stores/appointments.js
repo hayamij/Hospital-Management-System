@@ -1,97 +1,78 @@
 import { defineStore } from 'pinia';
-import * as api from '../services/api.js';
+import { patientApi, doctorApi, adminApi } from '../services/api.js';
+import { useAuthStore } from './auth.js';
 
-// Appointments domain store: isolates appointment workflows from UI components
 export const useAppointmentsStore = defineStore('appointments', {
-  state: () => ({
-    items: [],
-    loading: false,
-    error: null,
-  }),
-  actions: {
-    async scheduleAppointment(input) {
-      this.loading = true;
-      this.error = null;
-      try {
-        const res = await api.scheduleAppointment(input);
-        this.items.push({
-          id: res.appointmentId,
-          patientId: input.patientId,
-          doctorId: input.doctorId,
-          startAt: res.startAt ?? input.startAt,
-          endAt: res.endAt ?? input.endAt,
-          status: res.status ?? 'scheduled',
-        });
-        return res;
-      } catch (err) {
-        this.error = err;
-        throw err;
-      } finally {
-        this.loading = false;
-      }
-    },
-    async rescheduleAppointment(appointmentId, startAt, endAt) {
-      this.loading = true;
-      this.error = null;
-      try {
-        const res = await api.rescheduleAppointment(appointmentId, { startAt, endAt });
-        const found = this.items.find((a) => a.id === appointmentId);
-        if (found) {
-          found.startAt = res.startAt ?? startAt;
-          found.endAt = res.endAt ?? endAt;
-          if (res.status) found.status = res.status;
-        }
-        return res;
-      } catch (err) {
-        this.error = err;
-        throw err;
-      } finally {
-        this.loading = false;
-      }
-    },
-    async cancelAppointment(appointmentId, patientId) {
-      this.loading = true;
-      this.error = null;
-      try {
-        const res = await api.cancelAppointment(appointmentId, { patientId });
-        const found = this.items.find((a) => a.id === appointmentId);
-        if (found) found.status = res.status ?? 'cancelled';
-        return res;
-      } catch (err) {
-        this.error = err;
-        throw err;
-      } finally {
-        this.loading = false;
-      }
-    },
-    async manageAppointmentDecision(appointmentId, decision, doctorId) {
-      this.loading = true;
-      this.error = null;
-      try {
-        const res = await api.decideAppointment(appointmentId, { decision, doctorId });
-        // Refresh list after decision
-        await this.viewAppointments({ doctorId });
-        return res;
-      } catch (err) {
-        this.error = err;
-        throw err;
-      } finally {
-        this.loading = false;
-      }
-    },
-    async viewAppointments(filter = {}) {
-      this.loading = true;
-      this.error = null;
-      try {
-        const res = await api.viewAppointments(filter);
-        this.items = res?.appointments ?? [];
-        return res;
-      } catch (err) {
-        this.error = err;
-        throw err;
-      } finally {
-        this.loading = false;
-      }
-    },
-  },
+	state: () => ({
+		items: [],
+		page: 1,
+		pageSize: 10,
+		total: 0,
+		loading: false,
+		error: null,
+	}),
+	actions: {
+		async fetchAppointments(filters = {}) {
+			const auth = useAuthStore();
+			this.loading = true;
+			this.error = null;
+			try {
+				let response;
+				if (auth.role === 'patient') {
+					response = await patientApi.listAppointments(auth.token, {
+						...filters,
+						page: filters.page || this.page,
+						pageSize: filters.pageSize || this.pageSize,
+						patientId: auth.userId,
+					});
+					this.items = response.appointments || [];
+					this.total = response.total || 0;
+					this.page = response.page || 1;
+					this.pageSize = response.pageSize || this.pageSize;
+				} else if (auth.role === 'doctor') {
+					response = await doctorApi.getSchedule(auth.token, filters);
+					this.items = response.appointments || [];
+					this.total = response.total || 0;
+					this.page = response.page || 1;
+					this.pageSize = response.pageSize || this.pageSize;
+				} else if (auth.role === 'admin') {
+					// Admin has override endpoint but no dedicated list; keep current list untouched
+					this.items = this.items;
+				}
+				return response;
+			} catch (error) {
+				this.error = error.message;
+				throw error;
+			} finally {
+				this.loading = false;
+			}
+		},
+		async schedule(payload) {
+			const auth = useAuthStore();
+			if (auth.role !== 'patient') return;
+			await patientApi.scheduleAppointment(auth.token, { ...payload, patientId: auth.userId });
+			await this.fetchAppointments();
+		},
+		async reschedule(appointmentId, payload) {
+			const auth = useAuthStore();
+			if (auth.role !== 'patient') return;
+			await patientApi.rescheduleAppointment(auth.token, appointmentId, { ...payload, patientId: auth.userId });
+			await this.fetchAppointments();
+		},
+		async cancel(appointmentId) {
+			const auth = useAuthStore();
+			if (auth.role !== 'patient') return;
+			await patientApi.cancelAppointment(auth.token, appointmentId);
+			await this.fetchAppointments();
+		},
+		async updateStatus(appointmentId, payload) {
+			const auth = useAuthStore();
+			if (auth.role === 'doctor') {
+				await doctorApi.updateAppointmentStatus(auth.token, appointmentId, { ...payload, doctorId: auth.userId });
+			} else if (auth.role === 'admin') {
+				await adminApi.overrideAppointment(auth.token, appointmentId, payload);
+			}
+			await this.fetchAppointments();
+		},
+	},
 });

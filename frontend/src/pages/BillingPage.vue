@@ -1,149 +1,67 @@
 <template>
-  <section class="page">
-    <header class="page__header">
-      <h1>Billing</h1>
-      <small>Issue invoices, mark payments, download prescriptions</small>
-    </header>
+	<div class="page">
+		<header class="panel">
+			<h1>Billing</h1>
+			<p>View billing records and execute billing actions.</p>
+			<button type="button" @click="refresh">Refresh</button>
+		</header>
 
-    <div class="panel two-col">
-      <BillingForm
-        v-model="invoiceForm"
-        :last-invoice="lastInvoice"
-        :loading="loading"
-        @submit="onIssue"
-        @mark="onMarkPaid"
-        @void="onVoid"
-      />
-      <BillingTable :billing="billing" v-model:patientId="billingPatientId" @change="fetchBilling" />
-    </div>
+		<div v-if="auth.role === 'patient'" class="panel">
+			<h2>Invoices</h2>
+			<div v-if="billing.invoices.length === 0">No invoices yet.</div>
+			<div class="grid two-col">
+				<div v-for="invoice in billing.invoices" :key="invoice.id || invoice.invoiceNumber" class="item">
+					<p><strong>Invoice {{ invoice.invoiceNumber || invoice.id }}</strong></p>
+					<p>Status: {{ invoice.status }}</p>
+					<p>Total: {{ invoice.total || invoice.amount }}</p>
+					<p>Due: {{ invoice.dueDate || '-' }}</p>
+				</div>
+			</div>
+		</div>
 
-    <div class="panel two-col">
-      <PrescriptionDownload v-model="prescriptionId" :link="prescriptionLink" :loading="loading" @submit="onDownload" />
-      <ServiceList :services="services" />
-    </div>
-  </section>
+		<div v-if="auth.role === 'admin'" class="panel">
+			<h2>Admin billing actions</h2>
+			<form class="grid action-grid" @submit.prevent="handleAdminAction">
+				<input v-model="adminForm.invoiceId" required placeholder="Invoice ID" />
+				<select v-model="adminForm.action" required>
+					<option value="issue">Issue</option>
+					<option value="markPaid">Mark paid</option>
+					<option value="void">Void</option>
+				</select>
+				<input v-model="adminForm.dueDate" type="date" />
+				<button type="submit">Apply</button>
+			</form>
+		</div>
+
+		<p v-if="billing.error" class="msg err">{{ billing.error }}</p>
+	</div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue';
-import BillingForm from '../components/billing/BillingForm.vue';
-import BillingTable from '../components/billing/BillingTable.vue';
-import PrescriptionDownload from '../components/billing/PrescriptionDownload.vue';
-import ServiceList from '../components/billing/ServiceList.vue';
+import { reactive, onMounted } from 'vue';
+import { useAuthStore } from '../stores/auth.js';
 import { useBillingStore } from '../stores/billing.js';
-import { usePatientsStore } from '../stores/patients.js';
 
-const billingStore = useBillingStore();
-const patientsStore = usePatientsStore();
+const auth = useAuthStore();
+const billing = useBillingStore();
 
-const invoiceForm = reactive({ id: '', patientId: 'pat-1', total: 0, dueDate: '' });
-const billingPatientId = ref('pat-1');
-const prescriptionId = ref('rx-1');
-const lastInvoice = ref(null);
-const prescriptionLink = ref(null);
+const adminForm = reactive({ invoiceId: '', action: 'issue', dueDate: '' });
 
-const loading = computed(() => billingStore.loading);
-const billing = computed(() => billingStore.items);
-const services = computed(() => patientsStore.services);
-
-const fetchBilling = async () => { await billingStore.viewBillingAndPayments(billingPatientId.value); };
-
-const onIssue = async (payload) => {
-  lastInvoice.value = await billingStore.manageBilling({ invoiceId: payload.id || 'new', action: 'issue', dueDate: payload.dueDate, patientId: payload.patientId });
+const refresh = () => {
+	if (auth.role === 'patient') {
+		billing.fetchBilling();
+	}
 };
 
-const onMarkPaid = async (invoiceId) => {
-  lastInvoice.value = await billingStore.manageBilling({ invoiceId, action: 'markPaid', patientId: billingPatientId.value });
+onMounted(refresh);
+
+const handleAdminAction = async () => {
+	await billing.manageInvoice(adminForm.invoiceId, { action: adminForm.action, dueDate: adminForm.dueDate });
+	Object.assign(adminForm, { invoiceId: '', action: 'issue', dueDate: '' });
 };
-
-const onVoid = async (invoiceId) => {
-  lastInvoice.value = await billingStore.manageBilling({ invoiceId, action: 'void', patientId: billingPatientId.value });
-};
-
-const onDownload = async () => {
-  prescriptionLink.value = await billingStore.downloadPrescription(prescriptionId.value, billingPatientId.value);
-};
-
-onMounted(async () => {
-  await fetchBilling();
-  await patientsStore.browsePublicInfo();
-});
-
-watch(billingPatientId, fetchBilling);
 </script>
 
 <style scoped>
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.page__header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.panel {
-  padding: 1rem;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-}
-
-.two-col {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1rem;
-}
-
-.form {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.form--inline {
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-input,
-button {
-  padding: 0.45rem 0.6rem;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-}
-
-button {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-}
-
-button.danger {
-  background: #dc2626;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: 0.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  text-align: left;
-}
-
-.list {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0;
-  list-style: none;
-}
+.two-col { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.action-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 </style>
