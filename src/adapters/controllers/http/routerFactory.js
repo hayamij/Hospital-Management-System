@@ -107,6 +107,9 @@ export function createHttpRouter(deps) {
   router.post('/admin/login', adminAccess.adminLogin);
 
   // Admin users & roles
+  router.get('/admin/users', requireRole(['admin']), adminUsers.listUsers);
+  router.post('/admin/users', requireRole(['admin']), adminUsers.createUser);
+  router.put('/admin/users/:userId', requireRole(['admin']), adminUsers.updateUser);
   router.post('/admin/users/:userId/roles', requireRole(['admin']), adminUsers.assignRoles);
   router.patch('/admin/users/:userId/status', requireRole(['admin']), adminUsers.manageUserStatus);
 

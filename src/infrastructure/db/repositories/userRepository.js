@@ -25,6 +25,51 @@ export class SqlUserRepository extends UserRepositoryPort {
     this.pool = pool;
   }
 
+  async list({ page = 1, pageSize = 10, query = '', role } = {}) {
+    const safePage = Math.max(1, Number(page) || 1);
+    const safePageSize = Math.min(100, Math.max(1, Number(pageSize) || 10));
+    const offset = (safePage - 1) * safePageSize;
+
+    const filters = [];
+    const params = [];
+
+    if (query) {
+      params.push(`%${query}%`);
+      const idx = params.length;
+      filters.push(`(email ILIKE $${idx} OR COALESCE(full_name, '') ILIKE $${idx} OR id ILIKE $${idx})`);
+    }
+
+    if (role) {
+      params.push(role);
+      filters.push(`role = $${params.length}`);
+    }
+
+    const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+
+    const countQuery = `SELECT COUNT(*)::int AS total FROM users ${whereClause}`;
+    const countResult = await this.pool.query(countQuery, params);
+    const total = countResult.rows?.[0]?.total ?? 0;
+
+    params.push(safePageSize, offset);
+    const limitIdx = params.length - 1;
+    const offsetIdx = params.length;
+
+    const listQuery = `
+      SELECT *
+      FROM users
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}`;
+
+    const { rows } = await this.pool.query(listQuery, params);
+    return {
+      page: safePage,
+      pageSize: safePageSize,
+      total,
+      items: rows.map(toEntity),
+    };
+  }
+
   async findByEmail(email) {
     const { rows } = await this.pool.query('SELECT * FROM users WHERE email = $1 LIMIT 1', [email]);
     return toEntity(rows[0]);

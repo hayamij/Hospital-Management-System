@@ -42,6 +42,9 @@ const baseResults = {
 
   // Admin
   adminLoginUseCase: { userId: 'admin-1', token: 'token-admin', role: 'admin' },
+  listUsersUseCase: { page: 1, pageSize: 10, total: 0, users: [] },
+  createUserUseCase: { userId: 'user-3', fullName: 'User 3', email: 'user3@example.com', role: 'patient', status: 'active' },
+  updateUserUseCase: { userId: 'user-2', fullName: 'Updated User', email: 'updated@example.com', role: 'patient', status: 'active' },
   assignRolesUseCase: { userId: 'user-2', roles: ['admin'] },
   manageUsersUseCase: { userId: 'user-2', action: 'disabled' },
   manageDoctorSchedulesUseCase: { doctorId: 'doc-1', slotsPerDay: 4 },

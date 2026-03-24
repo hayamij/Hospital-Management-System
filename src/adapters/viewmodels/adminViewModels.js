@@ -19,6 +19,37 @@ export class AssignRolesViewModel {
   }
 }
 
+export class ListUsersViewModel {
+  constructor(output) {
+    this.page = output.page;
+    this.pageSize = output.pageSize;
+    this.total = output.total;
+    this.users = output.users;
+  }
+}
+
+export class CreateUserViewModel {
+  constructor(output) {
+    this.userId = output.userId;
+    this.fullName = output.fullName;
+    this.email = output.email;
+    this.role = output.role;
+    this.status = output.status;
+    this.createdAt = output.createdAt;
+  }
+}
+
+export class UpdateUserViewModel {
+  constructor(output) {
+    this.userId = output.userId;
+    this.fullName = output.fullName;
+    this.email = output.email;
+    this.role = output.role;
+    this.status = output.status;
+    this.updatedAt = output.updatedAt;
+  }
+}
+
 export class CreateServiceCatalogItemViewModel {
   constructor(output) {
     this.itemId = output.itemId;

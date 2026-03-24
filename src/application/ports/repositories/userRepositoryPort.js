@@ -1,5 +1,9 @@
 // Port for user persistence operations.
 export class UserRepositoryPort {
+	async list({ page, pageSize, query, role } = {}) {
+		throw new Error('UserRepositoryPort.list not implemented');
+	}
+
 	async findByEmail(email) {
 		throw new Error('UserRepositoryPort.findByEmail not implemented');
 	}

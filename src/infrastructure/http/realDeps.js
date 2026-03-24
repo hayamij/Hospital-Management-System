@@ -48,6 +48,9 @@ import { SendDoctorMessageUseCase } from '../../application/use-cases/doctor/sen
 import { AdminLoginUseCase } from '../../application/use-cases/admin/adminLogin.usecase.js';
 import { AssignRolesUseCase } from '../../application/use-cases/admin/assignRoles.usecase.js';
 import { ManageUsersUseCase } from '../../application/use-cases/admin/manageUsers.usecase.js';
+import { ListUsersUseCase } from '../../application/use-cases/admin/listUsers.usecase.js';
+import { CreateUserUseCase } from '../../application/use-cases/admin/createUser.usecase.js';
+import { UpdateUserUseCase } from '../../application/use-cases/admin/updateUser.usecase.js';
 import { ManageDoctorSchedulesUseCase } from '../../application/use-cases/admin/manageDoctorSchedules.usecase.js';
 import { OverrideAppointmentUseCase } from '../../application/use-cases/admin/overrideAppointment.usecase.js';
 import { ManageBillingUseCase } from '../../application/use-cases/admin/manageBilling.usecase.js';
@@ -547,6 +550,9 @@ export function createRealDeps() {
   const adminLoginClass = new AdminLoginUseCase({ userRepository, authService });
   const assignRolesClass = new AssignRolesUseCase({ userRepository });
   const manageUsersClass = new ManageUsersUseCase({ userRepository });
+  const listUsersClass = new ListUsersUseCase({ userRepository });
+  const createUserClass = new CreateUserUseCase({ userRepository, authService });
+  const updateUserClass = new UpdateUserUseCase({ userRepository });
   const manageDoctorSchedulesClass = new ManageDoctorSchedulesUseCase({ doctorRepository, userRepository });
   const overrideAppointmentClass = new OverrideAppointmentUseCase({ appointmentRepository, doctorRepository, userRepository });
   const manageBillingClass = new ManageBillingUseCase({ billingRepository, userRepository });
@@ -622,6 +628,18 @@ export function createRealDeps() {
       return { ...input, action };
     }
   );
+  const listUsersViaClassUseCase = adaptUseCase(
+    listUsersClass,
+    (input) => ({
+      adminId: input?.adminId,
+      query: input?.query ?? input?.q,
+      type: input?.type,
+      page: input?.page,
+      pageSize: input?.pageSize,
+    })
+  );
+  const createUserViaClassUseCase = adaptUseCase(createUserClass);
+  const updateUserViaClassUseCase = adaptUseCase(updateUserClass);
   const overrideAppointmentViaClassUseCase = adaptUseCase(
     overrideAppointmentClass,
     (input) => {
@@ -721,6 +739,9 @@ export function createRealDeps() {
 
     // Admin
     adminLoginUseCase: adminLoginViaClassUseCase,
+    listUsersUseCase: listUsersViaClassUseCase,
+    createUserUseCase: createUserViaClassUseCase,
+    updateUserUseCase: updateUserViaClassUseCase,
     assignRolesUseCase: adaptUseCase(assignRolesClass, undefined, (result) => ({ ...result, roles: result.role ? [result.role] : [] })),
     manageUserStatusUseCase: manageUserStatusViaClassUseCase,
     setDoctorSlotsUseCase: manageDoctorSchedulesClass,
