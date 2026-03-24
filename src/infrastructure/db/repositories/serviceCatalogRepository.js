@@ -84,4 +84,20 @@ export class SqlServiceCatalogRepository extends ServiceCatalogRepositoryPort {
   async findServiceById(serviceId) {
     return this.findById(serviceId);
   }
+
+  async findInsurancePlanById(planId) {
+    const { rows } = await this.pool.query(
+      'SELECT * FROM insurance_plans WHERE id = $1 LIMIT 1',
+      [planId],
+    );
+    return toInsurancePlanEntity(rows[0]);
+  }
+
+  async findBookingConstraintById(constraintId) {
+    const { rows } = await this.pool.query(
+      'SELECT * FROM booking_constraints WHERE id = $1 LIMIT 1',
+      [constraintId],
+    );
+    return toBookingConstraintEntity(rows[0]);
+  }
 }
