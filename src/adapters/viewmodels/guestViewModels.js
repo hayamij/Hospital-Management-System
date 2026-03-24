@@ -36,3 +36,10 @@ export class ViewPublicServiceDetailViewModel {
     this.service = output?.service ?? null;
   }
 }
+
+export class ViewPublicCardDetailViewModel {
+  constructor(output) {
+    this.category = output?.category;
+    this.item = output?.item ?? null;
+  }
+}
