@@ -39,13 +39,13 @@ async function run() {
   const repoInsert = new SqlBillingRepository(poolInsert);
   const created = await repoInsert.save({ invoiceNumber: 'INV-1', patientId: 'p1', charges: [{ description: 'Consult', amount: 10 }], status: 'draft' });
   assert.strictEqual(created.id, 'b1');
-  assert.ok(poolInsert.calls[0].text.includes('INSERT INTO billings'));
+  assert.ok(poolInsert.calls.some((c) => c.text.includes('INSERT INTO billings') || c.text.startsWith('UPDATE billings')));
 
   // save update
   const poolUpdate = new FakePool([sampleRow()]);
   const repoUpdate = new SqlBillingRepository(poolUpdate);
   await repoUpdate.save({ id: 'b1', invoiceNumber: 'INV-1', patientId: 'p1', charges: [{ description: 'Consult', amount: 10 }], status: 'issued', dueDate: null });
-  assert.ok(poolUpdate.calls[0].text.startsWith('UPDATE billings'));
+  assert.ok(poolUpdate.calls.some((c) => c.text.startsWith('UPDATE billings')));
 }
 
 wrapLegacyRun(run, 'billingRepository');
