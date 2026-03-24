@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { guestApi, patientApi } from '../services/api.js';
 import { useAuthStore } from './auth.js';
 import { useAppointmentsStore } from './appointments.js';
+import { normalizeDoctor } from '../services/mappers.js';
 
 const toIsoTime = (value) => {
 	if (!value) return null;
@@ -9,12 +10,6 @@ const toIsoTime = (value) => {
 	if (Number.isNaN(t.getTime())) return null;
 	return t.toISOString();
 };
-
-const toDoctorModel = (source, index = 0) => ({
-	id: source?.id || source?.doctorId || `doctor-${index + 1}`,
-	name: source?.fullName || source?.name || `Doctor ${index + 1}`,
-	specialty: source?.specialization || source?.specialty || 'General',
-});
 
 const toSlotModel = (source, index = 0) => {
 	const start = toIsoTime(source?.start || source?.startAt || source?.from);
@@ -126,7 +121,7 @@ export const useBookingStore = defineStore('booking', {
 			try {
 				const result = await patientApi.searchDoctors({ page: 1, pageSize: 100 });
 				const list = Array.isArray(result?.doctors) ? result.doctors : [];
-				const normalized = list.map(toDoctorModel);
+				const normalized = list.map(normalizeDoctor);
 				this.doctors = normalized;
 				this.specialties = Array.from(new Set(normalized.map((d) => d.specialty))).sort((a, b) => a.localeCompare(b));
 			} catch (error) {

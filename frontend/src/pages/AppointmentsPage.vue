@@ -47,6 +47,11 @@
 							<button type="button" @click="openReschedule(item)">Reschedule</button>
 						</template>
 						<template v-else-if="auth.role === 'doctor'">
+							<select v-model="item.decisionUpdate" @change="updateDecision(item)">
+								<option disabled value="">Decision</option>
+								<option value="accepted">Accept</option>
+								<option value="rejected">Reject</option>
+							</select>
 							<select v-model="item.statusUpdate" @change="updateStatus(item)">
 								<option disabled value="">Update</option>
 								<option value="completed">Completed</option>
@@ -122,6 +127,12 @@ const updateStatus = async (item) => {
 	if (!item.statusUpdate) return;
 	await appointments.updateStatus(item.id || item.appointmentId, { status: item.statusUpdate });
 	item.statusUpdate = '';
+};
+
+const updateDecision = async (item) => {
+	if (!item.decisionUpdate) return;
+	await appointments.updateStatus(item.id || item.appointmentId, { decision: item.decisionUpdate });
+	item.decisionUpdate = '';
 };
 </script>
 

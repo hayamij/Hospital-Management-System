@@ -68,7 +68,11 @@ export const useAppointmentsStore = defineStore('appointments', {
 		async updateStatus(appointmentId, payload) {
 			const auth = useAuthStore();
 			if (auth.role === 'doctor') {
-				await doctorApi.updateAppointmentStatus(auth.token, appointmentId, { ...payload, doctorId: auth.userId });
+				if (payload?.decision) {
+					await doctorApi.updateAppointmentDecision(auth.token, appointmentId, { ...payload, doctorId: auth.userId });
+				} else {
+					await doctorApi.updateAppointmentStatus(auth.token, appointmentId, { ...payload, doctorId: auth.userId });
+				}
 			} else if (auth.role === 'admin') {
 				await adminApi.overrideAppointment(auth.token, appointmentId, payload);
 			}

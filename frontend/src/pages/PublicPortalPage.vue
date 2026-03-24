@@ -46,6 +46,16 @@
       </article>
 
       <article class="panel">
+        <h2>Start registration</h2>
+        <form class="grid" @submit.prevent="startRegistration">
+          <input v-model="registration.fullName" required placeholder="Full name" />
+          <input v-model="registration.email" type="email" required placeholder="Email" />
+          <input v-model="registration.phone" required placeholder="Phone" />
+          <button type="submit">Start registration</button>
+        </form>
+      </article>
+
+      <article class="panel">
         <h2>Contact clinic</h2>
         <form class="grid" @submit.prevent="sendContact">
           <input v-model="contact.fullName" required placeholder="Full name" />
@@ -74,6 +84,7 @@ const error = ref('');
 
 const search = reactive({ query: '', specialty: '' });
 const slotForm = reactive({ doctorId: '', from: '', to: '' });
+const registration = reactive({ fullName: '', email: '', phone: '' });
 const contact = reactive({ fullName: '', phone: '', email: '', message: '' });
 
 const pretty = (value) => (value ? JSON.stringify(value, null, 2) : 'No data loaded yet.');
@@ -92,6 +103,13 @@ const searchDoctors = async () => {
 const loadSlots = async () => {
   error.value = '';
   slots.value = await guestApi.availableSlots(slotForm.doctorId, { from: slotForm.from, to: slotForm.to });
+};
+
+const startRegistration = async () => {
+  error.value = '';
+  status.value = '';
+  await guestApi.startRegistration(registration);
+  status.value = 'Registration request received successfully.';
 };
 
 const sendContact = async () => {

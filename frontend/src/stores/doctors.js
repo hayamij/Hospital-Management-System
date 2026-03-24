@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { patientApi, guestApi, adminApi } from '../services/api.js';
 import { useAuthStore } from './auth.js';
+import { normalizeDoctor } from '../services/mappers.js';
 
 export const useDoctorsStore = defineStore('doctors', {
 	state: () => ({
@@ -19,7 +20,7 @@ export const useDoctorsStore = defineStore('doctors', {
 				const response = auth.isAuthenticated
 					? await patientApi.searchDoctors(query)
 					: await guestApi.searchDoctors(query);
-				this.list = response.doctors || [];
+				this.list = Array.isArray(response?.doctors) ? response.doctors.map(normalizeDoctor) : [];
 				this.total = response.total || 0;
 				return response;
 			} catch (error) {

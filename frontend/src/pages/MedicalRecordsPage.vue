@@ -38,9 +38,12 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue';
 import { useRecordsStore } from '../stores/records.js';
+import { useAuthStore } from '../stores/auth.js';
+import { patientApi } from '../services/api.js';
 import DataTable from '../components/shared/DataTable.vue';
 
 const records = useRecordsStore();
+const auth = useAuthStore();
 const selectedRecord = ref(null);
 
 const columns = [
@@ -85,7 +88,24 @@ const viewDetail = (row) => {
 const downloadPrescription = async (row) => {
 	const id = row.id;
 	if (!id) return;
-	window.open(`/api/patients/prescriptions/${id}/download`, '_blank', 'noopener,noreferrer');
+	try {
+		const response = await patientApi.downloadPrescription(auth.token, id);
+		const content = typeof response?.file === 'string' ? response.file : JSON.stringify(response?.file ?? {}, null, 2);
+		const filename = response?.filename || `${id}.json`;
+		const contentType = response?.contentType || 'application/json';
+
+		const blob = new Blob([content], { type: contentType });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = filename;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+	} catch (error) {
+		records.error = error?.message || 'Khong the tai don thuoc.';
+	}
 };
 </script>
 

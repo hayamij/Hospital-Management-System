@@ -6,3 +6,4 @@ export * from './dashboard.js';
 export * from './doctors.js';
 export * from './patients.js';
 export * from './records.js';
+export * from './adminUsers.js';

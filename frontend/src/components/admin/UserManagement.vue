@@ -14,17 +14,19 @@
         <option value="all">Tat ca nhom</option>
         <option value="doctor">Bac si</option>
         <option value="patient">Benh nhan</option>
+        <option value="admin">Admin</option>
       </select>
       <select v-model.number="pageSize">
         <option :value="5">5 / trang</option>
         <option :value="10">10 / trang</option>
         <option :value="20">20 / trang</option>
       </select>
+      <button type="button" @click="refresh">Tim</button>
     </div>
 
     <DataTable
       :columns="columns"
-      :rows="paginatedRows"
+      :rows="rows"
       row-key="id"
       empty-text="Khong co nguoi dung phu hop dieu kien tim kiem."
     >
@@ -42,8 +44,9 @@
       <button type="button" @click="nextPage" :disabled="page >= totalPages">Sau</button>
     </div>
 
+    <p v-if="store.loading" class="msg">Dang tai danh sach...</p>
     <p v-if="status" class="msg ok">{{ status }}</p>
-    <p v-if="error" class="msg err">{{ error }}</p>
+    <p v-if="error || store.error" class="msg err">{{ error || store.error }}</p>
 
     <div v-if="modalOpen" class="modal-overlay" @click.self="closeModal">
       <div class="modal-card">
@@ -91,11 +94,18 @@
               <option value="active">active</option>
               <option value="inactive">inactive</option>
               <option value="disabled">disabled</option>
+              <option value="verified">verified</option>
+              <option value="pending">pending</option>
             </select>
           </label>
 
+          <label v-if="modalMode === 'create'" class="field">
+            <span>Mat khau tam (tuy chon)</span>
+            <input v-model.trim="form.password" type="password" placeholder="De trong neu chua cap" />
+          </label>
+
           <div class="row modal-actions">
-            <button type="submit" :disabled="saving">{{ saving ? 'Dang luu...' : 'Luu' }}</button>
+            <button type="submit" :disabled="store.saving">{{ store.saving ? 'Dang luu...' : 'Luu' }}</button>
             <button type="button" @click="closeModal">Huy</button>
           </div>
         </form>
@@ -107,10 +117,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import DataTable from '../shared/DataTable.vue';
-import { adminApi, patientApi } from '../../services/api.js';
-import { useAuthStore } from '../../stores/auth.js';
-
-const auth = useAuthStore();
+import { useAdminUsersStore } from '../../stores/adminUsers.js';
 
 const columns = [
   { key: 'id', label: 'ID', width: '140px' },
@@ -122,7 +129,7 @@ const columns = [
   { key: 'actions', label: 'Thao tac', width: '120px', align: 'center' },
 ];
 
-const users = ref([]);
+const store = useAdminUsersStore();
 const searchText = ref('');
 const typeFilter = ref('all');
 const page = ref(1);
@@ -130,7 +137,6 @@ const pageSize = ref(10);
 
 const status = ref('');
 const error = ref('');
-const saving = ref(false);
 
 const modalOpen = ref(false);
 const modalMode = ref('create');
@@ -140,44 +146,41 @@ const form = reactive({
   id: '',
   name: '',
   email: '',
-  type: 'doctor',
+  type: 'patient',
   role: 'doctor',
   status: 'active',
+  password: '',
 });
 
-const fallbackUsers = [
-  { id: 'doc-1', name: 'Dr. Demo', email: 'doc.demo@example.com', type: 'doctor', role: 'doctor', status: 'active' },
-  { id: 'doc-2', name: 'Dr. Alice', email: 'alice@example.com', type: 'doctor', role: 'doctor', status: 'active' },
-  { id: 'pat-1', name: 'Tran Van B', email: 'patient1@example.com', type: 'patient', role: 'patient', status: 'active' },
-  { id: 'pat-2', name: 'Le Thi C', email: 'patient2@example.com', type: 'patient', role: 'patient', status: 'inactive' },
-];
+const rows = computed(() =>
+  store.users.map((item) => ({
+    id: item.id,
+    name: item.name,
+    email: item.email,
+    type: item.type,
+    role: item.role,
+    status: item.status,
+  }))
+);
 
-const filteredRows = computed(() => {
-  const keyword = searchText.value.trim().toLowerCase();
+const totalPages = computed(() => Math.max(1, Math.ceil((store.total || 0) / pageSize.value)));
 
-  return users.value.filter((item) => {
-    const byType = typeFilter.value === 'all' || item.type === typeFilter.value;
-    if (!byType) return false;
+const syncRoleFromType = (type) => {
+  if (type === 'doctor') return 'doctor';
+  if (type === 'admin') return 'admin';
+  return 'patient';
+};
 
-    if (!keyword) return true;
-    return (
-      item.id.toLowerCase().includes(keyword) ||
-      item.name.toLowerCase().includes(keyword) ||
-      item.email.toLowerCase().includes(keyword)
-    );
-  });
-});
-
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredRows.value.length / pageSize.value)));
-
-const paginatedRows = computed(() => {
-  const start = (page.value - 1) * pageSize.value;
-  const end = start + pageSize.value;
-  return filteredRows.value.slice(start, end);
-});
+watch(
+  () => form.type,
+  (value) => {
+    form.role = syncRoleFromType(value);
+  }
+);
 
 watch([searchText, typeFilter, pageSize], () => {
   page.value = 1;
+  refresh();
 });
 
 watch(totalPages, (val) => {
@@ -200,9 +203,10 @@ const resetForm = () => {
   form.id = '';
   form.name = '';
   form.email = '';
-  form.type = 'doctor';
-  form.role = 'doctor';
+  form.type = 'patient';
+  form.role = 'patient';
   form.status = 'active';
+  form.password = '';
   submitted.value = false;
 };
 
@@ -229,15 +233,24 @@ const openEditModal = (row) => {
   form.id = row.id;
   form.name = row.name;
   form.email = row.email;
-  form.type = row.type;
+  form.type = row.type || (row.role === 'doctor' ? 'doctor' : row.role === 'admin' ? 'admin' : 'patient');
   form.role = row.role;
   form.status = row.status;
+  form.password = '';
 };
 
-const toStatusAction = (s) => {
-  if (s === 'active') return 'activate';
-  if (s === 'inactive') return 'deactivate';
-  return 'disable';
+const refresh = async () => {
+  error.value = '';
+  try {
+    await store.fetchUsers({
+      query: searchText.value,
+      type: typeFilter.value === 'all' ? undefined : typeFilter.value,
+      page: page.value,
+      pageSize: pageSize.value,
+    });
+  } catch (e) {
+    error.value = e?.message || 'Khong the tai danh sach nguoi dung.';
+  }
 };
 
 const saveUser = async () => {
@@ -249,83 +262,48 @@ const saveUser = async () => {
     return;
   }
 
-  saving.value = true;
   try {
     if (modalMode.value === 'create') {
-      users.value.unshift({
-        id: form.id,
-        name: form.name,
+      await store.createUser({
+        fullName: form.name,
         email: form.email,
-        type: form.type,
+        role: form.role,
+        status: form.status,
+        password: form.password || undefined,
+      });
+      status.value = 'Da them nguoi dung moi.';
+    } else {
+      await store.updateUser(form.id, {
+        fullName: form.name,
+        email: form.email,
         role: form.role,
         status: form.status,
       });
-      status.value = 'Da them nguoi dung moi (frontend local).';
-    } else {
-      const idx = users.value.findIndex((u) => u.id === form.id);
-      if (idx !== -1) {
-        users.value[idx] = {
-          ...users.value[idx],
-          name: form.name,
-          email: form.email,
-          type: form.type,
-          role: form.role,
-          status: form.status,
-        };
-      }
-    }
-
-    if (auth.token && auth.userId) {
-      await adminApi.assignRole(auth.token, form.id, { role: form.role, adminId: auth.userId });
-      await adminApi.updateUserStatus(auth.token, form.id, { action: toStatusAction(form.status), adminId: auth.userId });
-    }
-
-    if (modalMode.value === 'edit') {
       status.value = 'Cap nhat nguoi dung thanh cong.';
     }
 
     closeModal();
   } catch (e) {
     error.value = e?.message || 'Khong the luu thong tin nguoi dung.';
-  } finally {
-    saving.value = false;
   }
 };
 
 const prevPage = () => {
-  if (page.value > 1) page.value -= 1;
+  if (page.value > 1) {
+    page.value -= 1;
+    refresh();
+  }
 };
 
 const nextPage = () => {
-  if (page.value < totalPages.value) page.value += 1;
-};
-
-const hydrateDoctors = async () => {
-  try {
-    const response = await patientApi.searchDoctors({ page: 1, pageSize: 50 });
-    const doctorRows = (response?.doctors || []).map((d, idx) => ({
-      id: d.id || d.doctorId || `doc-${idx + 1}`,
-      name: d.fullName || d.name || `Doctor ${idx + 1}`,
-      email: d.email || `doctor${idx + 1}@example.com`,
-      type: 'doctor',
-      role: 'doctor',
-      status: d.status || 'active',
-    }));
-
-    const patientRows = fallbackUsers.filter((u) => u.type === 'patient');
-    users.value = [...doctorRows, ...patientRows];
-
-    if (users.value.length === 0) {
-      users.value = [...fallbackUsers];
-    }
-  } catch {
-    users.value = [...fallbackUsers];
+  if (page.value < totalPages.value) {
+    page.value += 1;
+    refresh();
   }
 };
 
 onMounted(() => {
-  auth.fetchCurrentUser();
-  hydrateDoctors();
+  refresh();
 });
 </script>
 

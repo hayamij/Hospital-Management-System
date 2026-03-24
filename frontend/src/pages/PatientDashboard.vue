@@ -50,6 +50,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useAppointmentsStore } from '../stores/appointments.js';
 import { useRecordsStore } from '../stores/records.js';
 import { useBillingStore } from '../stores/billing.js';
+import { normalizeAppointment, normalizeInvoice, normalizeRecord, toTimestamp } from '../services/mappers.js';
 
 const appointmentsStore = useAppointmentsStore();
 const recordsStore = useRecordsStore();
@@ -58,37 +59,6 @@ const billingStore = useBillingStore();
 const loading = ref(false);
 const upcomingError = ref('');
 const summaryError = ref('');
-
-const toTimestamp = (value) => {
-  const t = new Date(value || '').getTime();
-  return Number.isNaN(t) ? Number.MAX_SAFE_INTEGER : t;
-};
-
-const toAppointmentModel = (source, index = 0) => ({
-  key: source?.id || source?.appointmentId || `appointment-${index + 1}`,
-  date: source?.appointmentDate || source?.date || source?.scheduledAt || '',
-  serviceName: source?.serviceName || source?.reason || source?.service || 'Kham tong quat',
-  doctorName: source?.doctorName || source?.doctorFullName || source?.doctor || 'Dang cap nhat',
-  status: source?.status || 'pending',
-});
-
-const toRecordModel = (source, index = 0) => ({
-  key: `record-${source?.id || index + 1}`,
-  type: 'Ket qua kham',
-  date: source?.visitDate || source?.createdAt || source?.updatedAt || '',
-  title: source?.title || source?.diagnosis || 'Phieu ket qua kham',
-  description: source?.summary || source?.note || source?.result || 'Thong tin ket qua dang duoc cap nhat.',
-  amount: null,
-});
-
-const toInvoiceModel = (source, index = 0) => ({
-  key: `billing-${source?.id || source?.invoiceId || index + 1}`,
-  type: 'Hoa don',
-  date: source?.issuedAt || source?.createdAt || source?.updatedAt || '',
-  title: source?.title || source?.code || source?.invoiceNumber || 'Hoa don dich vu',
-  description: source?.note || source?.status || 'Thong tin hoa don gan nhat.',
-  amount: source?.amount ?? source?.totalAmount ?? null,
-});
 
 const formatDate = (value) => {
   const d = new Date(value || '');
@@ -109,7 +79,7 @@ const formatMoney = (value) => {
 
 const upcomingAppointment = computed(() => {
   const now = Date.now();
-  const normalized = appointmentsStore.items.map(toAppointmentModel);
+  const normalized = appointmentsStore.items.map(normalizeAppointment);
   const future = normalized
     .filter((item) => toTimestamp(item.date) >= now)
     .sort((a, b) => toTimestamp(a.date) - toTimestamp(b.date));
@@ -118,8 +88,8 @@ const upcomingAppointment = computed(() => {
 });
 
 const latestSummary = computed(() => {
-  const recordItems = recordsStore.list.map(toRecordModel);
-  const billingItems = billingStore.invoices.map(toInvoiceModel);
+  const recordItems = recordsStore.list.map(normalizeRecord);
+  const billingItems = billingStore.invoices.map(normalizeInvoice);
 
   return [...recordItems, ...billingItems]
     .sort((a, b) => toTimestamp(a.date) - toTimestamp(b.date))

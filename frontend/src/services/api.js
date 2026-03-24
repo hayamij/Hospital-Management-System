@@ -130,6 +130,9 @@ export const patientApi = {
 	listRecords(token, filters) {
 		return request('/patients/medical-records', { method: 'GET', token, params: filters });
 	},
+	downloadPrescription(token, prescriptionId) {
+		return request(`/patients/prescriptions/${prescriptionId}/download`, { method: 'GET', token });
+	},
 	searchDoctors(filters) {
 		const params = { q: filters?.query, specialty: filters?.specialty, page: filters?.page, pageSize: filters?.pageSize };
 		return request('/patients/doctors/search', { method: 'GET', params });
@@ -200,6 +203,15 @@ export const adminApi = {
 	assignRole(token, userId, payload) {
 		return request(`/admin/users/${userId}/roles`, { method: 'POST', token, data: payload });
 	},
+	listUsers(token, params) {
+		return request('/admin/users', { method: 'GET', token, params });
+	},
+	createUser(token, payload) {
+		return request('/admin/users', { method: 'POST', token, data: payload });
+	},
+	updateUser(token, userId, payload) {
+		return request(`/admin/users/${userId}`, { method: 'PUT', token, data: payload });
+	},
 	updateUserStatus(token, userId, payload) {
 		return request(`/admin/users/${userId}/status`, { method: 'PATCH', token, data: payload });
 	},
@@ -227,9 +239,6 @@ export const guestApi = {
 	},
 	getServiceDetail(serviceId) {
 		return request(`/guests/services/${serviceId}`);
-	},
-	serviceDetail(serviceId) {
-		return this.getServiceDetail(serviceId);
 	},
 	cardDetail(category, itemId) {
 		return request(`/guests/cards/${encodeURIComponent(category)}/${encodeURIComponent(itemId)}`);
