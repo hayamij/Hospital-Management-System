@@ -68,6 +68,7 @@ export function createHttpRouter(deps) {
   router.delete('/patients/appointments/:id', requireRole(['patient']), patientAppointments.cancelAppointment);
   router.get('/patients/appointments', requireRole(['patient']), patientAppointments.viewAppointments);
   router.get('/patients/billing', requireRole(['patient']), patientBilling.viewBillingAndPayments);
+  router.get('/patients/invoices/:id/download', requireRole(['patient']), patientBilling.downloadInvoice);
   router.get('/patients/medical-records', requireRole(['patient']), patientRecords.viewMedicalRecords);
   router.get('/patients/prescriptions/:id/download', requireRole(['patient']), patientRecords.downloadPrescription);
   router.post('/patients/messages', requireRole(['patient']), patientMessages.sendPatientMessage);
@@ -76,6 +77,7 @@ export function createHttpRouter(deps) {
   // Guests
   router.get('/guests/public-info', guests.browsePublicInfo);
   router.get('/guests/services/:serviceId', guests.viewPublicServiceDetail);
+  router.get('/guests/cards/:category/:itemId', guests.viewPublicCardDetail);
   router.get('/guests/doctors/search', guests.guestSearchDoctors);
   router.post('/guests/registration', guests.startRegistration);
   router.post('/guests/contact', guests.submitContactForm);
