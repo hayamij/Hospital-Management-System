@@ -1,4 +1,7 @@
+import crypto from 'node:crypto';
 import { UserRepositoryPort } from '../../../application/ports/repositories/userRepositoryPort.js';
+
+const ensureId = (id) => id || crypto.randomUUID();
 
 const toEntity = (row) => {
   if (!row) return null;
@@ -33,8 +36,12 @@ export class SqlUserRepository extends UserRepositoryPort {
   }
 
   async save(user) {
-    if (user.id) {
-      const { rows } = await this.pool.query(
+    const id = ensureId(user.id);
+    const status = user.status ?? 'active';
+
+    const existing = await this.findById(id);
+    if (existing) {
+      await this.pool.query(
         `UPDATE users
            SET email = $1,
                password_hash = $2,
@@ -44,19 +51,17 @@ export class SqlUserRepository extends UserRepositoryPort {
                doctor_id = $6,
                full_name = $7,
                updated_at = now()
-         WHERE id = $8
-         RETURNING *`,
-        [user.email, user.passwordHash, user.role, user.status ?? 'active', user.patientId ?? null, user.doctorId ?? null, user.fullName ?? null, user.id],
+         WHERE id = $8`,
+        [user.email, user.passwordHash, user.role, status, user.patientId ?? null, user.doctorId ?? null, user.fullName ?? null, id],
       );
-      return toEntity(rows[0]);
+      return this.findById(id);
     }
 
-    const { rows } = await this.pool.query(
-      `INSERT INTO users (email, password_hash, role, status, patient_id, doctor_id, full_name)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
-       RETURNING *`,
-      [user.email, user.passwordHash, user.role, user.status ?? 'active', user.patientId ?? null, user.doctorId ?? null, user.fullName ?? null],
+    await this.pool.query(
+      `INSERT INTO users (id, email, password_hash, role, status, patient_id, doctor_id, full_name)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [id, user.email, user.passwordHash, user.role, status, user.patientId ?? null, user.doctorId ?? null, user.fullName ?? null],
     );
-    return toEntity(rows[0]);
+    return this.findById(id);
   }
 }

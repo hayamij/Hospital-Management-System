@@ -5,9 +5,10 @@ import {
   StartRegistrationViewModel,
   SubmitContactFormViewModel,
   ViewAvailableSlotsViewModel,
+  ViewPublicServiceDetailViewModel,
 } from '../../viewmodels/guestViewModels.js';
 
-export function buildGuestControllers({ browsePublicInfoUseCase, guestSearchDoctorsUseCase, startRegistrationUseCase, submitContactFormUseCase, viewAvailableSlotsUseCase }) {
+export function buildGuestControllers({ browsePublicInfoUseCase, guestSearchDoctorsUseCase, startRegistrationUseCase, submitContactFormUseCase, viewAvailableSlotsUseCase, viewPublicServiceDetailUseCase }) {
   return {
     browsePublicInfo: createHandler({
       useCase: browsePublicInfoUseCase,
@@ -35,6 +36,11 @@ export function buildGuestControllers({ browsePublicInfoUseCase, guestSearchDoct
       useCase: viewAvailableSlotsUseCase,
       mapInput: (req) => ({ doctorId: req.query?.doctorId ?? req.params?.doctorId, from: req.query?.from, to: req.query?.to }),
       mapOutput: (result) => new ViewAvailableSlotsViewModel(result),
+    }),
+    viewPublicServiceDetail: createHandler({
+      useCase: viewPublicServiceDetailUseCase,
+      mapInput: (req) => ({ serviceId: req.params?.serviceId }),
+      mapOutput: (result) => new ViewPublicServiceDetailViewModel(result),
     }),
   };
 }

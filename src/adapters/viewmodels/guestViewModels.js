@@ -30,3 +30,9 @@ export class ViewAvailableSlotsViewModel {
     Object.assign(this, output);
   }
 }
+
+export class ViewPublicServiceDetailViewModel {
+  constructor(output) {
+    this.service = output?.service ?? null;
+  }
+}

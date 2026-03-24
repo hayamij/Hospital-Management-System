@@ -5,7 +5,10 @@ export function buildAuthControllers({ loginUseCase, logoutUseCase, resetPasswor
   return {
     login: createHandler({
       useCase: loginUseCase,
-      mapInput: (req) => ({ email: req.body?.email, password: req.body?.password }),
+      mapInput: (req) => ({
+        identifier: req.body?.identifier ?? req.body?.email,
+        password: req.body?.password,
+      }),
       mapOutput: (result) => new LoginViewModel(result),
     }),
     logout: createHandler({

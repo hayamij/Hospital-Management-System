@@ -1,5 +1,15 @@
+import crypto from 'node:crypto';
 import { AppointmentRepositoryPort } from '../../../application/ports/repositories/appointmentRepositoryPort.js';
 import { Appointment } from '../../../domain/entities/appointment.js';
+
+const toDate = (value) => (value ? new Date(value) : null);
+
+const coerceDate = (value) => {
+  if (!value) return null;
+  return value instanceof Date ? value : new Date(value);
+};
+
+const ensureId = (id) => id || crypto.randomUUID();
 
 const toEntity = (row) => {
   if (!row) return null;
@@ -7,12 +17,12 @@ const toEntity = (row) => {
     id: row.id,
     patientId: row.patient_id,
     doctorId: row.doctor_id,
-    startAt: row.start_at,
-    endAt: row.end_at,
+    startAt: toDate(row.start_at),
+    endAt: toDate(row.end_at),
     reason: row.reason,
     status: row.status,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    createdAt: toDate(row.created_at),
+    updatedAt: toDate(row.updated_at),
   });
 };
 
@@ -28,8 +38,14 @@ export class SqlAppointmentRepository extends AppointmentRepositoryPort {
   }
 
   async save(appointment) {
-    if (appointment.id) {
-      const { rows } = await this.pool.query(
+    const startAt = coerceDate(appointment.startAt)?.toISOString();
+    const endAt = coerceDate(appointment.endAt)?.toISOString();
+    const status = appointment.status ?? 'pending';
+    const id = ensureId(appointment.id);
+
+    const existing = await this.findById(id);
+    if (existing) {
+      await this.pool.query(
         `UPDATE appointments
            SET patient_id = $1,
                doctor_id = $2,
@@ -38,35 +54,18 @@ export class SqlAppointmentRepository extends AppointmentRepositoryPort {
                reason = $5,
                status = $6,
                updated_at = now()
-         WHERE id = $7
-         RETURNING *`,
-        [
-          appointment.patientId,
-          appointment.doctorId,
-          appointment.startAt,
-          appointment.endAt,
-          appointment.reason,
-          appointment.status,
-          appointment.id,
-        ],
+         WHERE id = $7`,
+        [appointment.patientId, appointment.doctorId, startAt, endAt, appointment.reason, status, id],
       );
-      return toEntity(rows[0]);
+      return this.findById(id);
     }
 
-    const { rows } = await this.pool.query(
-      `INSERT INTO appointments (patient_id, doctor_id, start_at, end_at, reason, status)
-       VALUES ($1,$2,$3,$4,$5,$6)
-       RETURNING *`,
-      [
-        appointment.patientId,
-        appointment.doctorId,
-        appointment.startAt,
-        appointment.endAt,
-        appointment.reason,
-        appointment.status ?? 'pending',
-      ],
+    await this.pool.query(
+      `INSERT INTO appointments (id, patient_id, doctor_id, start_at, end_at, reason, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [id, appointment.patientId, appointment.doctorId, startAt, endAt, appointment.reason, status],
     );
-    return toEntity(rows[0]);
+    return this.findById(id);
   }
 
   async listByDoctor(doctorId, { from, to } = {}) {
