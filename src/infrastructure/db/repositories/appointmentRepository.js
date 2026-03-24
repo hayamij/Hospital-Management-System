@@ -11,6 +11,33 @@ const coerceDate = (value) => {
 
 const ensureId = (id) => id || crypto.randomUUID();
 
+const SLOT_MINUTES = 30;
+const WORKDAY_START_HOUR_UTC = 8;
+const WORKDAY_END_HOUR_UTC = 17;
+
+const isActiveAppointmentStatus = (status) => {
+  const value = String(status || '').trim().toLowerCase();
+  return !['canceled', 'cancelled', 'rejected'].includes(value);
+};
+
+const normalizeToDate = (value) => {
+  if (!value) return null;
+  const parsed = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const toDayBoundsUtc = (inputDate) => {
+  const date = normalizeToDate(inputDate) || new Date();
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+  const from = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+  const to = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
+  return { from, to };
+};
+
+const slotOverlaps = (slotStart, slotEnd, apptStart, apptEnd) => slotStart < apptEnd && slotEnd > apptStart;
+
 const toEntity = (row) => {
   if (!row) return null;
   return new Appointment({
@@ -93,7 +120,53 @@ export class SqlAppointmentRepository extends AppointmentRepositoryPort {
   }
 
   async listAvailableSlots(doctorId, { from, to } = {}) {
-    // Returns existing appointments; the caller can compute free slots from gaps.
-    return this.listByDoctor(doctorId, { from, to });
+    const normalizedFrom = normalizeToDate(from);
+    const normalizedTo = normalizeToDate(to);
+    const { from: dayStart, to: dayEnd } = normalizedFrom
+      ? { from: normalizedFrom, to: normalizedTo || normalizedFrom }
+      : toDayBoundsUtc(normalizedTo || new Date());
+
+    const appointments = await this.listByDoctor(doctorId, { from: dayStart, to: dayEnd });
+    const busy = appointments
+      .filter((item) => isActiveAppointmentStatus(item.status))
+      .map((item) => ({ start: item.startAt, end: item.endAt }))
+      .filter((item) => item.start instanceof Date && item.end instanceof Date);
+
+    const workStart = new Date(Date.UTC(
+      dayStart.getUTCFullYear(),
+      dayStart.getUTCMonth(),
+      dayStart.getUTCDate(),
+      WORKDAY_START_HOUR_UTC,
+      0,
+      0,
+      0,
+    ));
+    const workEnd = new Date(Date.UTC(
+      dayStart.getUTCFullYear(),
+      dayStart.getUTCMonth(),
+      dayStart.getUTCDate(),
+      WORKDAY_END_HOUR_UTC,
+      0,
+      0,
+      0,
+    ));
+
+    const slots = [];
+    let cursor = workStart;
+    while (cursor < workEnd) {
+      const next = new Date(cursor.getTime() + SLOT_MINUTES * 60 * 1000);
+      if (next > workEnd) break;
+      const blocked = busy.some((item) => slotOverlaps(cursor, next, item.start, item.end));
+      if (!blocked) {
+        slots.push({
+          id: `${doctorId}-${cursor.toISOString()}`,
+          start: cursor.toISOString(),
+          end: next.toISOString(),
+        });
+      }
+      cursor = next;
+    }
+
+    return slots;
   }
 }
