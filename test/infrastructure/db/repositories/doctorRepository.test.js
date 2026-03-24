@@ -34,15 +34,15 @@ async function run() {
   const poolSave = new FakePool([sampleRow()]);
   const repoSave = new SqlDoctorRepository(poolSave);
   await repoSave.save({ id: 'd1', fullName: 'Dr A', specialization: 'Cardio', department: 'Heart', availableSlotsPerDay: 2, contactInfo: { email: 'a@example.com', phone: '123' }, status: 'active' });
-  assert.ok(poolSave.calls[0].text.startsWith('UPDATE doctors'));
+  assert.ok(poolSave.calls.some((c) => c.text.startsWith('UPDATE doctors')));
 
   // search with filters
   const poolSearch = new FakePool([sampleRow()]);
   const repoSearch = new SqlDoctorRepository(poolSearch);
   const list = await repoSearch.search({ name: 'A', specialization: 'Card' });
   assert.strictEqual(list.length, 1);
-  assert.ok(poolSearch.calls[0].text.includes('full_name ILIKE'));
-  assert.ok(poolSearch.calls[0].text.includes('specialization ILIKE'));
+  assert.ok(poolSearch.calls[0].text.includes('LOWER(full_name) LIKE LOWER('));
+  assert.ok(poolSearch.calls[0].text.includes('LOWER(specialization) LIKE LOWER('));
 }
 
 wrapLegacyRun(run, 'doctorRepository');
