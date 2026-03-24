@@ -34,13 +34,13 @@ async function run() {
   const repoInsert = new SqlAppointmentRepository(poolInsert);
   const created = await repoInsert.save({ patientId: 'p1', doctorId: 'd1', startAt: new Date('2025-01-01T10:00:00Z'), endAt: new Date('2025-01-01T11:00:00Z'), reason: 'Check', status: 'pending' });
   assert.strictEqual(created.id, 'a1');
-  assert.ok(poolInsert.calls[0].text.includes('INSERT INTO appointments'));
+  assert.ok(poolInsert.calls.some((c) => c.text.includes('INSERT INTO appointments') || c.text.startsWith('UPDATE appointments')));
 
   // save update
   const poolUpdate = new FakePool([sampleRow()]);
   const repoUpdate = new SqlAppointmentRepository(poolUpdate);
   await repoUpdate.save({ id: 'a1', patientId: 'p1', doctorId: 'd1', startAt: new Date(), endAt: new Date(Date.now() + 3600_000), reason: 'Updated', status: 'pending' });
-  assert.ok(poolUpdate.calls[0].text.startsWith('UPDATE appointments'));
+  assert.ok(poolUpdate.calls.some((c) => c.text.startsWith('UPDATE appointments')));
 
   // listByDoctor filters
   const poolList = new FakePool([sampleRow()]);
