@@ -3,56 +3,65 @@
     <div class="header-inner">
       <RouterLink class="brand" to="/">Hospital Management</RouterLink>
 
-      <div class="right-zone">
-        <span class="auth-chip">
-          {{ auth.isAuthenticated ? `Signed in: ${auth.email || auth.role}` : 'Not signed in' }}
-        </span>
+      <button type="button" class="hamburger" @click="isMenuOpen = !isMenuOpen" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
 
+      <div class="right-zone" :class="{ open: isMenuOpen }">
         <nav class="menu">
-          <RouterLink to="/">Home</RouterLink>
-          <RouterLink to="/public">Public Portal</RouterLink>
-          <RouterLink to="/usecases">Use Cases</RouterLink>
+          <RouterLink to="/" @click="closeMenu">Home</RouterLink>
+          <RouterLink to="/services" @click="closeMenu">Services</RouterLink>
+          <RouterLink to="/doctors" @click="closeMenu">Doctors</RouterLink>
+          <RouterLink to="/news" @click="closeMenu">News</RouterLink>
+          <RouterLink to="/about" @click="closeMenu">About</RouterLink>
+        </nav>
+
+        <div class="auth-zone">
           <template v-if="!auth.isAuthenticated">
-            <RouterLink to="/login">Login</RouterLink>
-            <RouterLink to="/register">Register</RouterLink>
+            <RouterLink to="/login" class="action" @click="closeMenu">Login</RouterLink>
+            <RouterLink to="/register" class="action" @click="closeMenu">Register</RouterLink>
+          </template>
+          <template v-else-if="auth.role === 'patient'">
+            <div class="avatar" :title="auth.email || 'Patient'">{{ avatarInitial }}</div>
+            <RouterLink to="/patient/dashboard" class="action" @click="closeMenu">My Dashboard</RouterLink>
+            <RouterLink to="/patient/profile" class="action" @click="closeMenu">My Profile</RouterLink>
+            <button type="button" class="action" @click="handleLogout">Logout</button>
           </template>
           <template v-else>
-            <RouterLink to="/appointments">Appointments</RouterLink>
-            <RouterLink to="/patients">Patients</RouterLink>
-            <RouterLink to="/doctors">Doctors</RouterLink>
-            <RouterLink to="/records">Records</RouterLink>
-            <RouterLink v-if="auth.role === 'doctor'" to="/doctor-ops">Doctor Ops</RouterLink>
-            <RouterLink v-if="auth.role === 'admin'" to="/dashboard">Dashboard</RouterLink>
-            <RouterLink v-if="auth.role === 'admin'" to="/admin-ops">Admin Ops</RouterLink>
-            <RouterLink v-if="auth.role === 'patient' || auth.role === 'doctor'" to="/communications">Messages</RouterLink>
-            <RouterLink v-if="auth.role === 'patient' || auth.role === 'admin'" to="/billing">Billing</RouterLink>
-            <RouterLink class="user-link" :to="userRoute">User</RouterLink>
-            <button type="button" class="logout" @click="handleLogout">Logout</button>
+            <RouterLink :to="auth.role === 'admin' ? '/admin/dashboard' : '/doctor/dashboard'" class="action" @click="closeMenu">Backoffice</RouterLink>
+            <button type="button" class="action" @click="handleLogout">Logout</button>
           </template>
-        </nav>
+        </div>
       </div>
     </div>
   </header>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth.js';
 
 const auth = useAuthStore();
-auth.hydrate();
 const router = useRouter();
+const isMenuOpen = ref(false);
 
-const userRoute = computed(() => {
-  if (auth.role === 'admin') return '/admin-ops';
-  if (auth.role === 'doctor') return '/doctor-ops';
-  if (auth.role === 'patient') return '/patients';
-  return '/login';
+auth.fetchCurrentUser();
+
+const avatarInitial = computed(() => {
+  const source = auth.userProfile?.name || auth.email || 'P';
+  return source.charAt(0).toUpperCase();
 });
+
+const closeMenu = () => {
+  isMenuOpen.value = false;
+};
 
 const handleLogout = async () => {
   await auth.logout();
+  closeMenu();
   router.push('/login');
 };
 </script>
@@ -74,64 +83,119 @@ const handleLogout = async () => {
   box-sizing: border-box;
 }
 
-.right-zone {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.auth-chip {
-  border: 1px solid #d1d5db;
-  background: #f3f4f6;
-  color: #111827;
-  padding: 7px 10px;
-  font-size: 12px;
-}
-
 .brand {
   font-weight: 700;
   color: #111827;
   text-decoration: none;
 }
 
-.menu {
+.hamburger {
+  display: none;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-direction: column;
+}
+
+.hamburger span {
+  width: 18px;
+  height: 2px;
+  background: #111827;
+}
+
+.right-zone {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
-.menu a,
-.logout {
+.menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.menu a {
+  color: #111827;
+  text-decoration: none;
+  padding: 8px 6px;
+}
+
+.auth-zone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #9ca3af;
+  background: #eef2ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.action {
   border: 1px solid #d1d5db;
   background: #f9fafb;
   color: #111827;
   text-decoration: none;
+  min-width: 122px;
+  min-height: 40px;
   padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-align: center;
   cursor: pointer;
-}
-
-.menu a.router-link-active {
-  background: #eef2ff;
-  border-color: #9ca3af;
 }
 
 @media (max-width: 900px) {
   .header-inner {
-    flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     padding: 12px 16px;
   }
 
-  .right-zone {
-    justify-content: flex-start;
+  .hamburger {
+    display: inline-flex;
+    margin-left: auto;
   }
 
-  .menu {
-    justify-content: flex-start;
+  .right-zone {
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .right-zone.open {
+    display: flex;
+  }
+
+  .menu,
+  .auth-zone {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .menu a,
+  .action {
+    justify-content: center;
   }
 }
 </style>
