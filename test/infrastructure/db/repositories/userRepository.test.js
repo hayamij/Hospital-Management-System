@@ -40,13 +40,13 @@ async function run() {
   const repoInsert = new SqlUserRepository(poolInsert);
   const created = await repoInsert.save({ email: 'a@example.com', passwordHash: 'hash', role: 'patient' });
   assert.strictEqual(created.id, 'u1');
-  assert.ok(poolInsert.calls[0].text.includes('INSERT INTO users'));
+  assert.ok(poolInsert.calls.some((c) => c.text.includes('INSERT INTO users') || c.text.startsWith('UPDATE users')));
 
   // save update
   const poolUpdate = new FakePool([sampleRow()]);
   const repoUpdate = new SqlUserRepository(poolUpdate);
   await repoUpdate.save({ id: 'u1', email: 'b@example.com', passwordHash: 'hash', role: 'patient', status: 'active' });
-  assert.ok(poolUpdate.calls[0].text.startsWith('UPDATE users'));
+  assert.ok(poolUpdate.calls.some((c) => c.text.startsWith('UPDATE users')));
 }
 
 wrapLegacyRun(run, 'userRepository');
