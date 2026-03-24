@@ -10,6 +10,7 @@ describe('HTTP adapters smoke', () => {
     const app = appWith();
     const res = await request(app)
       .post('/api/patients/appointments')
+      .set('Authorization', 'Bearer mock-token')
       .send({ startAt: '2026-04-01T10:00:00Z', endAt: '2026-04-01T10:30:00Z' })
       .expect(201);
 
@@ -26,16 +27,29 @@ describe('HTTP adapters smoke', () => {
     const app = appWith();
     const res = await request(app)
       .get('/api/patients/prescriptions/rx-1/download')
+      .set('Authorization', 'Bearer mock-token')
       .expect(200);
 
     const data = expectJson(res);
     expect(data).toEqual({ prescriptionId: 'rx-1', file: 'PDFDATA', filename: 'rx.pdf' });
   });
 
+  it('patient: download invoice maps file/filename/contentType', async () => {
+    const app = appWith();
+    const res = await request(app)
+      .get('/api/patients/invoices/inv-1/download')
+      .set('Authorization', 'Bearer mock-token')
+      .expect(200);
+
+    const data = expectJson(res);
+    expect(data).toEqual({ invoiceId: 'inv-1', file: '{"invoiceId":"inv-1"}', filename: 'inv-1.json', contentType: 'application/json' });
+  });
+
   it('doctor: update profile returns view model', async () => {
     const app = appWith();
     const res = await request(app)
       .put('/api/doctors/profile')
+      .set('Authorization', 'Bearer doctor-token')
       .send({ profile: { bio: 'hello' } })
       .expect(200);
 
@@ -48,6 +62,7 @@ describe('HTTP adapters smoke', () => {
     const app = appWith();
     const res = await request(app)
       .get('/api/doctors/schedule')
+      .set('Authorization', 'Bearer doctor-token')
       .expect(200);
 
     const data = expectJson(res);
@@ -58,6 +73,7 @@ describe('HTTP adapters smoke', () => {
     const app = appWith();
     const res = await request(app)
       .post('/api/admin/appointments/apt-1/override')
+      .set('Authorization', 'Bearer admin-token')
       .send({ action: 'reschedule', startAt: '2026-04-02', endAt: '2026-04-02' })
       .expect(200);
 
