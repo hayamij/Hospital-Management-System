@@ -72,6 +72,13 @@ export class ViewMedicalRecordsRequest {
   }
 }
 
+export class DownloadInvoiceRequest {
+  constructor(params, query, user) {
+    this.invoiceId = params.id;
+    this.patientId = user?.id ?? query.patientId;
+  }
+}
+
 export class DownloadPrescriptionRequest {
   constructor(params, query, user) {
     this.prescriptionId = params.id;
