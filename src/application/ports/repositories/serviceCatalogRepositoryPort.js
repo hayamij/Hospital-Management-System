@@ -23,4 +23,12 @@ export class ServiceCatalogRepositoryPort {
 	async findServiceById(serviceId) {
 		throw new Error('ServiceCatalogRepositoryPort.findServiceById not implemented');
 	}
+
+	async findInsurancePlanById(planId) {
+		throw new Error('ServiceCatalogRepositoryPort.findInsurancePlanById not implemented');
+	}
+
+	async findBookingConstraintById(constraintId) {
+		throw new Error('ServiceCatalogRepositoryPort.findBookingConstraintById not implemented');
+	}
 }
