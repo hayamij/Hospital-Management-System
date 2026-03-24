@@ -25,22 +25,20 @@ const route = useRoute();
 
 const navByRole = {
 	doctor: [
-		{ label: 'Use Cases', path: '/usecases', icon: 'UC' },
-		{ label: 'Doctor Ops', path: '/doctor-ops', icon: 'DO' },
-		{ label: 'Schedule', path: '/appointments', icon: 'SC' },
-		{ label: 'Patients', path: '/patients', icon: 'PT' },
-		{ label: 'Records', path: '/records', icon: 'MR' },
-		{ label: 'Messages', path: '/communications', icon: 'MS' },
+		{ label: 'Doctor Ops', path: '/doctor/dashboard', icon: 'DO' },
+		{ label: 'Consultation', path: '/doctor/consultation', icon: 'CS' },
+		{ label: 'Schedule', path: '/doctor/appointments', icon: 'SC' },
+		{ label: 'Patients', path: '/doctor/patients', icon: 'PT' },
+		{ label: 'Records', path: '/doctor/records', icon: 'MR' },
+		{ label: 'Messages', path: '/doctor/communications', icon: 'MS' },
 	],
 	admin: [
-		{ label: 'Use Cases', path: '/usecases', icon: 'UC' },
-		{ label: 'Dashboard', path: '/dashboard', icon: 'DB' },
-		{ label: 'Appointments', path: '/appointments', icon: 'AP' },
-		{ label: 'Doctors', path: '/doctors', icon: 'DR' },
-		{ label: 'Patients', path: '/patients', icon: 'PT' },
-		{ label: 'Billing', path: '/billing', icon: 'BL' },
-		{ label: 'Records', path: '/records', icon: 'MR' },
-		{ label: 'Admin Ops', path: '/admin-ops', icon: 'AO' },
+		{ label: 'Dashboard', path: '/admin/dashboard', icon: 'DB' },
+		{ label: 'Quan ly Nhan su', path: '/admin/ops#staff', icon: 'HR' },
+		{ label: 'Quan ly Benh nhan', path: '/admin/patients', icon: 'PT' },
+		{ label: 'Quan ly Dich vu', path: '/admin/ops#services', icon: 'SV' },
+		{ label: 'Lich trinh', path: '/admin/appointments', icon: 'SC' },
+		{ label: 'Tai chinh', path: '/admin/billing', icon: 'FN' },
 	],
 };
 
