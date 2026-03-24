@@ -23,11 +23,6 @@
         <RouterLink to="/register">Create one</RouterLink>
       </p>
 
-      <p class="switch">
-        Need endpoint-by-endpoint testing?
-        <RouterLink to="/usecases">Open Use Cases Console</RouterLink>
-      </p>
-
       <Alert v-if="auth.error" :message="auth.error" />
     </div>
   </section>

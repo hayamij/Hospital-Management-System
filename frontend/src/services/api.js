@@ -1,47 +1,93 @@
+import axios from 'axios';
+
 const API_BASE = '/api';
+const STORAGE_KEY = 'hms.session';
 
-const toQuery = (params = {}) =>
-	Object.entries(params)
-		.filter(([, value]) => value !== undefined && value !== null && value !== '')
-		.map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-		.join('&');
+const http = axios.create({
+	baseURL: API_BASE,
+	headers: {
+		'Content-Type': 'application/json',
+	},
+});
 
-async function request(path, { method = 'GET', data, params, token } = {}) {
-	const url = new URL(`${API_BASE}${path.startsWith('/') ? path : `/${path}`}`, window.location.origin);
-	if (params) {
-		const queryString = toQuery(params);
-		if (queryString) {
-			url.search = queryString;
+const readToken = () => {
+	try {
+		const raw = localStorage.getItem(STORAGE_KEY);
+		if (!raw) return null;
+		const parsed = JSON.parse(raw);
+		return parsed?.token ?? null;
+	} catch {
+		return null;
+	}
+};
+
+http.interceptors.request.use((config) => {
+	const token = readToken();
+	if (token) {
+		config.headers = config.headers || {};
+		config.headers.Authorization = `Bearer ${token}`;
+	}
+	return config;
+});
+
+http.interceptors.response.use(
+	(response) => {
+		const payload = response?.data;
+		if (payload && typeof payload === 'object' && 'data' in payload) {
+			return payload.data;
+		}
+		return payload;
+	},
+	(error) => {
+		const status = error?.response?.status;
+		const payload = error?.response?.data;
+		const message =
+			(typeof payload === 'string' && payload) ||
+			payload?.message ||
+			payload?.error ||
+			error?.message ||
+			'Request failed';
+
+		const wrapped = new Error(message);
+		wrapped.status = status;
+		wrapped.details = payload;
+
+		if (status === 401 && typeof window !== 'undefined') {
+			localStorage.removeItem(STORAGE_KEY);
+			if (!window.location.pathname.includes('/login')) {
+				window.location.assign('/login');
+			}
+		}
+
+		return Promise.reject(wrapped);
+	}
+);
+
+const toQueryParams = (params = {}) => {
+	const out = {};
+	for (const [key, value] of Object.entries(params)) {
+		if (value !== undefined && value !== null && value !== '') {
+			out[key] = value;
 		}
 	}
+	return out;
+};
 
-	const headers = { 'Content-Type': 'application/json' };
-	if (token) {
-		headers.Authorization = `Bearer ${token}`;
-	}
-
-	const response = await fetch(url.toString(), {
+async function request(path, { method = 'GET', data, params, token } = {}) {
+	const config = {
+		url: path.startsWith('/') ? path : `/${path}`,
 		method,
-		headers,
-		body: data ? JSON.stringify(data) : undefined,
-	});
+		params: params ? toQueryParams(params) : undefined,
+		data,
+	};
 
-	const contentType = response.headers.get('content-type') || '';
-	const payload = contentType.includes('application/json') ? await response.json() : await response.text();
-
-	if (!response.ok) {
-		const message = typeof payload === 'string' ? payload : payload?.message || payload?.error || 'Request failed';
-		const error = new Error(message);
-		error.status = response.status;
-		error.details = payload;
-		throw error;
+	if (token) {
+		config.headers = {
+			Authorization: `Bearer ${token}`,
+		};
 	}
 
-	if (payload && typeof payload === 'object' && 'data' in payload) {
-		return payload.data;
-	}
-
-	return payload;
+	return http.request(config);
 }
 
 export const authApi = {
@@ -78,6 +124,9 @@ export const patientApi = {
 	listBilling(token, filters) {
 		return request('/patients/billing', { method: 'GET', token, params: filters });
 	},
+	downloadInvoice(token, invoiceId) {
+		return request(`/patients/invoices/${invoiceId}/download`, { method: 'GET', token });
+	},
 	listRecords(token, filters) {
 		return request('/patients/medical-records', { method: 'GET', token, params: filters });
 	},
@@ -105,6 +154,9 @@ export const doctorApi = {
 	},
 	addVisitNote(token, patientId, payload) {
 		return request(`/doctors/patients/${patientId}/visit-notes`, { method: 'POST', token, data: payload });
+	},
+	updateMedicalRecordEntry(token, recordId, payload) {
+		return request(`/doctors/records/${recordId}/entries`, { method: 'POST', token, data: payload });
 	},
 	viewPatientRecords(token, patientId, params) {
 		return request(`/doctors/patients/${patientId}/chart`, { method: 'GET', token, params });
@@ -173,9 +225,15 @@ export const guestApi = {
 	availableSlots(doctorId, params) {
 		return request(`/guests/doctors/${doctorId}/available-slots`, { params });
 	},
-	serviceDetail(serviceId) {
+	getServiceDetail(serviceId) {
 		return request(`/guests/services/${serviceId}`);
+	},
+	serviceDetail(serviceId) {
+		return this.getServiceDetail(serviceId);
+	},
+	cardDetail(category, itemId) {
+		return request(`/guests/cards/${encodeURIComponent(category)}/${encodeURIComponent(itemId)}`);
 	},
 };
 
-export { request };
+export { request, http };

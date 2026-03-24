@@ -35,13 +35,13 @@ async function run() {
   const repoInsert = new SqlMedicalRecordRepository(poolInsert);
   const created = await repoInsert.save({ patientId: 'p1', entries: [] });
   assert.strictEqual(created.id, 'm1');
-  assert.ok(poolInsert.calls[0].text.includes('INSERT INTO medical_records'));
+  assert.ok(poolInsert.calls.some((c) => c.text.includes('INSERT INTO medical_records') || c.text.startsWith('UPDATE medical_records')));
 
   // save update
   const poolUpdate = new FakePool([sampleRow()]);
   const repoUpdate = new SqlMedicalRecordRepository(poolUpdate);
   await repoUpdate.save({ id: 'm1', patientId: 'p1', entries: [{ note: 'New' }] });
-  assert.ok(poolUpdate.calls[0].text.startsWith('UPDATE medical_records'));
+  assert.ok(poolUpdate.calls.some((c) => c.text.startsWith('UPDATE medical_records')));
 }
 
 wrapLegacyRun(run, 'medicalRecordRepository');

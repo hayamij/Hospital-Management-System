@@ -1,8 +1,10 @@
 export class LoginViewModel {
   constructor(output) {
     this.userId = output.userId;
-    this.token = output.token;
+    this.token = output.token ?? output.accessToken;
     this.role = output.role;
+    this.refreshToken = output.refreshToken;
+    this.expiresAt = output.expiresAt;
   }
 }
 

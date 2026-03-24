@@ -8,6 +8,7 @@ const baseResults = {
   cancelAppointmentUseCase: { appointmentId: 'apt-1', status: 'cancelled', cancelledAt: '2026-04-01T08:00:00Z' },
   viewAppointmentsUseCase: { page: 1, pageSize: 10, total: 0, appointments: [] },
   viewBillingAndPaymentsUseCase: { page: 1, pageSize: 10, total: 0, billings: [], payments: [] },
+  downloadInvoiceUseCase: { invoiceId: 'inv-1', file: '{"invoiceId":"inv-1"}', filename: 'inv-1.json', contentType: 'application/json' },
   viewMedicalRecordsUseCase: { page: 1, pageSize: 10, total: 0, records: [] },
   downloadPrescriptionUseCase: { prescriptionId: 'rx-1', file: 'PDFDATA', filename: 'rx.pdf' },
   searchDoctorsUseCase: { page: 1, pageSize: 10, total: 0, doctors: [] },

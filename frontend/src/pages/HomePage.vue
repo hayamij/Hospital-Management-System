@@ -1,130 +1,122 @@
 <template>
   <div class="home">
-    <section class="banner">
-      <div>
-        <p class="banner-label">Welcome</p>
-        <h1>Reliable Healthcare For Everyone</h1>
+    <section class="hero-top-banner">
+      <img src="/assets/images/banner1.png" alt="Y bac si dang thao tac trong phong mo" loading="eager" />
+    </section>
+
+    <section class="hero-banner">
+      <div class="hero-content">
+        <p class="hero-tag">Cham soc suc khoe toan dien</p>
+        <h1>Dat lich kham nhanh, dung bac si, dung chuyen khoa</h1>
         <p>
-          This is the first version of the home page. It contains basic sections:
-          banner, services, doctor search, news, and contact form.
+          He thong benh vien so giup ban tim bac si, xem chuyen khoa noi bat
+          va cap nhat thong bao moi nhat trong vai thao tac.
         </p>
-      </div>
-      <div class="banner-actions">
-        <button type="button" @click="loadPublicInfo">Load public info</button>
-        <RouterLink to="/appointments">Book appointment</RouterLink>
+        <div class="hero-content-actions">
+          <RouterLink class="cta-primary" to="/patient/booking">Đặt lịch ngay</RouterLink>
+          <RouterLink class="cta-secondary" to="/doctors">Xem danh sach bac si</RouterLink>
+        </div>
       </div>
     </section>
 
-    <section class="ticker-wrap">
-      <div class="ticker-track">
+    <section class="section visual-row">
+      <article class="visual-card">
+        <img src="/assets/images/hospital.png" alt="Bac si tu van benh nhan cao tuoi" loading="lazy" />
+        <div>
+          <h3>Tu van than thien</h3>
+          <p>Doi ngu bac si luon dong hanh va giai thich ro rang cho benh nhan.</p>
+        </div>
+      </article>
+
+      <article class="visual-card">
+        <img src="/assets/images/room.png" alt="Khu dieu tri benh vien sach se" loading="lazy" />
+        <div>
+          <h3>Khong gian hien dai</h3>
+          <p>Khu dieu tri va can lam sang duoc bo tri toi uu cho quy trinh kham nhanh.</p>
+        </div>
+      </article>
+
+      <article class="visual-card">
+        <img src="/assets/images/room2.png" alt="Phong cap cuu voi day du giuong benh" loading="lazy" />
+        <div>
+          <h3>San sang 24/7</h3>
+          <p>Nang luc tiep nhan cap cuu lien tuc, dam bao phan tuyen va xu tri kip thoi.</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <header class="section-head">
+        <h2>Quick Search</h2>
+        <p>Tim nhanh bac si theo ten hoac chuyen khoa.</p>
+      </header>
+
+      <form class="quick-search" @submit.prevent="searchDoctors">
+        <input v-model="search.query" type="text" placeholder="Nhap ten bac si" />
+        <input v-model="search.specialty" type="text" placeholder="Nhap chuyen khoa" />
+        <button type="submit">Tim kiem</button>
+      </form>
+
+      <div class="doctor-list">
         <RouterLink
-          v-for="item in tickerItems"
-          :key="item.id"
-          :to="{ path: `/home-feature/step/${item.id}` }"
-          class="ticker-item"
+          v-for="doctor in doctors"
+          :key="doctor.id || doctor.doctorId"
+          :to="doctor.id || doctor.doctorId
+            ? { path: `/public-card/doctors/${doctor.id || doctor.doctorId}` }
+            : { path: '/doctors', query: { query: doctor.fullName || doctor.name } }"
+          class="card-link"
         >
-          {{ item.label }}
+          <article class="doctor-card">
+            <h3>{{ doctor.fullName || doctor.name }}</h3>
+            <p>{{ doctor.specialization || doctor.specialty || 'General' }}</p>
+          </article>
         </RouterLink>
       </div>
     </section>
 
-    <section id="services" class="section">
-      <h2>Services</h2>
-      <div class="service-grid">
-        <article v-for="service in services" :key="service.id || service.title" class="service-card">
-          <h3>{{ service.title }}</h3>
-          <p>{{ service.description }}</p>
-          <p v-if="service.price !== undefined"><strong>Price:</strong> {{ service.price }}</p>
-          <RouterLink :to="service.detailRoute">Use service</RouterLink>
-        </article>
+    <section class="section">
+      <header class="section-head">
+        <h2>Chuyen khoa noi bat</h2>
+        <p>Danh sach fallback se duoc thay bang API khi backend hoan thien.</p>
+      </header>
+
+      <div class="specialty-grid">
+        <RouterLink
+          v-for="item in specialties"
+          :key="item.id"
+          :to="specialtyLink(item)"
+          class="card-link specialty-link"
+        >
+          <article class="specialty-card">
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.summary }}</p>
+          </article>
+        </RouterLink>
       </div>
     </section>
 
-    <section id="insurance" class="section">
-      <h2>Insurance Plans</h2>
-      <div class="service-grid">
-        <article v-for="plan in insurancePlans" :key="plan.id || plan.planName" class="service-card">
-          <h3>{{ plan.planName }}</h3>
-          <p><strong>Provider:</strong> {{ plan.provider }}</p>
-          <p>{{ plan.coverageSummary }}</p>
-          <p><strong>Copay:</strong> {{ plan.copayAmount }}</p>
-          <RouterLink :to="{ path: `/home-feature/insurance/${plan.id}` }">View details</RouterLink>
-        </article>
-      </div>
-    </section>
+    <section class="section">
+      <header class="section-head">
+        <h2>Tin tuc / Thong bao moi nhat</h2>
+      </header>
 
-    <section id="booking-rules" class="section">
-      <h2>Booking Constraints</h2>
-      <div class="service-grid">
-        <article v-for="rule in bookingConstraints" :key="rule.id || rule.code" class="service-card">
-          <h3>{{ rule.title }}</h3>
-          <p><strong>Code:</strong> {{ rule.code }}</p>
-          <p>{{ rule.description }}</p>
-          <p><strong>Applies to:</strong> {{ rule.appliesToRole }}</p>
-          <p><strong>Value:</strong> {{ rule.value }}</p>
-          <RouterLink :to="{ path: `/home-feature/constraint/${rule.id}` }">View details</RouterLink>
-        </article>
-      </div>
-    </section>
-
-    <section id="doctors" class="section">
-      <h2>Find Doctor</h2>
-      <form class="search-form" @submit.prevent="searchDoctors">
-        <input v-model="search.query" type="text" placeholder="Doctor name" />
-        <input v-model="search.specialty" type="text" placeholder="Specialty" />
-        <button type="submit">Search</button>
-      </form>
-      <div class="doctor-list">
-        <article v-for="doctor in doctors" :key="doctor.id || doctor.doctorId" class="doctor-card">
-          <h3>{{ doctor.fullName || doctor.name }}</h3>
-          <p>{{ doctor.specialization || doctor.specialty }}</p>
-          <RouterLink :to="{ path: '/doctors', query: { query: doctor.fullName || doctor.name } }">View doctor</RouterLink>
-        </article>
-      </div>
-    </section>
-
-    <section id="news" class="section">
-      <h2>News</h2>
       <div class="news-row">
-        <article v-for="news in newsItems" :key="news.title" class="news-card">
-          <small>{{ news.date }}</small>
-          <h3>{{ news.title }}</h3>
-          <p>{{ news.summary }}</p>
-          <RouterLink :to="{ path: `/home-feature/news/${news.id}` }">Read more</RouterLink>
-        </article>
+        <RouterLink
+          v-for="news in newsItems"
+          :key="news.id"
+          :to="{ path: `/home-feature/news/${news.id}` }"
+          class="card-link"
+        >
+          <article class="news-card">
+            <small>{{ news.date }}</small>
+            <h3>{{ news.title }}</h3>
+            <p>{{ news.summary }}</p>
+          </article>
+        </RouterLink>
       </div>
     </section>
 
-    <section id="contact" class="section">
-      <h2>Contact</h2>
-      <div class="contact-grid">
-        <form class="contact-form" @submit.prevent="sendContact">
-          <input v-model="contact.fullName" type="text" placeholder="Full name" required />
-          <input v-model="contact.phone" type="text" placeholder="Phone" required />
-          <input v-model="contact.email" type="email" placeholder="Email" />
-          <textarea v-model="contact.message" rows="4" placeholder="Message" required></textarea>
-          <button type="submit">Send request</button>
-        </form>
-
-        <form class="contact-form" @submit.prevent="loadSlots">
-          <h3>Check available slots</h3>
-          <input v-model="slotForm.doctorId" type="text" placeholder="Doctor ID" required />
-          <input v-model="slotForm.from" type="date" />
-          <input v-model="slotForm.to" type="date" />
-          <button type="submit">Get slots</button>
-          <pre>{{ pretty(slots) }}</pre>
-        </form>
-      </div>
-    </section>
-
-    <section v-if="publicInfo" class="section">
-      <h2>Public Data</h2>
-      <pre>{{ pretty(publicInfo) }}</pre>
-    </section>
-
-    <p v-if="status" class="status ok">{{ status }}</p>
     <p v-if="error" class="status err">{{ error }}</p>
-
   </div>
 </template>
 
@@ -132,133 +124,72 @@
 import { onMounted, reactive, ref } from 'vue';
 import { guestApi } from '../services/api.js';
 
-const publicInfo = ref(null);
+const fallbackDoctors = [
+  { id: 'doc-1', fullName: 'Dr. Demo', specialization: 'Noi tong quat' },
+  { id: 'doc-2', fullName: 'Dr. Alice', specialization: 'Tim mach' },
+  { id: 'doc-3', fullName: 'Dr. Minh', specialization: 'Nhi khoa' },
+];
+
+const fallbackSpecialties = [
+  { id: 'sp-1', name: 'Noi tong quat', summary: 'Kham tong quat, tam soat va theo doi suc khoe dinh ky.' },
+  { id: 'sp-2', name: 'Tim mach', summary: 'Chan doan va dieu tri cac van de tim mach pho bien.' },
+  { id: 'sp-3', name: 'Nhi khoa', summary: 'Cham soc suc khoe toan dien cho tre em moi lua tuoi.' },
+  { id: 'sp-4', name: 'San phu khoa', summary: 'Dong hanh cung suc khoe phu nu va thai ky an toan.' },
+  { id: 'sp-5', name: 'Xet nghiem', summary: 'Ho tro chan doan nhanh voi he thong xet nghiem hien dai.' },
+  { id: 'sp-6', name: 'Cap cuu', summary: 'Xu ly tinh huong khan cap 24/7 voi doi ngu truc lien tuc.' },
+];
+
 const doctors = ref([]);
-const slots = ref(null);
-const status = ref('');
+const specialties = ref([...fallbackSpecialties]);
 const error = ref('');
-const insurancePlans = ref([]);
-const bookingConstraints = ref([]);
-
-const tickerItems = [
-  { id: 'medical-services', label: '24/7 Emergency Service' },
-  { id: 'find-doctor', label: 'Online Appointment Available' },
-  { id: 'appointment', label: 'Insurance Support' },
-  { id: 'question', label: 'New Pediatric Center Opened' },
-  { id: 'home-care', label: 'Free Screening Week' },
-];
-
-const fallbackServices = [
-  { id: 'svc-fallback-1', title: 'General Checkup', description: 'Routine health examination and consultation.', detailRoute: '/home-feature/service/svc-fallback-1' },
-  { id: 'svc-fallback-2', title: 'Cardiology', description: 'Heart and vascular disease diagnosis and treatment.', detailRoute: '/home-feature/service/svc-fallback-2' },
-  { id: 'svc-fallback-3', title: 'Laboratory', description: 'Blood tests, diagnostics, and clinical analysis.', detailRoute: '/home-feature/service/svc-fallback-3' },
-  { id: 'svc-fallback-4', title: 'Emergency', description: 'Immediate care for urgent medical cases.', detailRoute: '/home-feature/service/svc-fallback-4' },
-  { id: 'svc-fallback-5', title: 'Maternity', description: 'Pregnancy monitoring and childbirth support.', detailRoute: '/home-feature/service/svc-fallback-5' },
-  { id: 'svc-fallback-6', title: 'Pediatrics', description: 'Healthcare services for infants and children.', detailRoute: '/home-feature/service/svc-fallback-6' },
-];
-
-const services = ref([...fallbackServices]);
-const fallbackInsurancePlans = [
-  {
-    id: 'ins-fallback-1',
-    provider: 'Community Health',
-    planName: 'Basic Care',
-    coverageSummary: 'Covers outpatient consultation and selected diagnostics.',
-    copayAmount: 20,
-  },
-];
-const fallbackBookingConstraints = [
-  {
-    id: 'bc-fallback-1',
-    code: 'MAX_ACTIVE_APPOINTMENTS',
-    title: 'Active booking limit',
-    description: 'Each patient can hold a limited number of active appointments.',
-    appliesToRole: 'patient',
-    value: 3,
-  },
-];
-
-insurancePlans.value = [...fallbackInsurancePlans];
-bookingConstraints.value = [...fallbackBookingConstraints];
 
 const newsItems = [
-  { id: 'outpatient-expand', date: '2026-03-24', title: 'Hospital expands outpatient service', summary: 'New counters and faster check-in are now available.' },
-  { id: 'new-specialists', date: '2026-03-20', title: 'New specialist doctors joined', summary: 'Three specialists in cardiology and pediatrics joined this month.' },
-  { id: 'online-queue', date: '2026-03-15', title: 'Online queue pilot launched', summary: 'Patients can now monitor waiting queue from home.' },
+  { id: 'outpatient-expand', date: '2026-03-24', title: 'Mo rong khu kham ngoai tru', summary: 'Tang so quay tiep nhan va toi uu thoi gian cho cua benh nhan.' },
+  { id: 'new-specialists', date: '2026-03-20', title: 'Bo sung doi ngu bac si chuyen khoa', summary: 'Them bac si tim mach, nhi khoa va noi tong quat tuan nay.' },
+  { id: 'online-queue', date: '2026-03-15', title: 'Ra mat thong bao hang doi truc tuyen', summary: 'Nguoi benh co the theo doi thu tu kham ngay tren he thong.' },
 ];
 
 const search = reactive({ query: '', specialty: '' });
-const slotForm = reactive({ doctorId: '', from: '', to: '' });
-const contact = reactive({ fullName: '', phone: '', email: '', message: '' });
 
-const pretty = (value) => (value ? JSON.stringify(value, null, 2) : 'No data yet.');
+const specialtyLink = (item) => ({
+  path: '/doctors',
+  query: { specialty: item?.name || '' },
+});
 
 const safeRun = async (fn) => {
   error.value = '';
-  status.value = '';
   try {
     await fn();
   } catch (e) {
-    error.value = e.message || 'Request failed';
+    error.value = e.message || 'Khong the tai du lieu tu he thong.';
   }
 };
 
-const loadPublicInfo = () =>
+const hydrateSpecialties = () =>
   safeRun(async () => {
-    publicInfo.value = await guestApi.publicInfo();
-    const mapped = (publicInfo.value?.services || []).map((svc) => ({
-      id: svc.id,
-      title: svc.name || svc.title || 'Service',
-      description: svc.description || 'Service available via clinic management workflow.',
-      price: svc.price,
-      detailRoute: svc.id ? `/services/${svc.id}` : '/home-feature/service/unknown',
+    const info = await guestApi.publicInfo();
+    const mapped = (info?.services || []).map((svc) => ({
+      id: svc.id || `sp-${svc.name || 'unknown'}`,
+      name: svc.name || 'Chuyen khoa',
+      summary: svc.description || 'Thong tin chuyen khoa dang duoc cap nhat.',
     }));
+
     if (mapped.length > 0) {
-      services.value = mapped;
+      specialties.value = mapped;
     }
-
-    const mappedPlans = (publicInfo.value?.insurancePlans || []).map((plan) => ({
-      id: plan.id,
-      provider: plan.provider || 'Unknown provider',
-      planName: plan.planName || 'Insurance Plan',
-      coverageSummary: plan.coverageSummary || 'Coverage details are available at check-in.',
-      copayAmount: plan.copayAmount ?? 0,
-    }));
-    insurancePlans.value = mappedPlans.length > 0 ? mappedPlans : [...fallbackInsurancePlans];
-
-    const mappedConstraints = (publicInfo.value?.bookingConstraints || []).map((rule) => ({
-      id: rule.id,
-      code: rule.code || 'UNKNOWN_RULE',
-      title: rule.title || 'Booking Rule',
-      description: rule.description || 'Please contact reception for booking requirements.',
-      appliesToRole: rule.appliesToRole || 'patient',
-      value: rule.value ?? '-',
-    }));
-    bookingConstraints.value = mappedConstraints.length > 0 ? mappedConstraints : [...fallbackBookingConstraints];
   });
 
 const searchDoctors = () =>
   safeRun(async () => {
     const response = await guestApi.searchDoctors(search);
-    doctors.value = response.doctors || [];
-  });
-
-const loadSlots = () =>
-  safeRun(async () => {
-    slots.value = await guestApi.availableSlots(slotForm.doctorId, {
-      from: slotForm.from,
-      to: slotForm.to,
-    });
-  });
-
-const sendContact = () =>
-  safeRun(async () => {
-    await guestApi.contact(contact);
-    status.value = 'Contact request submitted.';
+    doctors.value = (response?.doctors && response.doctors.length > 0)
+      ? response.doctors
+      : [...fallbackDoctors];
   });
 
 onMounted(() => {
-  loadPublicInfo();
+  doctors.value = [...fallbackDoctors];
+  hydrateSpecialties();
   searchDoctors();
 });
 </script>
@@ -268,78 +199,160 @@ onMounted(() => {
   width: 100%;
   margin: 0 auto;
   color: #1f2937;
-}
-
-.banner-actions a,
-.banner-actions button,
-.search-form button,
-.contact-form button {
-  border: 1px solid #9ca3af;
-  background: #f9fafb;
-  padding: 10px 14px;
-  color: #111827;
-  text-decoration: none;
-}
-
-.banner {
-  margin-top: 24px;
-  background: linear-gradient(90deg, #dbeafe, #f0f9ff);
-  border: 1px solid #93c5fd;
-  padding: 30px;
   display: grid;
-  gap: 24px;
-  grid-template-columns: 1fr auto;
+  gap: 18px;
 }
 
-.banner-label {
+.hero-top-banner {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  min-height: 580px;
+  background: #0f172a;
+  overflow: hidden;
+}
+
+.hero-top-banner img {
+  width: 100%;
+  height: 100%;
+  min-height: 580px;
+  object-fit: cover;
+  display: block;
+  filter: saturate(1.04) contrast(1.03);
+}
+
+.hero-banner {
+  margin-top: 0;
+  padding: 26px 34px 34px;
+  border: 1px solid #93c5fd;
+  background: linear-gradient(120deg, #eff6ff 0%, #f8fbff 100%);
+}
+
+.hero-content {
+  display: grid;
+  gap: 14px;
+}
+
+.hero-tag {
   margin: 0;
   text-transform: uppercase;
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   color: #1d4ed8;
 }
 
-.banner h1 {
-  margin: 14px 0;
-  font-size: 30px;
+.hero-content h1 {
+  margin: 0;
+  max-width: 760px;
+  font-size: 34px;
+  line-height: 1.2;
 }
 
-.ticker-wrap {
-  margin-top: 24px;
-  overflow: hidden;
-  border: 1px solid #d1d5db;
-  background: #f9fafb;
+.hero-content p {
+  margin: 0;
+  max-width: 860px;
+  color: #334155;
 }
 
-.ticker-track {
+.hero-content-actions {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cta-primary,
+.cta-secondary {
+  min-width: 172px;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
   display: inline-flex;
-  gap: 38px;
-  padding: 14px 24px;
-  min-width: 100%;
-  animation: slide 22s linear infinite;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #0f172a;
+  padding: 0 14px;
+  box-sizing: border-box;
 }
 
-.ticker-item {
-  color: #1f2937;
-  text-decoration: none;
-  border-bottom: 1px dashed #93c5fd;
+.cta-primary {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+}
+
+.cta-secondary {
+  background: #ffffff;
+  border-color: #cbd5e1;
 }
 
 .section {
-  margin-top: 24px;
   border: 1px solid #d1d5db;
   background: #ffffff;
   padding: 28px;
 }
 
-.service-grid {
-  margin-top: 16px;
+.visual-row {
   display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.service-card,
+.visual-card {
+  border: 1px solid #dbe2ea;
+  background: #f8fafc;
+  display: grid;
+  grid-template-rows: 170px auto;
+}
+
+.visual-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.visual-card div {
+  padding: 14px;
+}
+
+.visual-card h3 {
+  margin: 0 0 8px;
+}
+
+.visual-card p {
+  margin: 0;
+  color: #334155;
+}
+
+.section-head h2 {
+  margin: 0;
+}
+
+.section-head p {
+  margin: 8px 0 0;
+  color: #475569;
+}
+
+.quick-search {
+  margin-top: 18px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr 1fr auto;
+}
+
+.quick-search input {
+  width: 100%;
+}
+
+.doctor-list {
+  margin-top: 18px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
 .doctor-card,
 .news-card {
   border: 1px solid #e5e7eb;
@@ -347,64 +360,54 @@ onMounted(() => {
   padding: 18px;
 }
 
-.search-form {
+.specialty-grid {
+  margin-top: 18px;
   display: grid;
-  gap: 14px;
-  grid-template-columns: 1fr 1fr auto;
-}
-
-.search-form input,
-.contact-form input,
-.contact-form textarea {
-  border: 1px solid #9ca3af;
-  padding: 10px 12px;
-  width: 100%;
-}
-
-.doctor-list {
-  margin-top: 16px;
-  display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-}
-
-.news-row {
-  margin-top: 16px;
-  display: grid;
-  gap: 18px;
+  gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
-.contact-grid {
-  margin-top: 16px;
-  display: grid;
-  gap: 24px;
-  grid-template-columns: 1fr 1fr;
+.specialty-card {
+  border: 1px solid #dbe2ea;
+  background: #f8fafc;
+  padding: 18px;
+  min-height: 148px;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.contact-form {
-  display: grid;
-  gap: 14px;
+.specialty-card h3 {
+  margin: 0 0 8px;
 }
 
-.contact-form pre,
-.section pre {
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
-  padding: 12px;
-  max-height: 250px;
-  overflow: auto;
+.specialty-card p {
+  margin: 0;
+  color: #334155;
+}
+
+.specialty-link:hover .specialty-card,
+.specialty-link:focus-visible .specialty-card {
+  transform: translateY(-2px);
+  border-color: #60a5fa;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
+}
+
+.card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.news-row {
+  margin-top: 18px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .status {
-  margin-top: 24px;
+  margin-top: 0;
   border: 1px solid #d1d5db;
   padding: 12px 14px;
-}
-
-.status.ok {
-  background: #ecfdf5;
-  border-color: #6ee7b7;
 }
 
 .status.err {
@@ -412,19 +415,24 @@ onMounted(() => {
   border-color: #fca5a5;
 }
 
-@keyframes slide {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 @media (max-width: 900px) {
-  .banner,
-  .contact-grid,
-  .search-form {
+  .hero-top-banner {
+    min-height: 300px;
+  }
+
+  .hero-top-banner img {
+    min-height: 300px;
+  }
+
+  .hero-content-actions {
+    gap: 8px;
+  }
+
+  .visual-row {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-search {
     grid-template-columns: 1fr;
   }
 }

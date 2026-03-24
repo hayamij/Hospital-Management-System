@@ -5,16 +5,7 @@
       <p>Execute admin usecases: users, schedules, billing, services, settings, reports and audit.</p>
     </header>
 
-    <section class="panel">
-      <h2>User role and status</h2>
-      <form class="grid four" @submit.prevent="assignRole">
-        <input v-model="userOps.userId" placeholder="User ID" required />
-        <input v-model="userOps.role" placeholder="Role (patient/doctor/admin)" required />
-        <button type="submit">Assign role</button>
-        <button type="button" @click="updateUserStatus">Update status</button>
-      </form>
-      <input v-model="userOps.action" placeholder="Status action (activate/deactivate/disable)" />
-    </section>
+    <UserManagement />
 
     <section class="panel">
       <h2>Doctor schedule and appointment override</h2>
@@ -80,13 +71,13 @@
 import { reactive, ref } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
 import { adminApi } from '../services/api.js';
+import UserManagement from '../components/admin/UserManagement.vue';
 
 const auth = useAuthStore();
 const status = ref('');
 const error = ref('');
 const reportResult = ref(null);
 
-const userOps = reactive({ userId: '', role: 'doctor', action: 'activate' });
 const scheduleOps = reactive({ doctorId: '', slotsPerDay: 12 });
 const overrideOps = reactive({ appointmentId: '', action: 'cancel', startAt: '', endAt: '', doctorId: '' });
 const serviceOps = reactive({ id: '', name: '', price: 0 });
@@ -107,18 +98,6 @@ const withFeedback = async (action, successText) => {
     error.value = e.message;
   }
 };
-
-const assignRole = () =>
-  withFeedback(
-    () => adminApi.assignRole(auth.token, userOps.userId, { role: userOps.role, adminId: auth.userId }),
-    'Role assigned successfully.'
-  );
-
-const updateUserStatus = () =>
-  withFeedback(
-    () => adminApi.updateUserStatus(auth.token, userOps.userId, { action: userOps.action, adminId: auth.userId }),
-    'User status updated successfully.'
-  );
 
 const updateDoctorSchedule = () =>
   withFeedback(

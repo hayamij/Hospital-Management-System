@@ -13,7 +13,7 @@ async function run() {
   const created = await repo.create({ fromPatientId: 'p1', toDoctorId: 'd1', message: 'Hi', content: 'Hi', subject: undefined });
   assert.strictEqual(created.id, 'msg-1');
   assert.ok(pool.calls[0].text.includes('INSERT INTO messages'));
-  assert.deepStrictEqual(pool.calls[0].params.slice(0, 2), ['p1', 'd1']);
+  assert.deepStrictEqual(pool.calls[0].params.slice(1, 3), ['p1', 'd1']);
 }
 
 wrapLegacyRun(run, 'messageRepository');

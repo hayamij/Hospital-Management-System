@@ -16,16 +16,18 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite --config frontend/vite.config.js",
-    "dev:api": "node src/infrastructure/http/server.js",
+    "dev:api": "node --env-file=.env src/infrastructure/http/server.js",
+    "dev:api:mssql": "node --env-file=.env src/infrastructure/http/server.js",
     "build": "vite build --config frontend/vite.config.js",
     "preview": "vite preview --config frontend/vite.config.js",
     "test": "vitest run --config test/vitest.config.js"
   },
   "dependencies": {
+    "axios": "^1.13.6",
     "bcrypt": "^5.1.1",
-    "better-sqlite3": "^11.8.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.2",
+    "mssql": "^11.0.1",
     "pg": "^8.11.5",
     "pinia": "^3.0.4",
     "vue": "^3.5.30",
