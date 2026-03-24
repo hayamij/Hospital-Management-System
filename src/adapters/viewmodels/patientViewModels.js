@@ -67,6 +67,15 @@ export class ViewBillingAndPaymentsViewModel {
   }
 }
 
+export class DownloadInvoiceViewModel {
+  constructor(output) {
+    this.invoiceId = output.invoiceId;
+    this.file = output.file;
+    this.filename = output.filename;
+    this.contentType = output.contentType;
+  }
+}
+
 export class ViewMedicalRecordsViewModel {
   constructor(output) {
     this.page = output.page;
