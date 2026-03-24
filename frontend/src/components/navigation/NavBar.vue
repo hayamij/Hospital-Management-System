@@ -10,7 +10,9 @@
           <p>{{ auth.email || 'unknown' }}</p>
           <small>{{ auth.role || 'unauthenticated' }}</small>
         </div>
-				<RouterLink class="user-link" :to="userRoute">User</RouterLink>
+				<div class="manager-links" v-if="managementLinks.length">
+					<RouterLink v-for="item in managementLinks" :key="item.to" class="user-link" :to="item.to">{{ item.label }}</RouterLink>
+				</div>
         <button v-if="auth.isAuthenticated" type="button" @click="handleLogout">Logout</button>
       </div>
     </div>
@@ -25,10 +27,28 @@ import { useAuthStore } from '../../stores/auth.js';
 const auth = useAuthStore();
 const router = useRouter();
 
-const userRoute = computed(() => {
-	if (auth.role === 'admin') return '/admin-ops';
-	if (auth.role === 'doctor') return '/doctor-ops';
-	return '/patients';
+const managementLinks = computed(() => {
+	if (auth.role === 'admin') {
+		return [
+			{ label: 'Overview', to: '/admin/dashboard#overview' },
+			{ label: 'Users', to: '/admin/dashboard#users' },
+			{ label: 'Services', to: '/admin/dashboard#services' },
+			{ label: 'Billing', to: '/admin/dashboard#billing' },
+			{ label: 'Reports', to: '/admin/dashboard#reports' },
+		];
+	}
+
+	if (auth.role === 'doctor') {
+		return [
+			{ label: 'Doctor Ops', to: '/doctor/dashboard' },
+			{ label: 'Consultation', to: '/doctor/consultation' },
+			{ label: 'Schedule', to: '/doctor/appointments' },
+			{ label: 'Records', to: '/doctor/records' },
+			{ label: 'Messages', to: '/doctor/communications' },
+		];
+	}
+
+	return [];
 });
 
 const handleLogout = async () => {
@@ -61,6 +81,7 @@ const handleLogout = async () => {
 .right { display: flex; gap: 16px; align-items: center; text-align: right; }
 .right p { margin: 0; }
 .right small { color: #4b5563; }
+.manager-links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .user-link { border: 1px solid #9ca3af; background: #f9fafb; padding: 8px 12px; color: #111827; text-decoration: none; }
 .right button { border: 1px solid #9ca3af; background: #f9fafb; padding: 8px 12px; cursor: pointer; }
 
