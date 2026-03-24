@@ -8,9 +8,10 @@
       </div>
       <div class="footer-links">
         <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/public">Public Portal</RouterLink>
-        <RouterLink to="/login">Login</RouterLink>
-        <RouterLink to="/register">Register</RouterLink>
+        <RouterLink to="/services">Services</RouterLink>
+        <RouterLink to="/doctors">Doctors</RouterLink>
+        <RouterLink to="/news">News</RouterLink>
+        <RouterLink to="/about">About</RouterLink>
       </div>
     </div>
   </footer>
