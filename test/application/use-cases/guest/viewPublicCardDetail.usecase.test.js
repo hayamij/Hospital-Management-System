@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { ViewPublicCardDetailUseCase } from '../../../../src/application/use-cases/guest/viewPublicCardDetail.usecase.js';
-import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { ViewPublicCardDetailUseCase } from '../../../../server/application/use-cases/guest/viewPublicCardDetail.usecase.js';
+import { DomainError } from '../../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeServiceCatalogRepository {

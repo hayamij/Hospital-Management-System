@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { SqlBillingRepository } from '../../../../src/infrastructure/db/repositories/billingRepository.js';
+import { SqlBillingRepository } from '../../../../server/infrastructure/db/repositories/billingRepository.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePool {

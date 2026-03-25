@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { BrowsePublicInfoUseCase } from '../../../../src/application/use-cases/guest/browsePublicInfo.usecase.js';
+import { BrowsePublicInfoUseCase } from '../../../../server/application/use-cases/guest/browsePublicInfo.usecase.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeServiceCatalogRepository {

@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { Doctor } from '../../../src/domain/entities/doctor.js';
-import { DomainError } from '../../../src/domain/exceptions/domainError.js';
+import { Doctor } from '../../../server/domain/entities/doctor.js';
+import { DomainError } from '../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 async function expectThrows(fn, message) {

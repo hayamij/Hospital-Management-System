@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { BaseEntity } from '../../../src/domain/entities/baseEntity.js';
-import { DomainError } from '../../../src/domain/exceptions/domainError.js';
+import { BaseEntity } from '../../../server/domain/entities/baseEntity.js';
+import { DomainError } from '../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class ConcreteEntity extends BaseEntity {}

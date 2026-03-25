@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { OverrideAppointmentUseCase } from '../../../../src/application/use-cases/admin/overrideAppointment.usecase.js';
-import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { OverrideAppointmentUseCase } from '../../../../server/application/use-cases/admin/overrideAppointment.usecase.js';
+import { DomainError } from '../../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeAppointment {

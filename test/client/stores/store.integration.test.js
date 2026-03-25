@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 
-vi.mock('../../../frontend/src/services/api.js', () => ({
+vi.mock('../../../client/src/services/api.js', () => ({
   authApi: {
     login: vi.fn(),
     logout: vi.fn(),
@@ -28,11 +28,11 @@ vi.mock('../../../frontend/src/services/api.js', () => ({
   },
 }));
 
-import { authApi, patientApi, doctorApi, adminApi } from '../../../frontend/src/services/api.js';
-import { useAuthStore } from '../../../frontend/src/stores/auth.js';
-import { useAppointmentsStore } from '../../../frontend/src/stores/appointments.js';
-import { useBillingStore } from '../../../frontend/src/stores/billing.js';
-import { useAdminUsersStore } from '../../../frontend/src/stores/adminUsers.js';
+import { authApi, patientApi, doctorApi, adminApi } from '../../../client/src/services/api.js';
+import { useAuthStore } from '../../../client/src/stores/auth.js';
+import { useAppointmentsStore } from '../../../client/src/stores/appointments.js';
+import { useBillingStore } from '../../../client/src/stores/billing.js';
+import { useAdminUsersStore } from '../../../client/src/stores/adminUsers.js';
 
 const makeStorage = () => {
   const map = new Map();

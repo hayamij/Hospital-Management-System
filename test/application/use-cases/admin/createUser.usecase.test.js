@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { CreateUserUseCase } from '../../../../src/application/use-cases/admin/createUser.usecase.js';
-import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { CreateUserUseCase } from '../../../../server/application/use-cases/admin/createUser.usecase.js';
+import { DomainError } from '../../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeUserRepository {

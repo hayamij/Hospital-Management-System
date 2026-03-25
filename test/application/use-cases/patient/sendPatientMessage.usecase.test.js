@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { SendPatientMessageUseCase } from '../../../../src/application/use-cases/patient/sendPatientMessage.usecase.js';
-import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { SendPatientMessageUseCase } from '../../../../server/application/use-cases/patient/sendPatientMessage.usecase.js';
+import { DomainError } from '../../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePatientRepository {

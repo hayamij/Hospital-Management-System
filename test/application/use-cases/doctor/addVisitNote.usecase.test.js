@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { AddVisitNoteUseCase } from '../../../../src/application/use-cases/doctor/addVisitNote.usecase.js';
-import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { AddVisitNoteUseCase } from '../../../../server/application/use-cases/doctor/addVisitNote.usecase.js';
+import { DomainError } from '../../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeMedicalRecord {
