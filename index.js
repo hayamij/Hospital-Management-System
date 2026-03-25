@@ -1,5 +1,5 @@
 import express from 'express';
-import { createHttpRouter } from './src/adapters/controllers/http/routerFactory.js';
+import { createHttpRouter } from './server/adapters/controllers/http/routerFactory.js';
 
 // Build an Express app wired with HTTP controllers. The caller must provide all
 // use-case instances in deps (e.g., scheduleAppointmentUseCase, adminLoginUseCase).
