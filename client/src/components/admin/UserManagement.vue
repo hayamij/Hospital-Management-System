@@ -2,55 +2,55 @@
   <section class="panel">
     <header class="head-row">
       <div>
-        <h2>Quan ly Nguoi dung</h2>
-        <p>Quan ly Bac si va Benh nhan voi tim kiem, phan trang va chinh sua role.</p>
+        <h2>Quản lý người dùng</h2>
+        <p>Quản lý bác sĩ và bệnh nhân với tìm kiếm, phân trang và chỉnh sửa vai trò.</p>
       </div>
-      <button type="button" @click="openCreateModal">Them nguoi dung</button>
+      <button type="button" @click="openCreateModal">Thêm người dùng</button>
     </header>
 
     <div class="toolbar">
-      <input v-model.trim="searchText" type="text" placeholder="Tim theo ten, email, ID..." />
+      <input v-model.trim="searchText" type="text" placeholder="Tìm theo tên, email, ID..." />
       <select v-model="typeFilter">
-        <option value="all">Tat ca nhom</option>
-        <option value="doctor">Bac si</option>
-        <option value="patient">Benh nhan</option>
-        <option value="admin">Admin</option>
+        <option value="all">Tất cả nhóm</option>
+        <option value="doctor">Bác sĩ</option>
+        <option value="patient">Bệnh nhân</option>
+        <option value="admin">Quản trị</option>
       </select>
       <select v-model.number="pageSize">
         <option :value="5">5 / trang</option>
         <option :value="10">10 / trang</option>
         <option :value="20">20 / trang</option>
       </select>
-      <button type="button" @click="refresh">Tim</button>
+      <button type="button" @click="refresh">Tìm</button>
     </div>
 
     <DataTable
       :columns="columns"
       :rows="rows"
       row-key="id"
-      empty-text="Khong co nguoi dung phu hop dieu kien tim kiem."
+      empty-text="Không có người dùng phù hợp điều kiện tìm kiếm."
     >
-      <template #cell-type="{ value }">{{ value === 'doctor' ? 'Bac si' : 'Benh nhan' }}</template>
+      <template #cell-type="{ value }">{{ value === 'doctor' ? 'Bác sĩ' : 'Bệnh nhân' }}</template>
       <template #cell-actions="{ row }">
         <div class="row actions">
-          <button type="button" @click="openEditModal(row)">Chinh sua</button>
+          <button type="button" @click="openEditModal(row)">Chỉnh sửa</button>
         </div>
       </template>
     </DataTable>
 
     <div class="pagination">
-      <button type="button" @click="prevPage" :disabled="page <= 1">Truoc</button>
+      <button type="button" @click="prevPage" :disabled="page <= 1">Trước</button>
       <span>Trang {{ page }} / {{ totalPages }}</span>
       <button type="button" @click="nextPage" :disabled="page >= totalPages">Sau</button>
     </div>
 
-    <p v-if="store.loading" class="msg">Dang tai danh sach...</p>
+    <p v-if="store.loading" class="msg">Đang tải danh sách...</p>
     <p v-if="status" class="msg ok">{{ status }}</p>
     <p v-if="error || store.error" class="msg err">{{ error || store.error }}</p>
 
     <div v-if="modalOpen" class="modal-overlay" @click.self="closeModal">
       <div class="modal-card">
-        <h3>{{ modalMode === 'create' ? 'Them nguoi dung moi' : 'Chinh sua nguoi dung' }}</h3>
+        <h3>{{ modalMode === 'create' ? 'Thêm người dùng mới' : 'Chỉnh sửa người dùng' }}</h3>
 
         <form class="modal-form" @submit.prevent="saveUser">
           <label class="field">
@@ -60,7 +60,7 @@
           </label>
 
           <label class="field">
-            <span>Ho ten</span>
+            <span>Họ tên</span>
             <input v-model.trim="form.name" placeholder="Nguyen Van A" />
             <small v-if="submitted && fieldErrors.name" class="field-error">{{ fieldErrors.name }}</small>
           </label>
@@ -72,41 +72,41 @@
           </label>
 
           <label class="field">
-            <span>Nhom</span>
+            <span>Nhóm</span>
             <select v-model="form.type">
-              <option value="doctor">Bac si</option>
-              <option value="patient">Benh nhan</option>
+              <option value="doctor">Bác sĩ</option>
+              <option value="patient">Bệnh nhân</option>
             </select>
           </label>
 
           <label class="field">
-            <span>Role</span>
+            <span>Vai trò</span>
             <select v-model="form.role">
-              <option value="doctor">doctor</option>
-              <option value="patient">patient</option>
-              <option value="admin">admin</option>
+              <option value="doctor">Bác sĩ</option>
+              <option value="patient">Bệnh nhân</option>
+              <option value="admin">Quản trị</option>
             </select>
           </label>
 
           <label class="field">
-            <span>Trang thai</span>
+            <span>Trạng thái</span>
             <select v-model="form.status">
-              <option value="active">active</option>
-              <option value="inactive">inactive</option>
-              <option value="disabled">disabled</option>
-              <option value="verified">verified</option>
-              <option value="pending">pending</option>
+              <option value="active">Đang hoạt động</option>
+              <option value="inactive">Không hoạt động</option>
+              <option value="disabled">Vô hiệu hóa</option>
+              <option value="verified">Đã xác thực</option>
+              <option value="pending">Chờ duyệt</option>
             </select>
           </label>
 
           <label v-if="modalMode === 'create'" class="field">
-            <span>Mat khau tam (tuy chon)</span>
-            <input v-model.trim="form.password" type="password" placeholder="De trong neu chua cap" />
+            <span>Mật khẩu tạm (tùy chọn)</span>
+            <input v-model.trim="form.password" type="password" placeholder="Để trống nếu chưa cấp" />
           </label>
 
           <div class="row modal-actions">
-            <button type="submit" :disabled="store.saving">{{ store.saving ? 'Dang luu...' : 'Luu' }}</button>
-            <button type="button" @click="closeModal">Huy</button>
+            <button type="submit" :disabled="store.saving">{{ store.saving ? 'Đang lưu...' : 'Lưu' }}</button>
+            <button type="button" @click="closeModal">Hủy</button>
           </div>
         </form>
       </div>
@@ -121,12 +121,12 @@ import { useAdminUsersStore } from '../../stores/adminUsers.js';
 
 const columns = [
   { key: 'id', label: 'ID', width: '140px' },
-  { key: 'name', label: 'Ho ten' },
+  { key: 'name', label: 'Họ tên' },
   { key: 'email', label: 'Email', width: '230px' },
-  { key: 'type', label: 'Nhom', width: '120px' },
-  { key: 'role', label: 'Role', width: '120px' },
-  { key: 'status', label: 'Trang thai', width: '130px' },
-  { key: 'actions', label: 'Thao tac', width: '120px', align: 'center' },
+  { key: 'type', label: 'Nhóm', width: '120px' },
+  { key: 'role', label: 'Vai trò', width: '120px' },
+  { key: 'status', label: 'Trạng thái', width: '130px' },
+  { key: 'actions', label: 'Thao tác', width: '120px', align: 'center' },
 ];
 
 const store = useAdminUsersStore();
@@ -190,11 +190,11 @@ watch(totalPages, (val) => {
 const fieldErrors = computed(() => {
   const e = {};
 
-  if (!form.id || form.id.length < 3) e.id = 'ID toi thieu 3 ky tu.';
-  if (!form.name || form.name.length < 2) e.name = 'Ho ten toi thieu 2 ky tu.';
+  if (!form.id || form.id.length < 3) e.id = 'ID tối thiểu 3 ký tự.';
+  if (!form.name || form.name.length < 2) e.name = 'Họ tên tối thiểu 2 ký tự.';
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email || '');
-  if (!emailOk) e.email = 'Email khong hop le.';
+  if (!emailOk) e.email = 'Email không hợp lệ.';
 
   return e;
 });
@@ -249,7 +249,7 @@ const refresh = async () => {
       pageSize: pageSize.value,
     });
   } catch (e) {
-    error.value = e?.message || 'Khong the tai danh sach nguoi dung.';
+    error.value = e?.message || 'Không thể tải danh sách người dùng.';
   }
 };
 
@@ -271,7 +271,7 @@ const saveUser = async () => {
         status: form.status,
         password: form.password || undefined,
       });
-      status.value = 'Da them nguoi dung moi.';
+      status.value = 'Đã thêm người dùng mới.';
     } else {
       await store.updateUser(form.id, {
         fullName: form.name,
@@ -279,12 +279,12 @@ const saveUser = async () => {
         role: form.role,
         status: form.status,
       });
-      status.value = 'Cap nhat nguoi dung thanh cong.';
+      status.value = 'Cập nhật người dùng thành công.';
     }
 
     closeModal();
   } catch (e) {
-    error.value = e?.message || 'Khong the luu thong tin nguoi dung.';
+    error.value = e?.message || 'Không thể lưu thông tin người dùng.';
   }
 };
 

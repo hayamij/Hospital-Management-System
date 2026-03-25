@@ -36,7 +36,7 @@ export class SqlUserRepository extends UserRepositoryPort {
     if (query) {
       params.push(`%${query}%`);
       const idx = params.length;
-      filters.push(`(email ILIKE $${idx} OR COALESCE(full_name, '') ILIKE $${idx} OR id ILIKE $${idx})`);
+      filters.push(`(LOWER(email) LIKE LOWER($${idx}) OR LOWER(COALESCE(full_name, '')) LIKE LOWER($${idx}) OR LOWER(id) LIKE LOWER($${idx}))`);
     }
 
     if (role) {
@@ -46,9 +46,9 @@ export class SqlUserRepository extends UserRepositoryPort {
 
     const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
 
-    const countQuery = `SELECT COUNT(*)::int AS total FROM users ${whereClause}`;
+    const countQuery = `SELECT COUNT(*) AS total FROM users ${whereClause}`;
     const countResult = await this.pool.query(countQuery, params);
-    const total = countResult.rows?.[0]?.total ?? 0;
+    const total = Number(countResult.rows?.[0]?.total ?? 0);
 
     params.push(safePageSize, offset);
     const limitIdx = params.length - 1;
@@ -59,7 +59,7 @@ export class SqlUserRepository extends UserRepositoryPort {
       FROM users
       ${whereClause}
       ORDER BY created_at DESC
-      LIMIT $${limitIdx} OFFSET $${offsetIdx}`;
+      OFFSET $${offsetIdx} ROWS FETCH NEXT $${limitIdx} ROWS ONLY`;
 
     const { rows } = await this.pool.query(listQuery, params);
     return {

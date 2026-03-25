@@ -2,18 +2,18 @@
   <header class="topbar">
     <div class="topbar-center">
       <div>
-        <p class="title">Hospital Management</p>
-        <p class="meta">Backoffice for doctor and admin</p>
+				<p class="title">Hospital Management</p>
+				<p class="meta">Backoffice cho bác sĩ và quản trị</p>
       </div>
       <div class="right">
         <div>
-          <p>{{ auth.email || 'unknown' }}</p>
-          <small>{{ auth.role || 'unauthenticated' }}</small>
+					<p>{{ auth.email || 'không rõ' }}</p>
+					<small>{{ auth.role || 'chưa đăng nhập' }}</small>
         </div>
 				<div class="manager-links" v-if="managementLinks.length">
 					<RouterLink v-for="item in managementLinks" :key="item.to" class="user-link" :to="item.to">{{ item.label }}</RouterLink>
 				</div>
-        <button v-if="auth.isAuthenticated" type="button" @click="handleLogout">Logout</button>
+				<button v-if="auth.isAuthenticated" type="button" @click="handleLogout">Đăng xuất</button>
       </div>
     </div>
   </header>
@@ -30,21 +30,21 @@ const router = useRouter();
 const managementLinks = computed(() => {
 	if (auth.role === 'admin') {
 		return [
-			{ label: 'Overview', to: '/admin/dashboard#overview' },
-			{ label: 'Users', to: '/admin/dashboard#users' },
-			{ label: 'Services', to: '/admin/dashboard#services' },
-			{ label: 'Billing', to: '/admin/dashboard#billing' },
-			{ label: 'Reports', to: '/admin/dashboard#reports' },
+			{ label: 'Tổng quan', to: '/admin/dashboard#overview' },
+			{ label: 'Người dùng', to: '/admin/dashboard#users' },
+			{ label: 'Dịch vụ', to: '/admin/dashboard#services' },
+			{ label: 'Thanh toán', to: '/admin/dashboard#billing' },
+			{ label: 'Báo cáo', to: '/admin/dashboard#reports' },
 		];
 	}
 
 	if (auth.role === 'doctor') {
 		return [
-			{ label: 'Doctor Ops', to: '/doctor/dashboard' },
-			{ label: 'Consultation', to: '/doctor/consultation' },
-			{ label: 'Schedule', to: '/doctor/appointments' },
-			{ label: 'Records', to: '/doctor/records' },
-			{ label: 'Messages', to: '/doctor/communications' },
+			{ label: 'Vận hành bác sĩ', to: '/doctor/dashboard' },
+			{ label: 'Khám bệnh', to: '/doctor/consultation' },
+			{ label: 'Lịch hẹn', to: '/doctor/appointments' },
+			{ label: 'Hồ sơ', to: '/doctor/records' },
+			{ label: 'Tin nhắn', to: '/doctor/communications' },
 		];
 	}
 

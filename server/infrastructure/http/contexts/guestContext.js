@@ -1,37 +1,45 @@
-import { ViewPublicServicesUseCase } from '../../../application/use-cases/guest/viewPublicServices.usecase.js';
+import { BrowsePublicInfoUseCase } from '../../../application/use-cases/guest/browsePublicInfo.usecase.js';
 import { ViewPublicServiceDetailUseCase } from '../../../application/use-cases/guest/viewPublicServiceDetail.usecase.js';
-import { ViewDoctorDirectoryUseCase } from '../../../application/use-cases/guest/viewDoctorDirectory.usecase.js';
+import { GuestSearchDoctorsUseCase } from '../../../application/use-cases/guest/guestSearchDoctors.usecase.js';
 import { ViewPublicCardDetailUseCase } from '../../../application/use-cases/guest/viewPublicCardDetail.usecase.js';
-import { SubmitContactLeadUseCase } from '../../../application/use-cases/guest/submitContactLead.usecase.js';
-import { StartGuestRegistrationUseCase } from '../../../application/use-cases/guest/startGuestRegistration.usecase.js';
+import { SubmitContactFormUseCase } from '../../../application/use-cases/guest/submitContactForm.usecase.js';
+import { StartRegistrationUseCase } from '../../../application/use-cases/guest/startRegistration.usecase.js';
 import { adaptUseCase } from './common.js';
 
 export const createGuestUseCases = ({
   serviceCatalogRepository,
+  settingsRepository,
   doctorRepository,
+  patientRepository,
   contactLeadRepository,
 }) => {
-  const viewPublicServicesClass = new ViewPublicServicesUseCase({
+  const browsePublicInfoClass = new BrowsePublicInfoUseCase({
     serviceCatalogRepository,
+    settingsRepository:
+      settingsRepository || {
+        async getSettings() {
+          return {};
+        },
+      },
   });
   const viewPublicServiceDetailClass = new ViewPublicServiceDetailUseCase({
     serviceCatalogRepository,
   });
-  const viewDoctorDirectoryClass = new ViewDoctorDirectoryUseCase({
+  const guestSearchDoctorsClass = new GuestSearchDoctorsUseCase({
     doctorRepository,
   });
   const viewPublicCardDetailClass = new ViewPublicCardDetailUseCase({
     doctorRepository,
   });
-  const submitContactLeadClass = new SubmitContactLeadUseCase({
+  const submitContactFormClass = new SubmitContactFormUseCase({
     contactLeadRepository,
   });
-  const startGuestRegistrationClass = new StartGuestRegistrationUseCase({
-    contactLeadRepository,
+  const startRegistrationClass = new StartRegistrationUseCase({
+    patientRepository,
   });
 
-  const viewPublicServicesUseCase = adaptUseCase(
-    viewPublicServicesClass,
+  const browsePublicInfoUseCase = adaptUseCase(
+    browsePublicInfoClass,
     undefined,
     (result) => ({
       page: 1,
@@ -40,9 +48,12 @@ export const createGuestUseCases = ({
       services: result.services ?? [],
     })
   );
-  const viewDoctorDirectoryUseCase = adaptUseCase(
-    viewDoctorDirectoryClass,
-    undefined,
+  const guestSearchDoctorsUseCase = adaptUseCase(
+    guestSearchDoctorsClass,
+    (input) => ({
+      name: input?.name ?? input?.query,
+      specialization: input?.specialization ?? input?.specialty,
+    }),
     (result) => ({
       page: 1,
       pageSize: result.doctors?.length ?? 0,
@@ -52,11 +63,15 @@ export const createGuestUseCases = ({
   );
 
   return {
-    viewPublicServicesUseCase,
+    browsePublicInfoUseCase,
+    viewPublicServicesUseCase: browsePublicInfoUseCase,
     viewPublicServiceDetailUseCase: viewPublicServiceDetailClass,
-    viewDoctorDirectoryUseCase,
+    guestSearchDoctorsUseCase,
+    viewDoctorDirectoryUseCase: guestSearchDoctorsUseCase,
     viewPublicCardDetailUseCase: viewPublicCardDetailClass,
-    submitContactLeadUseCase: submitContactLeadClass,
-    startGuestRegistrationUseCase: startGuestRegistrationClass,
+    submitContactFormUseCase: submitContactFormClass,
+    submitContactLeadUseCase: submitContactFormClass,
+    startRegistrationUseCase: startRegistrationClass,
+    startGuestRegistrationUseCase: startRegistrationClass,
   };
 };

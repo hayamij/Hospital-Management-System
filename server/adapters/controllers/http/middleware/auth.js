@@ -26,11 +26,27 @@ export function buildAuthMiddleware({ userRepository } = {}) {
     try {
       const payload = jwt.verify(token, secret);
       req.user = { id: payload.sub, role: payload.role, email: payload.email };
+
+      if (userRepository && req.user?.id) {
+        const dbUser = await userRepository.findById(req.user.id);
+        if (dbUser) {
+          req.user = {
+            ...req.user,
+            patientId: dbUser.patientId ?? null,
+            doctorId: dbUser.doctorId ?? null,
+          };
+        }
+      }
+
       return next?.();
     } catch (err) {
       const dev = decodeDevToken(token);
       if (dev) {
-        req.user = dev;
+        req.user = {
+          ...dev,
+          patientId: dev.role === 'patient' ? dev.id : null,
+          doctorId: dev.role === 'doctor' ? dev.id : null,
+        };
         return next?.();
       }
       return res.status(401).json({ data: null, code: 'invalid_token', message: 'Invalid token' });

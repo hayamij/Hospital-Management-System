@@ -54,10 +54,10 @@ const form = reactive({
 });
 
 const recordColumns = [
-  { key: 'recordedAt', label: 'Thoi gian', width: '170px' },
-  { key: 'doctorId', label: 'Bac si', width: '120px' },
-  { key: 'note', label: 'Ghi chu' },
-  { key: 'summary', label: 'Chi tiet', width: '120px', align: 'center' },
+  { key: 'recordedAt', label: 'Thời gian', width: '170px' },
+  { key: 'doctorId', label: 'Bác sĩ', width: '120px' },
+  { key: 'note', label: 'Ghi chú' },
+  { key: 'summary', label: 'Chi tiết', width: '120px', align: 'center' },
 ];
 
 const recordRows = computed(() => mapRecordRows(records.list));
@@ -90,7 +90,7 @@ const submitConsultation = async () => {
   submitError.value = '';
 
   if (Object.keys(errors.value).length > 0) {
-    submitError.value = errors.value.patient || 'Vui long kiem tra lai thong tin truoc khi luu.';
+    submitError.value = errors.value.patient || 'Vui lòng kiểm tra lại thông tin trước khi lưu.';
     return;
   }
 
@@ -111,10 +111,10 @@ const submitConsultation = async () => {
       });
     }
 
-    success.value = 'Da luu thong tin ca kham hien tai thanh cong.';
+    success.value = 'Đã lưu thông tin ca khám hiện tại thành công.';
     await records.fetchRecords({ patientId: activePatientId.value });
   } catch (error) {
-    submitError.value = error?.message || 'Khong the luu ca kham. Vui long thu lai.';
+    submitError.value = error?.message || 'Không thể lưu ca khám. Vui lòng thử lại.';
   } finally {
     submitting.value = false;
   }

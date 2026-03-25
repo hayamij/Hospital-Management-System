@@ -1,9 +1,9 @@
 <template>
 	<div class="page">
 		<header class="panel">
-			<h1>Hoa don cua toi</h1>
-			<p>Danh sach hoa don va don thuoc lien quan duoc hien thi duoi dang bang.</p>
-			<button type="button" @click="refresh" :disabled="billing.loading">Lam moi</button>
+			<h1>Hóa đơn của tôi</h1>
+			<p>Danh sách hóa đơn và đơn thuốc liên quan được hiển thị dưới dạng bảng.</p>
+			<button type="button" @click="refresh" :disabled="billing.loading">Làm mới</button>
 		</header>
 
 		<section class="panel">
@@ -11,25 +11,25 @@
 				:columns="columns"
 				:rows="rows"
 				row-key="id"
-				empty-text="Ban chua co hoa don nao."
+				empty-text="Bạn chưa có hóa đơn nào."
 			>
 				<template #cell-amount="{ value }">{{ formatMoney(value) }}</template>
 				<template #cell-dueDate="{ value }">{{ formatDate(value) }}</template>
 				<template #cell-actions="{ row }">
 					<div class="row actions">
-						<button type="button" @click="viewDetail(row)">Xem chi tiet</button>
-						<button type="button" @click="downloadInvoice(row)">Tai PDF</button>
+						<button type="button" @click="viewDetail(row)">Xem chi tiết</button>
+						<button type="button" @click="downloadInvoice(row)">Tải PDF</button>
 					</div>
 				</template>
 			</DataTable>
 		</section>
 
 		<section v-if="selectedInvoice" class="panel">
-			<h2>Chi tiet hoa don</h2>
-			<p><strong>Ma hoa don:</strong> {{ selectedInvoice.invoiceNumber || selectedInvoice.id }}</p>
-			<p><strong>Trang thai:</strong> {{ selectedInvoice.status || 'N/A' }}</p>
-			<p><strong>So tien:</strong> {{ formatMoney(selectedInvoice.amount) }}</p>
-			<p><strong>Han thanh toan:</strong> {{ formatDate(selectedInvoice.dueDate) }}</p>
+			<h2>Chi tiết hóa đơn</h2>
+			<p><strong>Mã hóa đơn:</strong> {{ selectedInvoice.invoiceNumber || selectedInvoice.id }}</p>
+			<p><strong>Trạng thái:</strong> {{ selectedInvoice.status || 'N/A' }}</p>
+			<p><strong>Số tiền:</strong> {{ formatMoney(selectedInvoice.amount) }}</p>
+			<p><strong>Hạn thanh toán:</strong> {{ formatDate(selectedInvoice.dueDate) }}</p>
 		</section>
 
 		<p v-if="billing.error" class="msg err">{{ billing.error }}</p>
@@ -48,11 +48,11 @@ const auth = useAuthStore();
 const selectedInvoice = ref(null);
 
 const columns = [
-	{ key: 'invoiceNumber', label: 'Ma hoa don', width: '170px' },
-	{ key: 'status', label: 'Trang thai', width: '140px' },
-	{ key: 'amount', label: 'Tong tien', width: '160px', align: 'right' },
-	{ key: 'dueDate', label: 'Han thanh toan', width: '150px' },
-	{ key: 'actions', label: 'Thao tac', width: '220px' },
+	{ key: 'invoiceNumber', label: 'Mã hóa đơn', width: '170px' },
+	{ key: 'status', label: 'Trạng thái', width: '140px' },
+	{ key: 'amount', label: 'Tổng tiền', width: '160px', align: 'right' },
+	{ key: 'dueDate', label: 'Hạn thanh toán', width: '150px' },
+	{ key: 'actions', label: 'Thao tác', width: '220px' },
 ];
 
 const rows = computed(() => billing.invoices.map((item, index) => ({
@@ -93,7 +93,7 @@ const downloadInvoice = async (row) => {
 		document.body.removeChild(link);
 		URL.revokeObjectURL(url);
 	} catch (error) {
-		billing.error = error?.message || 'Khong the tai hoa don.';
+		billing.error = error?.message || 'Không thể tải hóa đơn.';
 	}
 };
 

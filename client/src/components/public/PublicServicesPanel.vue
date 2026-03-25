@@ -3,16 +3,16 @@
     <header class="hero panel">
       <div class="hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">CARE PROGRAMS</p>
-          <h1>Danh muc dich vu y te theo nhu cau dieu tri</h1>
+          <p class="eyebrow">CHƯƠNG TRÌNH CHĂM SÓC</p>
+          <h1>Danh mục dịch vụ y tế theo nhu cầu điều trị</h1>
           <p>
-            Tim kiem nhanh theo ten dich vu, loc theo nhom chuyen khoa, va xem cac goi kham
-            noi bat duoc dat lich nhieu trong tuan.
+            Tìm kiếm nhanh theo tên dịch vụ, lọc theo nhóm chuyên khoa và xem các gói khám
+            nổi bật được đặt lịch nhiều trong tuần.
           </p>
 
           <div class="hero-actions">
-            <RouterLink to="/register" class="hero-link primary">Bat dau dat lich</RouterLink>
-            <RouterLink to="/doctors" class="hero-link secondary">Xem danh ba bac si</RouterLink>
+            <RouterLink to="/register" class="hero-link primary">Bắt đầu đặt lịch</RouterLink>
+            <RouterLink to="/doctors" class="hero-link secondary">Xem danh bạ bác sĩ</RouterLink>
           </div>
         </div>
 
@@ -26,38 +26,38 @@
 
     <section class="filters panel">
       <div class="field search-col">
-        <label for="service-search">Tim theo ten dich vu</label>
+        <label for="service-search">Tìm theo tên dịch vụ</label>
         <input
           id="service-search"
           :value="searchText"
           type="text"
-          placeholder="Vi du: Kham tim mach"
+          placeholder="Ví dụ: Khám tim mạch"
           @input="$emit('update:searchText', $event.target.value)"
         />
       </div>
 
       <div class="field">
-        <label for="service-group">Nhom dich vu</label>
+        <label for="service-group">Nhóm dịch vụ</label>
         <select
           id="service-group"
           :value="categoryFilter"
           @change="$emit('update:categoryFilter', $event.target.value)"
         >
-          <option value="all">Tat ca nhom</option>
+          <option value="all">Tất cả nhóm</option>
           <option v-for="group in categoryOptions" :key="group" :value="group">{{ group }}</option>
         </select>
       </div>
 
       <div class="field stat-box">
-        <p>Tong dich vu</p>
+        <p>Tổng dịch vụ</p>
         <strong>{{ filteredServices.length }}</strong>
       </div>
     </section>
 
     <section class="panel spotlight" v-if="featuredServices.length > 0">
       <header class="spotlight-head">
-        <h2>Goi dich vu noi bat</h2>
-        <p>Lua chon duoc benh nhan dat lich nhieu nhat trong he thong.</p>
+        <h2>Gói dịch vụ nổi bật</h2>
+        <p>Lựa chọn được bệnh nhân đặt lịch nhiều nhất trong hệ thống.</p>
       </header>
 
       <div class="spotlight-grid">
@@ -68,13 +68,13 @@
           class="spotlight-link"
         >
           <article class="spotlight-card">
-            <img :src="service.image" :alt="`Hinh minh hoa dich vu ${service.name}`" loading="lazy" />
+            <img :src="service.image" :alt="`Hình minh họa dịch vụ ${service.name}`" loading="lazy" />
             <div class="spotlight-body">
               <p class="category-chip">{{ service.category }}</p>
               <h3>{{ service.name }}</h3>
-              <p>{{ service.description || 'Thong tin dang duoc cap nhat.' }}</p>
+              <p>{{ service.description || 'Thông tin đang được cập nhật.' }}</p>
               <p class="price" v-if="service.price !== null && service.price !== undefined">
-                Gia tham khao: {{ formatPrice(service.price) }}
+                Giá tham khảo: {{ formatPrice(service.price) }}
               </p>
             </div>
           </article>
@@ -83,7 +83,7 @@
     </section>
 
     <section class="panel catalog">
-      <p v-if="loading" class="msg">Dang tai danh sach dich vu...</p>
+      <p v-if="loading" class="msg">Đang tải danh sách dịch vụ...</p>
       <p v-else-if="error" class="msg err">{{ error }}</p>
 
       <div v-else class="service-grid">
@@ -95,21 +95,21 @@
         >
           <article class="service-card">
             <div class="thumb-wrap">
-              <img class="service-thumb" :src="service.image" :alt="`Hinh minh hoa dich vu ${service.name}`" loading="lazy" />
+              <img class="service-thumb" :src="service.image" :alt="`Hình minh họa dịch vụ ${service.name}`" loading="lazy" />
               <p class="category-chip">{{ service.category }}</p>
             </div>
             <h2>{{ service.name }}</h2>
-            <p class="desc">{{ service.description || 'Thong tin dang duoc cap nhat.' }}</p>
+            <p class="desc">{{ service.description || 'Thông tin đang được cập nhật.' }}</p>
             <p class="price" v-if="service.price !== null && service.price !== undefined">
-              Gia tham khao: {{ formatPrice(service.price) }}
+              Giá tham khảo: {{ formatPrice(service.price) }}
             </p>
-            <span class="see-detail">Xem chi tiet</span>
+            <span class="see-detail">Xem chi tiết</span>
           </article>
         </RouterLink>
       </div>
 
       <p v-if="!loading && !error && filteredServices.length === 0" class="msg">
-        Chua co dich vu de hien thi.
+        Chưa có dịch vụ để hiển thị.
       </p>
     </section>
   </div>

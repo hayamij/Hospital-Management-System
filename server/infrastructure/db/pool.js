@@ -59,10 +59,15 @@ export const pool = {
     for (const [idx, paramName] of paramMap.entries()) {
       request.input(paramName, values[idx]);
     }
-    const result = await request.query(normalized);
-    return {
-      rows: result.recordset ?? [],
-      changes: (result.rowsAffected || []).reduce((acc, value) => acc + value, 0),
-    };
+    try {
+      const result = await request.query(normalized);
+      return {
+        rows: result.recordset ?? [],
+        changes: (result.rowsAffected || []).reduce((acc, value) => acc + value, 0),
+      };
+    } catch (error) {
+      console.error('SQL query failed:', normalized);
+      throw error;
+    }
   },
 };

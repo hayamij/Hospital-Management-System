@@ -1,29 +1,30 @@
 <template>
   <div class="page">
     <header class="panel">
-      <h1>Communications</h1>
-      <p>Send secure messages and review lab result notes.</p>
+      <h1>Trao đổi</h1>
+      <p>Gửi tin nhắn an toàn và duyệt ghi chú kết quả xét nghiệm.</p>
     </header>
 
     <section class="panel">
-      <h2>Send message</h2>
+      <h2>Gửi tin nhắn</h2>
       <form class="grid two" @submit.prevent="sendMessage">
-        <input v-if="auth.role === 'patient'" v-model="payload.doctorId" required placeholder="Doctor ID" />
-        <input v-if="auth.role === 'doctor'" v-model="payload.patientId" required placeholder="Patient ID" />
-        <input v-if="auth.role === 'patient'" v-model="payload.subject" placeholder="Subject" />
-        <textarea v-model="payload.message" required rows="4" :placeholder="auth.role === 'doctor' ? 'Message content' : 'Message body'"></textarea>
-        <button type="submit">Send</button>
+        <input v-if="auth.role === 'patient'" v-model="payload.doctorId" required placeholder="Mã bác sĩ" />
+        <input v-if="auth.role === 'doctor'" v-model="payload.patientId" required placeholder="Mã bệnh nhân" />
+        <input v-if="auth.role === 'patient'" v-model="payload.subject" placeholder="Tiêu đề" />
+        <textarea v-model="payload.message" required rows="4" :placeholder="auth.role === 'doctor' ? 'Nội dung tin nhắn' : 'Nội dung'"
+        ></textarea>
+        <button type="submit">Gửi</button>
       </form>
     </section>
 
     <section class="panel">
-      <h2>Doctor lab review</h2>
+      <h2>Bác sĩ duyệt xét nghiệm</h2>
       <form v-if="auth.role === 'doctor'" class="grid two" @submit.prevent="reviewLabResult">
-        <input v-model="labReview.labResultId" required placeholder="Lab result ID" />
-        <input v-model="labReview.notes" required placeholder="Review notes" />
-        <button type="submit">Submit review</button>
+        <input v-model="labReview.labResultId" required placeholder="Mã kết quả xét nghiệm" />
+        <input v-model="labReview.notes" required placeholder="Ghi chú duyệt" />
+        <button type="submit">Gửi duyệt</button>
       </form>
-      <p v-else>Lab review is available only for doctor role.</p>
+      <p v-else>Chỉ bác sĩ mới có thể duyệt xét nghiệm.</p>
     </section>
 
     <p v-if="status" class="msg ok">{{ status }}</p>
@@ -64,7 +65,7 @@ const sendMessage = async () => {
     });
   }
 
-  status.value = 'Message sent successfully.';
+  status.value = 'Gửi tin nhắn thành công.';
 };
 
 const reviewLabResult = async () => {
@@ -74,7 +75,7 @@ const reviewLabResult = async () => {
     notes: labReview.notes,
     doctorId: auth.userId,
   });
-  status.value = 'Lab result reviewed successfully.';
+  status.value = 'Duyệt kết quả xét nghiệm thành công.';
 };
 </script>
 

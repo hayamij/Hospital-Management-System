@@ -1,60 +1,60 @@
 <template>
   <div class="home">
     <section class="hero-top-banner">
-      <img src="/assets/images/banner1.png" alt="Y bac si dang thao tac trong phong mo" loading="eager" />
+      <img src="/assets/images/banner1.png" alt="Y bác sĩ đang thao tác trong phòng mổ" loading="eager" />
     </section>
 
     <section class="hero-banner">
       <div class="hero-content">
-        <p class="hero-tag">Cham soc suc khoe toan dien</p>
-        <h1>Dat lich kham nhanh, dung bac si, dung chuyen khoa</h1>
+        <p class="hero-tag">Chăm sóc sức khỏe toàn diện</p>
+        <h1>Đặt lịch khám nhanh, đúng bác sĩ, đúng chuyên khoa</h1>
         <p>
-          He thong benh vien so giup ban tim bac si, xem chuyen khoa noi bat
-          va cap nhat thong bao moi nhat trong vai thao tac.
+          Hệ thống bệnh viện số giúp bạn tìm bác sĩ, xem chuyên khoa nổi bật
+          và cập nhật thông báo mới nhất trong vài thao tác.
         </p>
         <div class="hero-content-actions">
           <RouterLink class="cta-primary" to="/patient/booking">Đặt lịch ngay</RouterLink>
-          <RouterLink class="cta-secondary" to="/doctors">Xem danh sach bac si</RouterLink>
+          <RouterLink class="cta-secondary" to="/doctors">Xem danh sách bác sĩ</RouterLink>
         </div>
       </div>
     </section>
 
     <section class="section visual-row">
       <article class="visual-card">
-        <img src="/assets/images/hospital.png" alt="Bac si tu van benh nhan cao tuoi" loading="lazy" />
+        <img src="/assets/images/hospital.png" alt="Bác sĩ tư vấn bệnh nhân cao tuổi" loading="lazy" />
         <div>
-          <h3>Tu van than thien</h3>
-          <p>Doi ngu bac si luon dong hanh va giai thich ro rang cho benh nhan.</p>
+          <h3>Tư vấn thân thiện</h3>
+          <p>Đội ngũ bác sĩ luôn đồng hành và giải thích rõ ràng cho bệnh nhân.</p>
         </div>
       </article>
 
       <article class="visual-card">
-        <img src="/assets/images/room.png" alt="Khu dieu tri benh vien sach se" loading="lazy" />
+        <img src="/assets/images/room.png" alt="Khu điều trị bệnh viện sạch sẽ" loading="lazy" />
         <div>
-          <h3>Khong gian hien dai</h3>
-          <p>Khu dieu tri va can lam sang duoc bo tri toi uu cho quy trinh kham nhanh.</p>
+          <h3>Không gian hiện đại</h3>
+          <p>Khu điều trị và cận lâm sàng được bố trí tối ưu cho quy trình khám nhanh.</p>
         </div>
       </article>
 
       <article class="visual-card">
-        <img src="/assets/images/room2.png" alt="Phong cap cuu voi day du giuong benh" loading="lazy" />
+        <img src="/assets/images/room2.png" alt="Phòng cấp cứu với đầy đủ giường bệnh" loading="lazy" />
         <div>
-          <h3>San sang 24/7</h3>
-          <p>Nang luc tiep nhan cap cuu lien tuc, dam bao phan tuyen va xu tri kip thoi.</p>
+          <h3>Sẵn sàng 24/7</h3>
+          <p>Năng lực tiếp nhận cấp cứu liên tục, đảm bảo phân tuyến và xử trí kịp thời.</p>
         </div>
       </article>
     </section>
 
     <section class="section">
       <header class="section-head">
-        <h2>Quick Search</h2>
-        <p>Tim nhanh bac si theo ten hoac chuyen khoa.</p>
+        <h2>Tìm nhanh bác sĩ</h2>
+        <p>Tìm nhanh bác sĩ theo tên hoặc chuyên khoa.</p>
       </header>
 
       <form class="quick-search" @submit.prevent="searchDoctors">
-        <input v-model="search.query" type="text" placeholder="Nhap ten bac si" />
-        <input v-model="search.specialty" type="text" placeholder="Nhap chuyen khoa" />
-        <button type="submit">Tim kiem</button>
+        <input v-model="search.query" type="text" placeholder="Nhập tên bác sĩ" />
+        <input v-model="search.specialty" type="text" placeholder="Nhập chuyên khoa" />
+        <button type="submit">Tìm kiếm</button>
       </form>
 
       <div class="doctor-list">
@@ -68,7 +68,7 @@
         >
           <article class="doctor-card">
             <h3>{{ doctor.fullName || doctor.name }}</h3>
-            <p>{{ doctor.specialization || doctor.specialty || 'General' }}</p>
+            <p>{{ doctor.specialization || doctor.specialty || 'Nội tổng quát' }}</p>
           </article>
         </RouterLink>
       </div>
@@ -76,8 +76,8 @@
 
     <section class="section">
       <header class="section-head">
-        <h2>Chuyen khoa noi bat</h2>
-        <p>Danh sach fallback se duoc thay bang API khi backend hoan thien.</p>
+        <h2>Chuyên khoa nổi bật</h2>
+        <p>Danh sách tạm sẽ được thay bằng API khi backend hoàn thiện.</p>
       </header>
 
       <div class="specialty-grid">
@@ -97,7 +97,7 @@
 
     <section class="section">
       <header class="section-head">
-        <h2>Tin tuc / Thong bao moi nhat</h2>
+        <h2>Tin tức / Thông báo mới nhất</h2>
       </header>
 
       <div class="news-row">
@@ -125,18 +125,18 @@ import { onMounted, reactive, ref } from 'vue';
 import { guestApi } from '../services/api.js';
 
 const fallbackDoctors = [
-  { id: 'doc-1', fullName: 'Dr. Demo', specialization: 'Noi tong quat' },
-  { id: 'doc-2', fullName: 'Dr. Alice', specialization: 'Tim mach' },
-  { id: 'doc-3', fullName: 'Dr. Minh', specialization: 'Nhi khoa' },
+  { id: 'doc-1', fullName: 'BS. Minh họa', specialization: 'Nội tổng quát' },
+  { id: 'doc-2', fullName: 'BS. Alice', specialization: 'Tim mạch' },
+  { id: 'doc-3', fullName: 'BS. Minh', specialization: 'Nhi khoa' },
 ];
 
 const fallbackSpecialties = [
-  { id: 'sp-1', name: 'Noi tong quat', summary: 'Kham tong quat, tam soat va theo doi suc khoe dinh ky.' },
-  { id: 'sp-2', name: 'Tim mach', summary: 'Chan doan va dieu tri cac van de tim mach pho bien.' },
-  { id: 'sp-3', name: 'Nhi khoa', summary: 'Cham soc suc khoe toan dien cho tre em moi lua tuoi.' },
-  { id: 'sp-4', name: 'San phu khoa', summary: 'Dong hanh cung suc khoe phu nu va thai ky an toan.' },
-  { id: 'sp-5', name: 'Xet nghiem', summary: 'Ho tro chan doan nhanh voi he thong xet nghiem hien dai.' },
-  { id: 'sp-6', name: 'Cap cuu', summary: 'Xu ly tinh huong khan cap 24/7 voi doi ngu truc lien tuc.' },
+  { id: 'sp-1', name: 'Nội tổng quát', summary: 'Khám tổng quát, tầm soát và theo dõi sức khỏe định kỳ.' },
+  { id: 'sp-2', name: 'Tim mạch', summary: 'Chẩn đoán và điều trị các vấn đề tim mạch phổ biến.' },
+  { id: 'sp-3', name: 'Nhi khoa', summary: 'Chăm sóc sức khỏe toàn diện cho trẻ em mọi lứa tuổi.' },
+  { id: 'sp-4', name: 'Sản phụ khoa', summary: 'Đồng hành cùng sức khỏe phụ nữ và thai kỳ an toàn.' },
+  { id: 'sp-5', name: 'Xét nghiệm', summary: 'Hỗ trợ chẩn đoán nhanh với hệ thống xét nghiệm hiện đại.' },
+  { id: 'sp-6', name: 'Cấp cứu', summary: 'Xử lý tình huống khẩn cấp 24/7 với đội ngũ trực liên tục.' },
 ];
 
 const doctors = ref([]);
@@ -144,9 +144,9 @@ const specialties = ref([...fallbackSpecialties]);
 const error = ref('');
 
 const newsItems = [
-  { id: 'outpatient-expand', date: '2026-03-24', title: 'Mo rong khu kham ngoai tru', summary: 'Tang so quay tiep nhan va toi uu thoi gian cho cua benh nhan.' },
-  { id: 'new-specialists', date: '2026-03-20', title: 'Bo sung doi ngu bac si chuyen khoa', summary: 'Them bac si tim mach, nhi khoa va noi tong quat tuan nay.' },
-  { id: 'online-queue', date: '2026-03-15', title: 'Ra mat thong bao hang doi truc tuyen', summary: 'Nguoi benh co the theo doi thu tu kham ngay tren he thong.' },
+  { id: 'outpatient-expand', date: '2026-03-24', title: 'Mở rộng khu khám ngoại trú', summary: 'Tăng số quầy tiếp nhận và tối ưu thời gian chờ của bệnh nhân.' },
+  { id: 'new-specialists', date: '2026-03-20', title: 'Bổ sung đội ngũ bác sĩ chuyên khoa', summary: 'Thêm bác sĩ tim mạch, nhi khoa và nội tổng quát tuần này.' },
+  { id: 'online-queue', date: '2026-03-15', title: 'Ra mắt thông báo hàng đợi trực tuyến', summary: 'Người bệnh có thể theo dõi thứ tự khám ngay trên hệ thống.' },
 ];
 
 const search = reactive({ query: '', specialty: '' });
@@ -161,7 +161,7 @@ const safeRun = async (fn) => {
   try {
     await fn();
   } catch (e) {
-    error.value = e.message || 'Khong the tai du lieu tu he thong.';
+    error.value = e.message || 'Không thể tải dữ liệu từ hệ thống.';
   }
 };
 
@@ -170,8 +170,8 @@ const hydrateSpecialties = () =>
     const info = await guestApi.publicInfo();
     const mapped = (info?.services || []).map((svc) => ({
       id: svc.id || `sp-${svc.name || 'unknown'}`,
-      name: svc.name || 'Chuyen khoa',
-      summary: svc.description || 'Thong tin chuyen khoa dang duoc cap nhat.',
+      name: svc.name || 'Chuyên khoa',
+      summary: svc.description || 'Thông tin chuyên khoa đang được cập nhật.',
     }));
 
     if (mapped.length > 0) {

@@ -1,33 +1,33 @@
 <template>
 	<div class="page">
 		<header class="panel">
-			<h1>Patients</h1>
-			<p>Patient profile and chart access.</p>
-			<button type="button" @click="loadRecords">Refresh</button>
+			<h1>Bệnh nhân</h1>
+			<p>Hồ sơ bệnh nhân và truy cập bệnh án.</p>
+			<button type="button" @click="loadRecords">Làm mới</button>
 		</header>
 
 		<section v-if="auth.role === 'patient'" class="panel">
-			<h2>Update profile</h2>
+			<h2>Cập nhật hồ sơ</h2>
 			<form class="grid two" @submit.prevent="updateProfile">
-				<input v-model="profile.name" placeholder="Full name" />
-				<input v-model="profile.phone" placeholder="Phone" />
-				<input v-model="profile.address" placeholder="Address" />
+				<input v-model="profile.name" placeholder="Họ và tên" />
+				<input v-model="profile.phone" placeholder="Số điện thoại" />
+				<input v-model="profile.address" placeholder="Địa chỉ" />
 				<input v-model="profile.dateOfBirth" type="date" />
-				<input v-model="profile.emergencyContact" placeholder="Emergency contact" />
-				<button type="submit">Save profile</button>
+				<input v-model="profile.emergencyContact" placeholder="Liên hệ khẩn cấp" />
+				<button type="submit">Lưu hồ sơ</button>
 			</form>
 		</section>
 
 		<section v-if="auth.role === 'doctor'" class="panel">
-			<h2>Patient chart</h2>
+			<h2>Bệnh án bệnh nhân</h2>
 			<div class="row">
-				<input v-model="patientId" placeholder="Patient ID" />
-				<button type="button" @click="loadRecords">Load chart</button>
+				<input v-model="patientId" placeholder="Mã bệnh nhân" />
+				<button type="button" @click="loadRecords">Tải bệnh án</button>
 			</div>
 			<div class="list-grid">
 				<article v-for="rec in patients.records" :key="rec.id || rec.recordId" class="item">
-					<p><strong>{{ rec.note || 'Entry' }}</strong></p>
-					<p>{{ rec.recordedAt }} | Doctor {{ rec.doctorId || '-' }}</p>
+					<p><strong>{{ rec.note || 'Ghi chú' }}</strong></p>
+					<p>{{ rec.recordedAt }} | Bác sĩ {{ rec.doctorId || '-' }}</p>
 				</article>
 			</div>
 		</section>

@@ -3,47 +3,47 @@
     <header class="panel hero">
       <div class="hero-grid">
         <div>
-          <p class="eyebrow">Multi-step Booking</p>
-          <h1>Dat lich kham theo 4 buoc thong minh</h1>
-          <p>Chon chuyen khoa, bac si, khung gio, trieu chung va xac nhan lich hen.</p>
+          <p class="eyebrow">Đặt lịch nhiều bước</p>
+          <h1>Đặt lịch khám theo 4 bước thông minh</h1>
+          <p>Chọn chuyên khoa, bác sĩ, khung giờ, triệu chứng và xác nhận lịch hẹn.</p>
           <div class="context-chips" v-if="selectedDoctorFromQuery || selectedServiceName">
-            <span v-if="selectedDoctorFromQuery" class="chip">Doctor preselected: {{ selectedDoctorFromQuery }}</span>
-            <span v-if="selectedServiceName" class="chip">Service preselected: {{ selectedServiceName }}</span>
+            <span v-if="selectedDoctorFromQuery" class="chip">Đã chọn bác sĩ: {{ selectedDoctorFromQuery }}</span>
+            <span v-if="selectedServiceName" class="chip">Đã chọn dịch vụ: {{ selectedServiceName }}</span>
           </div>
         </div>
 
         <aside class="hero-side">
-          <p class="hero-side-title">Booking snapshot</p>
-          <p><strong>Specialty:</strong> {{ booking.form.specialty || 'Chua chon' }}</p>
-          <p><strong>Doctor:</strong> {{ booking.selectedDoctor?.name || 'Chua chon' }}</p>
-          <p><strong>Date:</strong> {{ booking.form.appointmentDate || 'Chua chon' }}</p>
+          <p class="hero-side-title">Tóm tắt đặt lịch</p>
+          <p><strong>Chuyên khoa:</strong> {{ booking.form.specialty || 'Chưa chọn' }}</p>
+          <p><strong>Bác sĩ:</strong> {{ booking.selectedDoctor?.name || 'Chưa chọn' }}</p>
+          <p><strong>Ngày:</strong> {{ booking.form.appointmentDate || 'Chưa chọn' }}</p>
         </aside>
       </div>
     </header>
 
     <section class="panel">
       <ol class="steps">
-        <li :class="{ active: booking.step === 1, done: booking.step > 1 }">1. Chon chuyen khoa/bac si</li>
-        <li :class="{ active: booking.step === 2, done: booking.step > 2 }">2. Chon ngay va khung gio</li>
-        <li :class="{ active: booking.step === 3, done: booking.step > 3 }">3. Dien trieu chung lam sang</li>
-        <li :class="{ active: booking.step === 4 }">4. Xac nhan va tao cuoc hen</li>
+        <li :class="{ active: booking.step === 1, done: booking.step > 1 }">1. Chọn chuyên khoa/bác sĩ</li>
+        <li :class="{ active: booking.step === 2, done: booking.step > 2 }">2. Chọn ngày và khung giờ</li>
+        <li :class="{ active: booking.step === 3, done: booking.step > 3 }">3. Điền triệu chứng lâm sàng</li>
+        <li :class="{ active: booking.step === 4 }">4. Xác nhận và tạo cuộc hẹn</li>
       </ol>
 
       <div v-if="booking.step === 1" class="step-body">
-        <h2>Buoc 1: Chon chuyen khoa va bac si</h2>
+        <h2>Bước 1: Chọn chuyên khoa và bác sĩ</h2>
         <div class="grid two-col">
           <label class="field">
-            <span>Chuyen khoa</span>
+            <span>Chuyên khoa</span>
             <select :value="booking.form.specialty" @change="onSpecialtyChange">
-              <option value="">Chon chuyen khoa</option>
+              <option value="">Chọn chuyên khoa</option>
               <option v-for="item in booking.specialties" :key="item" :value="item">{{ item }}</option>
             </select>
           </label>
 
           <label class="field">
-            <span>Bac si</span>
+            <span>Bác sĩ</span>
             <select :value="booking.form.doctorId" @change="onDoctorChange">
-              <option value="">Chon bac si</option>
+              <option value="">Chọn bác sĩ</option>
               <option v-for="doc in booking.filteredDoctors" :key="doc.id" :value="doc.id">
                 {{ doc.name }} - {{ doc.specialty }}
               </option>
@@ -53,21 +53,21 @@
       </div>
 
       <div v-if="booking.step === 2" class="step-body">
-        <h2>Buoc 2: Chon ngay va khung gio</h2>
+        <h2>Bước 2: Chọn ngày và khung giờ</h2>
         <div class="grid two-col slot-controls">
           <label class="field">
-            <span>Ngay kham</span>
+            <span>Ngày khám</span>
             <input type="date" :value="booking.form.appointmentDate" @input="onDateInput" />
           </label>
           <div class="field action-field">
             <span>&nbsp;</span>
             <button type="button" @click="loadSlots" :disabled="booking.loadingSlots">
-              {{ booking.loadingSlots ? 'Dang kiem tra...' : 'Kiem tra gio trong' }}
+              {{ booking.loadingSlots ? 'Đang kiểm tra...' : 'Kiểm tra giờ trống' }}
             </button>
           </div>
         </div>
 
-        <p v-if="booking.loadingSlots" class="muted">Dang tai khung gio trong...</p>
+        <p v-if="booking.loadingSlots" class="muted">Đang tải khung giờ trống...</p>
         <p v-else-if="booking.availableSlots.length === 0" class="muted">{{ emptySlotMessage }}</p>
 
         <div v-else class="slot-grid">
@@ -85,25 +85,25 @@
       </div>
 
       <div v-if="booking.step === 3" class="step-body">
-        <h2>Buoc 3: Trieu chung lam sang</h2>
+        <h2>Bước 3: Triệu chứng lâm sàng</h2>
         <label class="field">
-          <span>Mo ta trieu chung</span>
+          <span>Mô tả triệu chứng</span>
           <textarea
             v-model="booking.form.clinicalSymptoms"
             rows="5"
-            placeholder="Nhap trieu chung, thoi gian khoi phat va tien su lien quan..."
+            placeholder="Nhập triệu chứng, thời gian khởi phát và tiền sử liên quan..."
           ></textarea>
         </label>
       </div>
 
       <div v-if="booking.step === 4" class="step-body">
-        <h2>Buoc 4: Xac nhan thong tin</h2>
+        <h2>Bước 4: Xác nhận thông tin</h2>
         <article class="confirm-card">
-          <p><strong>Chuyen khoa:</strong> {{ booking.form.specialty || 'Chua chon' }}</p>
-          <p><strong>Bac si:</strong> {{ booking.selectedDoctor?.name || 'Chua chon' }}</p>
-          <p><strong>Ngay kham:</strong> {{ booking.form.appointmentDate || 'Chua chon' }}</p>
-          <p><strong>Khung gio:</strong> {{ selectedSlotLabel }}</p>
-          <p><strong>Trieu chung:</strong> {{ booking.form.clinicalSymptoms || 'Chua nhap' }}</p>
+          <p><strong>Chuyên khoa:</strong> {{ booking.form.specialty || 'Chưa chọn' }}</p>
+          <p><strong>Bác sĩ:</strong> {{ booking.selectedDoctor?.name || 'Chưa chọn' }}</p>
+          <p><strong>Ngày khám:</strong> {{ booking.form.appointmentDate || 'Chưa chọn' }}</p>
+          <p><strong>Khung giờ:</strong> {{ selectedSlotLabel }}</p>
+          <p><strong>Triệu chứng:</strong> {{ booking.form.clinicalSymptoms || 'Chưa nhập' }}</p>
         </article>
       </div>
 
@@ -111,10 +111,10 @@
       <p v-if="booking.successMessage" class="msg ok">{{ booking.successMessage }}</p>
 
       <div class="actions">
-        <button type="button" @click="booking.goBack" :disabled="booking.step === 1 || booking.submitting">Quay lai</button>
-        <button v-if="booking.step < 4" type="button" @click="booking.goNext" :disabled="booking.loadingDoctors || booking.loadingSlots">Tiep tuc</button>
+        <button type="button" @click="booking.goBack" :disabled="booking.step === 1 || booking.submitting">Quay lại</button>
+        <button v-if="booking.step < 4" type="button" @click="booking.goNext" :disabled="booking.loadingDoctors || booking.loadingSlots">Tiếp tục</button>
         <button v-else type="button" class="primary" @click="submit" :disabled="booking.submitting">
-          {{ booking.submitting ? 'Dang tao lich...' : 'Xac nhan tao lich' }}
+          {{ booking.submitting ? 'Đang tạo lịch...' : 'Xác nhận tạo lịch' }}
         </button>
       </div>
     </section>
@@ -133,14 +133,14 @@ const selectedServiceName = ref('');
 
 const selectedSlotLabel = computed(() => {
   const slot = booking.availableSlots.find((item) => item.start === booking.form.slotStart);
-  return slot?.label || 'Chua chon';
+  return slot?.label || 'Chưa chọn';
 });
 
 const emptySlotMessage = computed(() => {
   if (!booking.slotsChecked) {
-    return 'Chua co khung gio. Hay chon ngay va bam Kiem tra gio trong.';
+    return 'Chưa có khung giờ. Hãy chọn ngày và bấm Kiểm tra giờ trống.';
   }
-  return 'Khong tim thay khung gio trong cho ngay nay. Vui long thu ngay khac.';
+  return 'Không tìm thấy khung giờ trống cho ngày này. Vui lòng thử ngày khác.';
 });
 
 const selectedDoctorFromQuery = computed(() => {
@@ -195,7 +195,7 @@ onMounted(async () => {
       const matched = services.find((item) => String(item?.id || '').trim() === serviceFromQuery);
       selectedServiceName.value = matched?.name || serviceFromQuery;
       if (!booking.form.clinicalSymptoms.trim()) {
-        booking.form.clinicalSymptoms = `Tu van va kham theo dich vu: ${selectedServiceName.value}.`;
+        booking.form.clinicalSymptoms = `Tư vấn và khám theo dịch vụ: ${selectedServiceName.value}.`;
       }
     } catch {
       selectedServiceName.value = serviceFromQuery;

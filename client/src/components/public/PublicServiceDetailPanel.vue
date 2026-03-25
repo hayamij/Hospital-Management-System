@@ -1,22 +1,22 @@
 <template>
   <div class="service-detail-page">
     <p class="back-link-wrap">
-      <RouterLink class="back-link" to="/services">← Back to all services</RouterLink>
+      <RouterLink class="back-link" to="/services">← Quay lại tất cả dịch vụ</RouterLink>
     </p>
 
     <section class="hero panel" v-if="!loading && service">
       <div class="hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">SERVICE DETAIL</p>
-          <h1>{{ service.name || 'Service' }}</h1>
+          <p class="eyebrow">CHI TIẾT DỊCH VỤ</p>
+          <h1>{{ service.name || 'Dịch vụ' }}</h1>
           <p class="lead">
-            {{ service.description || 'Service details are available at the clinic desk.' }}
+            {{ service.description || 'Thông tin dịch vụ có thể được cung cấp tại quầy tiếp đón.' }}
           </p>
 
           <div class="meta-row">
-            <span class="meta-item">Fast booking</span>
-            <span class="meta-item">Doctor-reviewed process</span>
-            <span class="meta-item">Transparent pricing</span>
+            <span class="meta-item">Đặt lịch nhanh</span>
+            <span class="meta-item">Quy trình được bác sĩ duyệt</span>
+            <span class="meta-item">Giá minh bạch</span>
           </div>
 
           <p v-if="service.price !== null && service.price !== undefined" class="price">
@@ -24,52 +24,52 @@
           </p>
 
           <div class="hero-actions">
-            <RouterLink class="cta primary" :to="bookingLink">Book appointment</RouterLink>
-            <RouterLink class="cta secondary" to="/public">Talk to advisor</RouterLink>
+            <RouterLink class="cta primary" :to="bookingLink">Đặt lịch khám</RouterLink>
+            <RouterLink class="cta secondary" to="/public">Trao đổi với tư vấn viên</RouterLink>
           </div>
         </div>
 
         <div class="hero-media" aria-hidden="true">
-          <img :src="service.image" :alt="`Service image ${service.name || 'service'}`" loading="lazy" />
+          <img :src="service.image" :alt="`Hình dịch vụ ${service.name || 'dịch vụ'}`" loading="lazy" />
         </div>
       </div>
     </section>
 
     <section class="panel status-panel" v-if="loading || error || (!service && hasFetched)">
-      <p v-if="loading" class="status-text">Loading service detail...</p>
+      <p v-if="loading" class="status-text">Đang tải chi tiết dịch vụ...</p>
       <p v-else-if="error" class="msg err">{{ error }}</p>
-      <p v-else-if="hasFetched">Service not found.</p>
-      <button v-if="!loading && error" type="button" class="retry-btn" @click="$emit('retry')">Retry</button>
+      <p v-else-if="hasFetched">Không tìm thấy dịch vụ.</p>
+      <button v-if="!loading && error" type="button" class="retry-btn" @click="$emit('retry')">Thử lại</button>
     </section>
 
     <section class="panel details" v-if="!loading && service">
       <div class="details-grid">
         <article class="info-card">
-          <h2>Service overview</h2>
+          <h2>Tổng quan dịch vụ</h2>
           <p>
-            This service is designed to keep diagnosis and care pathways clear from first check-in to follow-up.
-            You will receive guidance on preparation, expected timeline, and post-visit instructions.
+            Dịch vụ này giúp quy trình chẩn đoán và chăm sóc rõ ràng từ bước tiếp nhận đến tái khám.
+            Bạn sẽ nhận hướng dẫn chuẩn bị, mốc thời gian dự kiến và lưu ý sau khi khám.
           </p>
           <ul>
-            <li>Digital queue support at check-in.</li>
-            <li>Coordinated workflow across doctor and records team.</li>
-            <li>Follow-up recommendations included after consultation.</li>
+            <li>Hỗ trợ xếp hàng số khi tiếp nhận.</li>
+            <li>Quy trình phối hợp giữa bác sĩ và đội hồ sơ.</li>
+            <li>Kèm khuyến nghị tái khám sau tư vấn.</li>
           </ul>
         </article>
 
         <aside class="quick-card">
-          <h3>Quick actions</h3>
-          <RouterLink class="quick-btn" :to="bookingLink">Book this service</RouterLink>
-          <RouterLink class="quick-btn" to="/doctors">Choose doctor first</RouterLink>
-          <RouterLink class="quick-btn" to="/news">See latest updates</RouterLink>
+          <h3>Thao tác nhanh</h3>
+          <RouterLink class="quick-btn" :to="bookingLink">Đặt dịch vụ này</RouterLink>
+          <RouterLink class="quick-btn" to="/doctors">Chọn bác sĩ trước</RouterLink>
+          <RouterLink class="quick-btn" to="/news">Xem cập nhật mới</RouterLink>
         </aside>
       </div>
     </section>
 
     <section class="panel related" v-if="!loading && relatedServices.length > 0">
       <header class="related-head">
-        <h2>Related services</h2>
-        <p>Explore other services commonly selected by patients together with this option.</p>
+        <h2>Dịch vụ liên quan</h2>
+        <p>Khám phá các dịch vụ thường được chọn kèm với lựa chọn này.</p>
       </header>
 
       <div class="related-grid">
@@ -80,9 +80,9 @@
           class="related-link"
         >
           <article class="related-card">
-            <img :src="item.image" :alt="`Service image ${item.name}`" loading="lazy" />
+            <img :src="item.image" :alt="`Hình dịch vụ ${item.name}`" loading="lazy" />
             <h3>{{ item.name }}</h3>
-            <p>{{ item.description || 'Service details are available at the clinic desk.' }}</p>
+            <p>{{ item.description || 'Thông tin dịch vụ có thể được cung cấp tại quầy tiếp đón.' }}</p>
             <p class="sub-price" v-if="item.price !== null && item.price !== undefined">{{ formatPrice(item.price) }}</p>
           </article>
         </RouterLink>

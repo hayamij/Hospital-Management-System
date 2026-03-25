@@ -1,6 +1,6 @@
 <template>
   <div class="feature-page">
-    <p class="back-link-wrap"><RouterLink class="back-link" to="/">← Back to home</RouterLink></p>
+    <p class="back-link-wrap"><RouterLink class="back-link" to="/">← Quay về trang chủ</RouterLink></p>
 
     <header class="panel hero">
       <div class="hero-grid">
@@ -11,24 +11,24 @@
           <p class="description">{{ view.description }}</p>
           <div class="hero-actions">
             <RouterLink class="btn primary" :to="primaryCta.to">{{ primaryCta.label }}</RouterLink>
-            <RouterLink class="btn" to="/public">Open public portal</RouterLink>
+            <RouterLink class="btn" to="/public">Mở cổng thông tin công khai</RouterLink>
           </div>
         </div>
-        <img :src="heroImage" :alt="`Feature image ${view.title}`" loading="lazy" />
+        <img :src="heroImage" :alt="`Hình minh họa ${view.title}`" loading="lazy" />
       </div>
     </header>
 
     <section class="panel meta-panel">
       <div class="meta-item">
-        <span>Group</span>
+        <span>Nhóm</span>
         <strong>{{ group }}</strong>
       </div>
       <div class="meta-item">
-        <span>ID</span>
+        <span>Mã</span>
         <strong>{{ id }}</strong>
       </div>
       <div class="meta-item">
-        <span>Next step</span>
+        <span>Bước tiếp theo</span>
         <strong>{{ primaryCta.label }}</strong>
       </div>
     </section>
@@ -53,73 +53,73 @@ const imageByGroup = {
 const catalog = {
   step: {
     'medical-services': {
-      title: 'Medical Services',
-      subtitle: 'Explore medical services available for patients.',
-      description: 'This section introduces core medical support and outpatient consultation tracks.',
+      title: 'Dịch vụ y tế',
+      subtitle: 'Khám phá các dịch vụ y tế dành cho bệnh nhân.',
+      description: 'Giới thiệu các dịch vụ y tế cốt lõi và quy trình khám ngoại trú.',
     },
     'find-doctor': {
-      title: 'Find A Doctor',
-      subtitle: 'Search by specialty and experience.',
-      description: 'Use doctor search and filtering to locate the right physician quickly.',
+      title: 'Tìm bác sĩ',
+      subtitle: 'Tìm theo chuyên khoa và kinh nghiệm.',
+      description: 'Sử dụng bộ lọc để chọn đúng bác sĩ nhanh chóng.',
     },
     appointment: {
-      title: 'Make An Appointment',
-      subtitle: 'Start from available slots and preferred doctor.',
-      description: 'Booking flow supports doctor schedule visibility and patient constraints.',
+      title: 'Đặt lịch khám',
+      subtitle: 'Bắt đầu từ khung giờ trống và bác sĩ phù hợp.',
+      description: 'Luồng đặt lịch hỗ trợ xem lịch bác sĩ và điều kiện đặt lịch.',
     },
     question: {
-      title: 'Ask Us A Question',
-      subtitle: 'Get support before registration.',
-      description: 'Submit contact requests for guidance on departments, insurance, and prep.',
+      title: 'Gửi câu hỏi',
+      subtitle: 'Nhận hỗ trợ trước khi đăng ký.',
+      description: 'Gửi yêu cầu liên hệ về chuyên khoa, bảo hiểm và chuẩn bị khám.',
     },
     'home-care': {
-      title: 'Healthcare At Home',
-      subtitle: 'Care pathways for remote support.',
-      description: 'Home-care services cover consultation follow-up and nurse-assisted instructions.',
+      title: 'Chăm sóc tại nhà',
+      subtitle: 'Lộ trình chăm sóc từ xa.',
+      description: 'Dịch vụ tại nhà gồm theo dõi sau khám và hướng dẫn từ điều dưỡng.',
     },
   },
   insurance: {},
   constraint: {},
   news: {
     'outpatient-expand': {
-      title: 'Outpatient Expansion',
-      subtitle: 'Capacity improvements for daily care.',
-      description: 'New counters and faster check-in process reduce waiting time.',
+      title: 'Mở rộng khu khám ngoại trú',
+      subtitle: 'Tăng năng lực phục vụ mỗi ngày.',
+      description: 'Bổ sung quầy tiếp nhận và quy trình nhanh hơn giúp giảm thời gian chờ.',
     },
     'new-specialists': {
-      title: 'New Specialists Joined',
-      subtitle: 'Expanded expertise in key departments.',
-      description: 'Additional specialists strengthen diagnosis and treatment quality.',
+      title: 'Thêm bác sĩ chuyên khoa',
+      subtitle: 'Mở rộng chuyên môn ở các khoa trọng điểm.',
+      description: 'Bổ sung chuyên gia giúp nâng cao chất lượng chẩn đoán và điều trị.',
     },
     'online-queue': {
-      title: 'Online Queue Pilot',
-      subtitle: 'Track clinic queue remotely.',
-      description: 'Patients can monitor queue position before arriving at the facility.',
+      title: 'Thử nghiệm xếp hàng trực tuyến',
+      subtitle: 'Theo dõi thứ tự khám từ xa.',
+      description: 'Người bệnh có thể xem thứ tự trước khi đến bệnh viện.',
     },
   },
 };
 
 const defaultView = {
-  title: 'Feature Detail',
-  subtitle: 'Home element detail page.',
-  description: 'This feature is available in the home navigation flow.',
+  title: 'Chi tiết tính năng',
+  subtitle: 'Trang chi tiết tính năng trên trang chủ.',
+  description: 'Tính năng này hiển thị trong luồng điều hướng trang chủ.',
 };
 
 const view = computed(() => {
   const groupMap = catalog[group.value] || {};
   return groupMap[id.value] || {
     ...defaultView,
-    title: `${group.value} detail`,
+    title: `Chi tiết ${group.value}`,
   };
 });
 
 const heroImage = computed(() => imageByGroup[group.value] || '/assets/images/image.png');
 
 const primaryCta = computed(() => {
-  if (group.value === 'news') return { label: 'Book appointment', to: '/patient/booking' };
-  if (group.value === 'step' && id.value === 'find-doctor') return { label: 'Find doctor now', to: '/doctors' };
-  if (group.value === 'step' && id.value === 'medical-services') return { label: 'Browse services', to: '/services' };
-  return { label: 'Start booking', to: '/patient/booking' };
+  if (group.value === 'news') return { label: 'Đặt lịch khám', to: '/patient/booking' };
+  if (group.value === 'step' && id.value === 'find-doctor') return { label: 'Tìm bác sĩ ngay', to: '/doctors' };
+  if (group.value === 'step' && id.value === 'medical-services') return { label: 'Xem dịch vụ', to: '/services' };
+  return { label: 'Bắt đầu đặt lịch', to: '/patient/booking' };
 });
 </script>
 

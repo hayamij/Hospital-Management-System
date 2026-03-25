@@ -1,28 +1,28 @@
 <template>
   <div class="page">
     <header class="panel">
-      <h1>Public Portal</h1>
-      <p>Guest functions: browse public info, search doctors, view slots, and submit contact form.</p>
+      <h1>Cổng thông tin công khai</h1>
+      <p>Tác vụ khách: xem thông tin công khai, tìm bác sĩ, xem khung giờ và gửi liên hệ.</p>
       <div class="row">
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/login">Login</RouterLink>
-        <RouterLink to="/register">Register</RouterLink>
+        <RouterLink to="/">Trang chủ</RouterLink>
+        <RouterLink to="/login">Đăng nhập</RouterLink>
+        <RouterLink to="/register">Đăng ký</RouterLink>
       </div>
     </header>
 
     <section class="grid two-col">
       <article class="panel">
-        <h2>Public information</h2>
-        <button type="button" @click="loadPublicInfo">Load public data</button>
+        <h2>Thông tin công khai</h2>
+        <button type="button" @click="loadPublicInfo">Tải dữ liệu công khai</button>
         <pre class="pre">{{ pretty(publicInfo) }}</pre>
       </article>
 
       <article class="panel">
-        <h2>Guest doctor search</h2>
+        <h2>Tìm bác sĩ (khách)</h2>
         <form class="grid three" @submit.prevent="searchDoctors">
-          <input v-model="search.query" placeholder="Doctor name" />
-          <input v-model="search.specialty" placeholder="Specialty" />
-          <button type="submit">Search</button>
+          <input v-model="search.query" placeholder="Tên bác sĩ" />
+          <input v-model="search.specialty" placeholder="Chuyên khoa" />
+          <button type="submit">Tìm kiếm</button>
         </form>
         <ul class="list">
           <li v-for="d in doctors" :key="d.id || d.doctorId" class="item">
@@ -35,34 +35,34 @@
 
     <section class="grid two-col">
       <article class="panel">
-        <h2>Check available slots</h2>
+        <h2>Kiểm tra khung giờ trống</h2>
         <form class="grid three" @submit.prevent="loadSlots">
-          <input v-model="slotForm.doctorId" required placeholder="Doctor ID" />
+          <input v-model="slotForm.doctorId" required placeholder="Mã bác sĩ" />
           <input v-model="slotForm.from" type="date" />
           <input v-model="slotForm.to" type="date" />
-          <button type="submit">Get slots</button>
+          <button type="submit">Lấy khung giờ</button>
         </form>
         <pre class="pre">{{ pretty(slots) }}</pre>
       </article>
 
       <article class="panel">
-        <h2>Start registration</h2>
+        <h2>Bắt đầu đăng ký</h2>
         <form class="grid" @submit.prevent="startRegistration">
-          <input v-model="registration.fullName" required placeholder="Full name" />
+          <input v-model="registration.fullName" required placeholder="Họ và tên" />
           <input v-model="registration.email" type="email" required placeholder="Email" />
-          <input v-model="registration.phone" required placeholder="Phone" />
-          <button type="submit">Start registration</button>
+          <input v-model="registration.phone" required placeholder="Số điện thoại" />
+          <button type="submit">Bắt đầu đăng ký</button>
         </form>
       </article>
 
       <article class="panel">
-        <h2>Contact clinic</h2>
+        <h2>Liên hệ phòng khám</h2>
         <form class="grid" @submit.prevent="sendContact">
-          <input v-model="contact.fullName" required placeholder="Full name" />
-          <input v-model="contact.phone" required placeholder="Phone" />
+          <input v-model="contact.fullName" required placeholder="Họ và tên" />
+          <input v-model="contact.phone" required placeholder="Số điện thoại" />
           <input v-model="contact.email" type="email" placeholder="Email" />
-          <textarea v-model="contact.message" required rows="4" placeholder="Your message"></textarea>
-          <button type="submit">Submit contact form</button>
+          <textarea v-model="contact.message" required rows="4" placeholder="Nội dung liên hệ"></textarea>
+          <button type="submit">Gửi liên hệ</button>
         </form>
       </article>
     </section>
@@ -87,7 +87,7 @@ const slotForm = reactive({ doctorId: '', from: '', to: '' });
 const registration = reactive({ fullName: '', email: '', phone: '' });
 const contact = reactive({ fullName: '', phone: '', email: '', message: '' });
 
-const pretty = (value) => (value ? JSON.stringify(value, null, 2) : 'No data loaded yet.');
+const pretty = (value) => (value ? JSON.stringify(value, null, 2) : 'Chưa có dữ liệu.');
 
 const loadPublicInfo = async () => {
   error.value = '';
@@ -109,14 +109,14 @@ const startRegistration = async () => {
   error.value = '';
   status.value = '';
   await guestApi.startRegistration(registration);
-  status.value = 'Registration request received successfully.';
+  status.value = 'Yêu cầu đăng ký đã được ghi nhận.';
 };
 
 const sendContact = async () => {
   error.value = '';
   status.value = '';
   await guestApi.contact(contact);
-  status.value = 'Contact request sent successfully.';
+  status.value = 'Yêu cầu liên hệ đã được gửi.';
 };
 </script>
 

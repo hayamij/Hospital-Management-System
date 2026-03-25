@@ -1,40 +1,40 @@
 <template>
 	<div class="page">
 		<header class="panel">
-			<h1>Doctors</h1>
-			<p>Search doctors by keyword and specialization.</p>
+			<h1>Bác sĩ</h1>
+			<p>Tìm bác sĩ theo từ khóa và chuyên khoa.</p>
 			<form class="search" @submit.prevent="search">
-				<input v-model="filters.query" placeholder="Name or keyword" />
-				<input v-model="filters.specialty" placeholder="Specialty" />
-				<button type="submit">Search</button>
-				<button type="button" @click="search">Refresh</button>
+				<input v-model="filters.query" placeholder="Tên hoặc từ khóa" />
+				<input v-model="filters.specialty" placeholder="Chuyên khoa" />
+				<button type="submit">Tìm kiếm</button>
+				<button type="button" @click="search">Làm mới</button>
 			</form>
 		</header>
 
 		<section class="panel">
-			<h2>Doctor list</h2>
-			<p v-if="doctors.loading">Loading...</p>
-			<p v-if="!doctors.loading && doctors.list.length === 0">No doctors found.</p>
+			<h2>Danh sách bác sĩ</h2>
+			<p v-if="doctors.loading">Đang tải...</p>
+			<p v-if="!doctors.loading && doctors.list.length === 0">Chưa có bác sĩ phù hợp.</p>
 			<div class="grid two-col">
 				<article v-for="doc in doctors.list" :key="doc.id || doc.doctorId" class="item">
 					<p><strong>{{ doc.fullName || doc.name }}</strong></p>
 					<p>{{ doc.specialization || doc.specialty }}</p>
-					<p>Status: {{ doc.status || 'active' }}</p>
+					<p>Trạng thái: {{ doc.status || 'đang hoạt động' }}</p>
 				</article>
 			</div>
 		</section>
 
 		<section v-if="auth.role === 'admin'" class="panel">
-			<h2>Service catalog actions (admin)</h2>
+			<h2>Quản lý danh mục dịch vụ (admin)</h2>
 			<form class="grid admin-grid" @submit.prevent="upsertService">
-				<input v-model="service.id" placeholder="Service ID" />
-				<input v-model="service.name" placeholder="Service name" required />
-				<input v-model.number="service.price" type="number" min="0" placeholder="Price" required />
-				<button type="submit">Upsert service</button>
+				<input v-model="service.id" placeholder="Mã dịch vụ" />
+				<input v-model="service.name" placeholder="Tên dịch vụ" required />
+				<input v-model.number="service.price" type="number" min="0" placeholder="Giá" required />
+				<button type="submit">Cập nhật dịch vụ</button>
 			</form>
 			<form class="row" @submit.prevent="removeService">
-				<input v-model="removeServiceId" placeholder="Service ID to remove" required />
-				<button type="submit">Remove service</button>
+				<input v-model="removeServiceId" placeholder="Mã dịch vụ cần xóa" required />
+				<button type="submit">Xóa dịch vụ</button>
 			</form>
 		</section>
 
@@ -60,13 +60,13 @@ const search = () => doctors.search(filters);
 const upsertService = async () => {
   status.value = '';
   await doctors.upsertService({ ...service });
-  status.value = 'Service upsert completed.';
+	status.value = 'Cập nhật dịch vụ thành công.';
 };
 
 const removeService = async () => {
   status.value = '';
   await doctors.removeService(removeServiceId.value);
-  status.value = 'Service removal completed.';
+	status.value = 'Xóa dịch vụ thành công.';
 };
 
 onMounted(search);

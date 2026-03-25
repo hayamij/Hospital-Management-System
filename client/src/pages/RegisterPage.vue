@@ -1,11 +1,11 @@
 <template>
   <section class="auth-wrap">
     <div class="auth-card">
-      <h1>Create Account</h1>
-      <p class="muted">Registration always creates a patient account.</p>
+      <h1>Tạo tài khoản</h1>
+      <p class="muted">Đăng ký luôn tạo tài khoản bệnh nhân.</p>
 
       <form class="form" @submit.prevent="submit">
-        <FormField label="Full Name">
+        <FormField label="Họ và tên">
           <input v-model.trim="form.fullName" required placeholder="Nguyen Van A" />
         </FormField>
 
@@ -13,26 +13,26 @@
           <input v-model.trim="form.email" type="email" required placeholder="user@example.com" />
         </FormField>
 
-        <FormField label="Phone">
+        <FormField label="Số điện thoại">
           <input v-model.trim="form.phone" type="tel" required placeholder="0901234567" />
         </FormField>
 
-        <FormField label="Password">
-          <input v-model="form.password" type="password" required minlength="8" placeholder="At least 8 characters" />
+        <FormField label="Mật khẩu">
+          <input v-model="form.password" type="password" required minlength="8" placeholder="Ít nhất 8 ký tự" />
         </FormField>
 
-        <FormField label="Confirm Password">
-          <input v-model="form.confirmPassword" type="password" required minlength="8" placeholder="Retype password" />
+        <FormField label="Xác nhận mật khẩu">
+          <input v-model="form.confirmPassword" type="password" required minlength="8" placeholder="Nhập lại mật khẩu" />
         </FormField>
 
         <button type="submit" :disabled="auth.loading">
-          {{ auth.loading ? 'Creating...' : 'Create Account' }}
+          {{ auth.loading ? 'Đang tạo...' : 'Tạo tài khoản' }}
         </button>
       </form>
 
       <p class="switch">
-        Already have an account?
-        <RouterLink to="/login">Sign in</RouterLink>
+        Đã có tài khoản?
+        <RouterLink to="/login">Đăng nhập</RouterLink>
       </p>
 
       <Alert v-if="auth.error" :message="auth.error" />
@@ -64,27 +64,27 @@ const submit = async () => {
   auth.error = null;
 
   if (!form.fullName || form.fullName.length < 2) {
-    auth.error = 'Full name must be at least 2 characters.';
+    auth.error = 'Họ tên phải có ít nhất 2 ký tự.';
     return;
   }
 
   if (!form.email) {
-    auth.error = 'Email is required.';
+    auth.error = 'Email là bắt buộc.';
     return;
   }
 
   if (!form.phone || !phoneRegex.test(form.phone)) {
-    auth.error = 'Phone is invalid (example: 0901234567).';
+    auth.error = 'Số điện thoại không hợp lệ (ví dụ: 0901234567).';
     return;
   }
 
   if (!form.password || form.password.length < 8) {
-    auth.error = 'Password must be at least 8 characters.';
+    auth.error = 'Mật khẩu phải có ít nhất 8 ký tự.';
     return;
   }
 
   if (form.password !== form.confirmPassword) {
-    auth.error = 'Password confirmation does not match.';
+    auth.error = 'Xác nhận mật khẩu không khớp.';
     return;
   }
 

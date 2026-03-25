@@ -49,7 +49,7 @@ const props = defineProps({
 	},
 	emptyText: {
 		type: String,
-		default: 'No data.',
+		default: 'Không có dữ liệu.',
 	},
 });
 

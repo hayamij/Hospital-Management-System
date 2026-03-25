@@ -1,34 +1,34 @@
 <template>
 	<div class="page">
 		<header class="panel">
-			<h1>Appointments</h1>
-			<p>Request, schedule, reschedule, cancel and update appointment status.</p>
+			<h1>Lịch hẹn</h1>
+			<p>Yêu cầu, đặt lịch, đổi lịch, hủy và cập nhật trạng thái lịch hẹn.</p>
 			<div class="row">
 				<select v-model="filters.status" @change="refresh">
-					<option value="">All statuses</option>
-					<option value="scheduled">Scheduled</option>
-					<option value="completed">Completed</option>
-					<option value="cancelled">Cancelled</option>
-					<option value="no_show">No show</option>
+					<option value="">Tất cả trạng thái</option>
+					<option value="scheduled">Đã lên lịch</option>
+					<option value="completed">Hoàn tất</option>
+					<option value="cancelled">Đã hủy</option>
+					<option value="no_show">Vắng mặt</option>
 				</select>
-				<button type="button" @click="refresh">Refresh</button>
+				<button type="button" @click="refresh">Làm mới</button>
 			</div>
 		</header>
 
 		<div v-if="auth.role === 'patient'" class="panel">
-			<h2>Schedule new appointment</h2>
+			<h2>Đặt lịch mới</h2>
 			<form class="grid four" @submit.prevent="handleSchedule">
-				<input v-model="createForm.doctorId" required placeholder="Doctor ID" />
+				<input v-model="createForm.doctorId" required placeholder="Mã bác sĩ" />
 				<input v-model="createForm.startAt" required type="datetime-local" />
 				<input v-model="createForm.endAt" required type="datetime-local" />
-				<input v-model="createForm.reason" required placeholder="Reason" />
-				<button type="submit" :disabled="appointments.loading">Schedule</button>
+				<input v-model="createForm.reason" required placeholder="Lý do" />
+				<button type="submit" :disabled="appointments.loading">Đặt lịch</button>
 			</form>
 		</div>
 
 		<div class="panel">
-			<h2>Appointments list ({{ appointments.items.length }})</h2>
-			<div v-if="appointments.items.length === 0">No appointments found.</div>
+			<h2>Danh sách lịch hẹn ({{ appointments.items.length }})</h2>
+			<div v-if="appointments.items.length === 0">Chưa có lịch hẹn.</div>
 			<div class="list-grid">
 				<div
 					v-for="item in appointments.items"
@@ -36,27 +36,27 @@
 					class="item"
 				>
 					<div>
-						<p><strong>{{ item.reason || 'Appointment' }}</strong></p>
+						<p><strong>{{ item.reason || 'Lịch hẹn' }}</strong></p>
 						<p>{{ item.startAt }} -> {{ item.endAt }}</p>
-						<p>Status: {{ item.status }}</p>
-						<p>Doctor: {{ item.doctorId || item.doctor?.id || 'TBD' }}</p>
+						<p>Trạng thái: {{ item.status }}</p>
+						<p>Bác sĩ: {{ item.doctorId || item.doctor?.id || 'Chưa xác định' }}</p>
 					</div>
 					<div class="row">
 						<template v-if="auth.role === 'patient'">
-							<button type="button" @click="cancel(item)">Cancel</button>
-							<button type="button" @click="openReschedule(item)">Reschedule</button>
+							<button type="button" @click="cancel(item)">Hủy</button>
+							<button type="button" @click="openReschedule(item)">Đổi lịch</button>
 						</template>
 						<template v-else-if="auth.role === 'doctor'">
 							<select v-model="item.decisionUpdate" @change="updateDecision(item)">
-								<option disabled value="">Decision</option>
-								<option value="accepted">Accept</option>
-								<option value="rejected">Reject</option>
+								<option disabled value="">Quyết định</option>
+								<option value="accepted">Chấp nhận</option>
+								<option value="rejected">Từ chối</option>
 							</select>
 							<select v-model="item.statusUpdate" @change="updateStatus(item)">
-								<option disabled value="">Update</option>
-								<option value="completed">Completed</option>
-								<option value="no_show">No show</option>
-								<option value="cancelled">Cancelled</option>
+								<option disabled value="">Cập nhật</option>
+								<option value="completed">Hoàn tất</option>
+								<option value="no_show">Vắng mặt</option>
+								<option value="cancelled">Đã hủy</option>
 							</select>
 						</template>
 					</div>
@@ -65,13 +65,13 @@
 		</div>
 
 		<div v-if="showReschedule" class="panel">
-			<h2>Reschedule appointment</h2>
+			<h2>Đổi lịch hẹn</h2>
 			<form class="grid three" @submit.prevent="handleReschedule">
 				<input v-model="rescheduleForm.startAt" required type="datetime-local" />
 				<input v-model="rescheduleForm.endAt" required type="datetime-local" />
 				<div class="row">
-					<button type="submit" :disabled="appointments.loading">Update</button>
-					<button type="button" @click="showReschedule = null">Close</button>
+					<button type="submit" :disabled="appointments.loading">Cập nhật</button>
+					<button type="button" @click="showReschedule = null">Đóng</button>
 				</div>
 			</form>
 		</div>

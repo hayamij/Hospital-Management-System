@@ -25,20 +25,20 @@ const route = useRoute();
 
 const navByRole = {
 	doctor: [
-		{ label: 'Doctor Ops', path: '/doctor/dashboard', icon: 'DO' },
-		{ label: 'Consultation', path: '/doctor/consultation', icon: 'CS' },
-		{ label: 'Schedule', path: '/doctor/appointments', icon: 'SC' },
-		{ label: 'Patients', path: '/doctor/patients', icon: 'PT' },
-		{ label: 'Records', path: '/doctor/records', icon: 'MR' },
-		{ label: 'Messages', path: '/doctor/communications', icon: 'MS' },
+		{ label: 'Vận hành bác sĩ', path: '/doctor/dashboard', icon: 'DO' },
+		{ label: 'Khám bệnh', path: '/doctor/consultation', icon: 'CS' },
+		{ label: 'Lịch hẹn', path: '/doctor/appointments', icon: 'SC' },
+		{ label: 'Bệnh nhân', path: '/doctor/patients', icon: 'PT' },
+		{ label: 'Hồ sơ', path: '/doctor/records', icon: 'MR' },
+		{ label: 'Tin nhắn', path: '/doctor/communications', icon: 'MS' },
 	],
 	admin: [
-		{ label: 'Dashboard', path: '/admin/dashboard', icon: 'DB' },
-		{ label: 'Quan ly Nhan su', path: '/admin/ops#staff', icon: 'HR' },
-		{ label: 'Quan ly Benh nhan', path: '/admin/patients', icon: 'PT' },
-		{ label: 'Quan ly Dich vu', path: '/admin/ops#services', icon: 'SV' },
-		{ label: 'Lich trinh', path: '/admin/appointments', icon: 'SC' },
-		{ label: 'Tai chinh', path: '/admin/billing', icon: 'FN' },
+		{ label: 'Bảng điều khiển', path: '/admin/dashboard', icon: 'DB' },
+		{ label: 'Quản lý nhân sự', path: '/admin/ops#staff', icon: 'HR' },
+		{ label: 'Quản lý bệnh nhân', path: '/admin/patients', icon: 'PT' },
+		{ label: 'Quản lý dịch vụ', path: '/admin/ops#services', icon: 'SV' },
+		{ label: 'Lịch trình', path: '/admin/appointments', icon: 'SC' },
+		{ label: 'Tài chính', path: '/admin/billing', icon: 'FN' },
 	],
 };
 

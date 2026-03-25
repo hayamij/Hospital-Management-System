@@ -2,35 +2,35 @@
   <div class="admin-dashboard page">
     <header class="panel header-panel">
       <div>
-        <h1>Admin Dashboard</h1>
-        <p>Bang dieu khien tong quan van hanh benh vien theo ngay.</p>
+        <h1>Bảng điều khiển quản trị</h1>
+        <p>Bảng điều khiển tổng quan vận hành bệnh viện theo ngày.</p>
       </div>
-      <button type="button" @click="loadOverview" :disabled="loading">Cap nhat so lieu</button>
+      <button type="button" @click="loadOverview" :disabled="loading">Cập nhật số liệu</button>
     </header>
 
     <section class="stats-grid">
       <article class="kpi-card">
-        <p class="kpi-label">Tong benh nhan</p>
+        <p class="kpi-label">Tổng bệnh nhân</p>
         <p class="kpi-value">{{ formatInteger(totalPatients) }}</p>
       </article>
 
       <article class="kpi-card">
-        <p class="kpi-label">Doanh thu ngay</p>
+        <p class="kpi-label">Doanh thu ngày</p>
         <p class="kpi-value">{{ formatCurrency(dailyRevenue) }}</p>
       </article>
 
       <article class="kpi-card">
-        <p class="kpi-label">So ca kham</p>
+        <p class="kpi-label">Số ca khám</p>
         <p class="kpi-value">{{ formatInteger(totalCases) }}</p>
       </article>
     </section>
 
     <section class="panel chart-panel">
-      <h2>Bieu do tong quan</h2>
+      <h2>Biểu đồ tổng quan</h2>
       <div class="bar-chart">
         <div class="bar-col">
           <div class="bar" :style="{ height: chartHeights.patients + '%' }"></div>
-          <p>Benh nhan</p>
+          <p>Bệnh nhân</p>
         </div>
         <div class="bar-col">
           <div class="bar revenue" :style="{ height: chartHeights.revenue + '%' }"></div>
@@ -38,7 +38,7 @@
         </div>
         <div class="bar-col">
           <div class="bar cases" :style="{ height: chartHeights.cases + '%' }"></div>
-          <p>Ca kham</p>
+          <p>Ca khám</p>
         </div>
       </div>
     </section>
@@ -92,7 +92,7 @@ const loadOverview = async () => {
     totalCases.value = report?.counts?.appointments ?? report?.counts?.cases ?? 0;
     dailyRevenue.value = report?.totals?.revenueDay ?? report?.totals?.revenue ?? 0;
   } catch (e) {
-    error.value = e?.message || 'Khong the tai so lieu dashboard.';
+    error.value = e?.message || 'Không thể tải số liệu dashboard.';
   } finally {
     loading.value = false;
   }

@@ -42,7 +42,7 @@ const reportResult = ref(null);
 const scheduleOps = reactive({ doctorId: '', slotsPerDay: 12 });
 const overrideOps = reactive({ appointmentId: '', action: 'cancel', startAt: '', endAt: '', doctorId: '' });
 const serviceOps = reactive({ id: '', name: '', price: 0 });
-const settingsOps = reactive({ clinicName: 'Hospital', timezone: 'Asia/Ho_Chi_Minh' });
+const settingsOps = reactive({ clinicName: 'Bệnh viện', timezone: 'Asia/Ho_Chi_Minh' });
 const reportOps = reactive({ reportName: 'system_overview', from: '', to: '' });
 const billingOps = reactive({ invoiceId: '', action: 'issue', dueDate: '' });
 const auditOps = reactive({ recordId: '', action: 'approve', reason: '' });
@@ -57,7 +57,7 @@ const updateDoctorSchedule = () =>
         }),
       setStatus: (message) => (status.value = message),
       setError: (message) => (error.value = message),
-      successText: 'Doctor schedule updated successfully.',
+      successText: 'Cập nhật lịch bác sĩ thành công.',
     }
   );
 
@@ -72,7 +72,7 @@ const overrideAppointment = () =>
         ),
       setStatus: (message) => (status.value = message),
       setError: (message) => (error.value = message),
-      successText: 'Appointment override applied.',
+      successText: 'Đã áp dụng thay đổi lịch hẹn.',
     }
   );
 
@@ -82,7 +82,7 @@ const upsertService = () =>
       run: () => adminApi.upsertService(auth.token, buildServicePayload(serviceOps, auth.userId)),
       setStatus: (message) => (status.value = message),
       setError: (message) => (error.value = message),
-      successText: 'Service updated successfully.',
+      successText: 'Cập nhật dịch vụ thành công.',
     }
   );
 
@@ -103,7 +103,7 @@ const runReport = () =>
     },
     setStatus: (message) => (status.value = message),
     setError: (message) => (error.value = message),
-    successText: 'Report generated successfully.',
+    successText: 'Tạo báo cáo thành công.',
   });
 
 const manageBilling = () =>
@@ -117,7 +117,7 @@ const manageBilling = () =>
         ),
       setStatus: (message) => (status.value = message),
       setError: (message) => (error.value = message),
-      successText: 'Billing action completed.',
+      successText: 'Thao tác thanh toán đã hoàn tất.',
     }
   );
 
@@ -132,7 +132,7 @@ const auditRecord = () =>
         }),
       setStatus: (message) => (status.value = message),
       setError: (message) => (error.value = message),
-      successText: 'Medical record audit submitted.',
+      successText: 'Đã gửi duyệt hồ sơ bệnh án.',
     }
   );
 </script>

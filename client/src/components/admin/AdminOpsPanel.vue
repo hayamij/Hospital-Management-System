@@ -1,64 +1,64 @@
 <template>
   <div class="page">
     <header class="panel">
-      <h1>Admin Operations</h1>
-      <p>Execute admin usecases: users, schedules, billing, services, settings, reports and audit.</p>
+      <h1>Vận hành quản trị</h1>
+      <p>Thực thi các tác vụ quản trị: người dùng, lịch, thanh toán, dịch vụ, thiết lập, báo cáo và kiểm tra.</p>
     </header>
 
     <UserManagement />
 
     <section class="panel">
-      <h2>Doctor schedule and appointment override</h2>
+      <h2>Lịch bác sĩ và điều chỉnh lịch hẹn</h2>
       <form class="grid four" @submit.prevent="$emit('update-doctor-schedule')">
-        <input v-model="scheduleOps.doctorId" placeholder="Doctor ID" required />
-        <input v-model.number="scheduleOps.slotsPerDay" type="number" min="0" placeholder="Slots per day" required />
-        <button type="submit">Update doctor schedule</button>
+        <input v-model="scheduleOps.doctorId" placeholder="Mã bác sĩ" required />
+        <input v-model.number="scheduleOps.slotsPerDay" type="number" min="0" placeholder="Số ca mỗi ngày" required />
+        <button type="submit">Cập nhật lịch bác sĩ</button>
       </form>
       <form class="grid five" @submit.prevent="$emit('override-appointment')">
-        <input v-model="overrideOps.appointmentId" placeholder="Appointment ID" required />
-        <input v-model="overrideOps.action" placeholder="Action (reschedule/cancel/assignDoctor)" required />
+        <input v-model="overrideOps.appointmentId" placeholder="Mã lịch hẹn" required />
+        <input v-model="overrideOps.action" placeholder="Hành động (reschedule/cancel/assignDoctor)" required />
         <input v-model="overrideOps.startAt" type="datetime-local" />
         <input v-model="overrideOps.endAt" type="datetime-local" />
-        <input v-model="overrideOps.doctorId" placeholder="Doctor ID (optional)" />
-        <button type="submit">Override appointment</button>
+        <input v-model="overrideOps.doctorId" placeholder="Mã bác sĩ (tùy chọn)" />
+        <button type="submit">Điều chỉnh lịch hẹn</button>
       </form>
     </section>
 
     <section class="panel">
-      <h2>Services, settings, and reports</h2>
+      <h2>Dịch vụ, thiết lập và báo cáo</h2>
       <form class="grid four" @submit.prevent="$emit('upsert-service')">
-        <input v-model="serviceOps.id" placeholder="Service ID" />
-        <input v-model="serviceOps.name" placeholder="Service name" required />
-        <input v-model.number="serviceOps.price" type="number" min="0" placeholder="Price" required />
-        <button type="submit">Upsert service</button>
+        <input v-model="serviceOps.id" placeholder="Mã dịch vụ" />
+        <input v-model="serviceOps.name" placeholder="Tên dịch vụ" required />
+        <input v-model.number="serviceOps.price" type="number" min="0" placeholder="Giá" required />
+        <button type="submit">Cập nhật dịch vụ</button>
       </form>
       <form class="grid three" @submit.prevent="$emit('update-settings')">
-        <input v-model="settingsOps.clinicName" placeholder="Clinic name" required />
-        <input v-model="settingsOps.timezone" placeholder="Timezone" required />
-        <button type="submit">Update settings</button>
+        <input v-model="settingsOps.clinicName" placeholder="Tên cơ sở" required />
+        <input v-model="settingsOps.timezone" placeholder="Múi giờ" required />
+        <button type="submit">Cập nhật thiết lập</button>
       </form>
       <form class="grid three" @submit.prevent="$emit('run-report')">
-        <input v-model="reportOps.reportName" placeholder="Report name" required />
+        <input v-model="reportOps.reportName" placeholder="Tên báo cáo" required />
         <input v-model="reportOps.from" type="date" />
         <input v-model="reportOps.to" type="date" />
-        <button type="submit">Run report</button>
+        <button type="submit">Chạy báo cáo</button>
       </form>
       <pre class="pre">{{ prettyReport(reportResult) }}</pre>
     </section>
 
     <section class="panel">
-      <h2>Billing and medical record audit</h2>
+      <h2>Thanh toán và kiểm tra bệnh án</h2>
       <form class="grid four" @submit.prevent="$emit('manage-billing')">
-        <input v-model="billingOps.invoiceId" placeholder="Invoice ID" required />
-        <input v-model="billingOps.action" placeholder="Action (issue/markPaid/void)" required />
+        <input v-model="billingOps.invoiceId" placeholder="Mã hóa đơn" required />
+        <input v-model="billingOps.action" placeholder="Hành động (issue/markPaid/void)" required />
         <input v-model="billingOps.dueDate" type="date" />
-        <button type="submit">Apply billing action</button>
+        <button type="submit">Áp dụng thanh toán</button>
       </form>
       <form class="grid three" @submit.prevent="$emit('audit-record')">
-        <input v-model="auditOps.recordId" placeholder="Record ID" required />
-        <input v-model="auditOps.action" placeholder="Action (approve/reject)" required />
-        <input v-model="auditOps.reason" placeholder="Reason" />
-        <button type="submit">Submit audit</button>
+        <input v-model="auditOps.recordId" placeholder="Mã bệnh án" required />
+        <input v-model="auditOps.action" placeholder="Hành động (approve/reject)" required />
+        <input v-model="auditOps.reason" placeholder="Lý do" />
+        <button type="submit">Gửi kiểm tra</button>
       </form>
     </section>
 

@@ -1,49 +1,49 @@
 <template>
   <div class="card-detail-page">
-    <p class="back-link-wrap"><RouterLink class="back-link" to="/public">← Back to public portal</RouterLink></p>
+    <p class="back-link-wrap"><RouterLink class="back-link" to="/public">← Quay về cổng thông tin công khai</RouterLink></p>
 
     <header class="panel hero">
-      <p class="eyebrow">PUBLIC DETAIL</p>
+      <p class="eyebrow">CHI TIẾT CÔNG KHAI</p>
       <h1>{{ pageTitle }}</h1>
       <p class="subtitle">{{ pageSubtitle }}</p>
       <div class="hero-actions">
-        <RouterLink class="hero-btn" to="/">Home</RouterLink>
-        <RouterLink class="hero-btn" to="/services">Browse services</RouterLink>
+        <RouterLink class="hero-btn" to="/">Trang chủ</RouterLink>
+        <RouterLink class="hero-btn" to="/services">Xem dịch vụ</RouterLink>
       </div>
     </header>
 
     <section class="panel">
-      <p v-if="loading" class="status">Loading detail...</p>
+      <p v-if="loading" class="status">Đang tải chi tiết...</p>
       <template v-else-if="item">
         <template v-if="category === 'insurance-plans'">
           <article class="detail-card">
             <h2>{{ item.planName }}</h2>
-            <p><strong>Provider:</strong> {{ item.provider }}</p>
+            <p><strong>Nhà cung cấp:</strong> {{ item.provider }}</p>
             <p>{{ item.coverageSummary }}</p>
-            <p><strong>Copay:</strong> {{ item.copayAmount }}</p>
+            <p><strong>Đồng chi trả:</strong> {{ item.copayAmount }}</p>
           </article>
         </template>
 
         <template v-else-if="category === 'booking-constraints'">
           <article class="detail-card">
             <h2>{{ item.title || item.code }}</h2>
-            <p><strong>Code:</strong> {{ item.code }}</p>
+            <p><strong>Mã:</strong> {{ item.code }}</p>
             <p>{{ item.description }}</p>
-            <p><strong>Applies to:</strong> {{ item.appliesToRole }}</p>
-            <p><strong>Value:</strong> {{ item.value }}</p>
+            <p><strong>Áp dụng cho:</strong> {{ item.appliesToRole }}</p>
+            <p><strong>Giá trị:</strong> {{ item.value }}</p>
           </article>
         </template>
 
         <template v-else-if="category === 'doctors'">
           <article class="detail-card doctor">
             <h2>{{ item.fullName }}</h2>
-            <p><strong>Specialization:</strong> {{ item.specialization }}</p>
-            <p><strong>Department:</strong> {{ item.department || '-' }}</p>
-            <p><strong>Available slots/day:</strong> {{ item.availableSlotsPerDay }}</p>
-            <p><strong>Status:</strong> {{ item.status }}</p>
+            <p><strong>Chuyên môn:</strong> {{ item.specialization }}</p>
+            <p><strong>Khoa:</strong> {{ item.department || '-' }}</p>
+            <p><strong>Khung giờ/ngày:</strong> {{ item.availableSlotsPerDay }}</p>
+            <p><strong>Trạng thái:</strong> {{ item.status }}</p>
             <div class="doctor-actions">
-              <RouterLink class="cta primary" :to="`/patient/booking?doctor=${encodeURIComponent(item.id || itemId)}`">Book appointment</RouterLink>
-              <RouterLink class="cta" to="/doctors">View all doctors</RouterLink>
+              <RouterLink class="cta primary" :to="`/patient/booking?doctor=${encodeURIComponent(item.id || itemId)}`">Đặt lịch khám</RouterLink>
+              <RouterLink class="cta" to="/doctors">Xem tất cả bác sĩ</RouterLink>
             </div>
           </article>
         </template>
@@ -51,11 +51,11 @@
         <template v-else>
           <article class="detail-card">
             <h2>{{ item.name || item.id }}</h2>
-            <p>{{ item.description || 'No additional details.' }}</p>
+            <p>{{ item.description || 'Không có thông tin bổ sung.' }}</p>
           </article>
         </template>
       </template>
-      <p v-else class="status">Item not found.</p>
+      <p v-else class="status">Không tìm thấy dữ liệu.</p>
     </section>
 
     <p v-if="error" class="msg err">{{ error }}</p>
@@ -76,14 +76,14 @@ const category = computed(() => String(route.params.category || ''));
 const itemId = computed(() => String(route.params.itemId || ''));
 
 const titleMap = {
-  'insurance-plans': 'Insurance Plan Detail',
-  'booking-constraints': 'Booking Constraint Detail',
-  doctors: 'Doctor Detail',
-  services: 'Service Detail',
+  'insurance-plans': 'Chi tiết gói bảo hiểm',
+  'booking-constraints': 'Chi tiết ràng buộc đặt lịch',
+  doctors: 'Chi tiết bác sĩ',
+  services: 'Chi tiết dịch vụ',
 };
 
-const pageTitle = computed(() => titleMap[category.value] || 'Detail');
-const pageSubtitle = computed(() => `Category: ${category.value || '-'} | ID: ${itemId.value || '-'}`);
+const pageTitle = computed(() => titleMap[category.value] || 'Chi tiết');
+const pageSubtitle = computed(() => `Danh mục: ${category.value || '-'} | Mã: ${itemId.value || '-'}`);
 
 const load = async () => {
   loading.value = true;
@@ -93,7 +93,7 @@ const load = async () => {
     const response = await guestApi.cardDetail(category.value, itemId.value);
     item.value = response?.item ?? null;
   } catch (e) {
-    error.value = e.message || 'Failed to load detail.';
+    error.value = e.message || 'Không thể tải chi tiết.';
   } finally {
     loading.value = false;
   }

@@ -1,12 +1,12 @@
 <template>
   <div class="profile-page">
     <section class="panel">
-      <h1>Thong tin ca nhan</h1>
-      <p>Cap nhat ho so benh nhan truoc khi dat lich de nhan tu van chinh xac hon.</p>
+      <h1>Thông tin cá nhân</h1>
+      <p>Cập nhật hồ sơ bệnh nhân trước khi đặt lịch để nhận tư vấn chính xác hơn.</p>
 
       <form class="grid two-col" @submit.prevent="submitProfile">
         <label class="field">
-          <span>Ten</span>
+          <span>Tên</span>
           <input
             v-model.trim="profileForm.name"
             type="text"
@@ -17,7 +17,7 @@
         </label>
 
         <label class="field">
-          <span>SDT</span>
+          <span>SĐT</span>
           <input
             v-model.trim="profileForm.phone"
             type="text"
@@ -28,29 +28,29 @@
         </label>
 
         <label class="field full-row">
-          <span>Dia chi</span>
+          <span>Địa chỉ</span>
           <input
             v-model.trim="profileForm.address"
             type="text"
-            placeholder="123 Duong ABC, Quan 1, TP.HCM"
+            placeholder="123 Đường ABC, Quận 1, TP.HCM"
             @blur="touchField('address')"
           />
           <small v-if="showFieldError('address')" class="field-error">{{ profileErrors.address }}</small>
         </label>
 
         <label class="field full-row">
-          <span>Tien su di ung</span>
+          <span>Tiền sử dị ứng</span>
           <textarea
             v-model.trim="profileForm.allergies"
             rows="4"
-            placeholder="Vi du: di ung penicillin, hai san..."
+            placeholder="Ví dụ: dị ứng penicillin, hải sản..."
             @blur="touchField('allergies')"
           ></textarea>
           <small v-if="showFieldError('allergies')" class="field-error">{{ profileErrors.allergies }}</small>
         </label>
 
         <div class="full-row actions">
-          <button type="submit" :disabled="patients.loading">Luu thong tin</button>
+          <button type="submit" :disabled="patients.loading">Lưu thông tin</button>
         </div>
       </form>
 
@@ -59,43 +59,43 @@
     </section>
 
     <section class="panel">
-      <h2>Doi mat khau</h2>
+      <h2>Đổi mật khẩu</h2>
       <form class="grid two-col" @submit.prevent="submitPassword">
         <label class="field full-row">
-          <span>Mat khau hien tai</span>
+          <span>Mật khẩu hiện tại</span>
           <input
             v-model="passwordForm.currentPassword"
             type="password"
-            placeholder="Nhap mat khau hien tai"
+            placeholder="Nhập mật khẩu hiện tại"
             @blur="touchPasswordField('currentPassword')"
           />
           <small v-if="showPasswordError('currentPassword')" class="field-error">{{ passwordErrors.currentPassword }}</small>
         </label>
 
         <label class="field">
-          <span>Mat khau moi</span>
+          <span>Mật khẩu mới</span>
           <input
             v-model="passwordForm.newPassword"
             type="password"
-            placeholder="Toi thieu 8 ky tu"
+            placeholder="Tối thiểu 8 ký tự"
             @blur="touchPasswordField('newPassword')"
           />
           <small v-if="showPasswordError('newPassword')" class="field-error">{{ passwordErrors.newPassword }}</small>
         </label>
 
         <label class="field">
-          <span>Xac nhan mat khau moi</span>
+          <span>Xác nhận mật khẩu mới</span>
           <input
             v-model="passwordForm.confirmPassword"
             type="password"
-            placeholder="Nhap lai mat khau moi"
+            placeholder="Nhập lại mật khẩu mới"
             @blur="touchPasswordField('confirmPassword')"
           />
           <small v-if="showPasswordError('confirmPassword')" class="field-error">{{ passwordErrors.confirmPassword }}</small>
         </label>
 
         <div class="full-row actions">
-          <button type="submit" :disabled="passwordSubmitting">Doi mat khau</button>
+          <button type="submit" :disabled="passwordSubmitting">Đổi mật khẩu</button>
         </div>
       </form>
 
@@ -154,19 +154,19 @@ const profileErrors = computed(() => {
   const errors = {};
 
   if (!profileForm.name || profileForm.name.length < 2) {
-    errors.name = 'Ten phai co it nhat 2 ky tu.';
+    errors.name = 'Tên phải có ít nhất 2 ký tự.';
   }
 
   if (!profileForm.phone || !phoneRegex.test(profileForm.phone)) {
-    errors.phone = 'SDT khong hop le (vi du: 0901234567).';
+    errors.phone = 'SĐT không hợp lệ (ví dụ: 0901234567).';
   }
 
   if (!profileForm.address || profileForm.address.length < 5) {
-    errors.address = 'Dia chi phai co it nhat 5 ky tu.';
+    errors.address = 'Địa chỉ phải có ít nhất 5 ký tự.';
   }
 
   if (profileForm.allergies.length > 500) {
-    errors.allergies = 'Tien su di ung khong duoc vuot qua 500 ky tu.';
+    errors.allergies = 'Tiền sử dị ứng không được vượt quá 500 ký tự.';
   }
 
   return errors;
@@ -176,19 +176,19 @@ const passwordErrors = computed(() => {
   const errors = {};
 
   if (!passwordForm.currentPassword) {
-    errors.currentPassword = 'Vui long nhap mat khau hien tai.';
+    errors.currentPassword = 'Vui lòng nhập mật khẩu hiện tại.';
   }
 
   if (!passwordForm.newPassword || passwordForm.newPassword.length < 8) {
-    errors.newPassword = 'Mat khau moi phai toi thieu 8 ky tu.';
+    errors.newPassword = 'Mật khẩu mới phải tối thiểu 8 ký tự.';
   } else if (!/[A-Z]/.test(passwordForm.newPassword) || !/[a-z]/.test(passwordForm.newPassword) || !/\d/.test(passwordForm.newPassword)) {
-    errors.newPassword = 'Mat khau moi can co chu hoa, chu thuong va so.';
+    errors.newPassword = 'Mật khẩu mới cần có chữ hoa, chữ thường và số.';
   }
 
   if (!passwordForm.confirmPassword) {
-    errors.confirmPassword = 'Vui long xac nhan mat khau moi.';
+    errors.confirmPassword = 'Vui lòng xác nhận mật khẩu mới.';
   } else if (passwordForm.confirmPassword !== passwordForm.newPassword) {
-    errors.confirmPassword = 'Xac nhan mat khau khong khop.';
+    errors.confirmPassword = 'Xác nhận mật khẩu không khớp.';
   }
 
   return errors;
@@ -220,7 +220,7 @@ const submitProfile = async () => {
     allergies: profileForm.allergies,
   });
 
-  profileSuccess.value = 'Cap nhat thong tin ca nhan thanh cong.';
+  profileSuccess.value = 'Cập nhật thông tin cá nhân thành công.';
 };
 
 const submitPassword = async () => {
@@ -240,7 +240,7 @@ const submitPassword = async () => {
       newPassword: passwordForm.newPassword,
     });
 
-    passwordSuccess.value = 'Doi mat khau thanh cong.';
+    passwordSuccess.value = 'Đổi mật khẩu thành công.';
     passwordForm.currentPassword = '';
     passwordForm.newPassword = '';
     passwordForm.confirmPassword = '';
@@ -249,7 +249,7 @@ const submitPassword = async () => {
     passwordTouched.newPassword = false;
     passwordTouched.confirmPassword = false;
   } catch (error) {
-    passwordError.value = error?.message || 'Khong the doi mat khau. Vui long thu lai.';
+    passwordError.value = error?.message || 'Không thể đổi mật khẩu. Vui lòng thử lại.';
   } finally {
     passwordSubmitting.value = false;
   }

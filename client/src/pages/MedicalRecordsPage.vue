@@ -1,9 +1,9 @@
 <template>
 	<div class="page">
 		<header class="panel">
-			<h1>Ho so kham benh</h1>
-			<p>Lich su ket qua kham va don thuoc cua ban duoc hien thi duoi dang bang.</p>
-			<button type="button" @click="refresh" :disabled="records.loading">Lam moi</button>
+			<h1>Hồ sơ khám bệnh</h1>
+			<p>Lịch sử kết quả khám và đơn thuốc của bạn được hiển thị dưới dạng bảng.</p>
+			<button type="button" @click="refresh" :disabled="records.loading">Làm mới</button>
 		</header>
 
 		<section class="panel">
@@ -11,24 +11,24 @@
 				:columns="columns"
 				:rows="rows"
 				row-key="id"
-				empty-text="Chua co ban ghi kham benh nao."
+				empty-text="Chưa có bản ghi khám bệnh nào."
 			>
 				<template #cell-visitDate="{ value }">{{ formatDate(value) }}</template>
 				<template #cell-actions="{ row }">
 					<div class="row actions">
-						<button type="button" @click="viewDetail(row)">Xem chi tiet</button>
-						<button type="button" @click="downloadPrescription(row)">Tai PDF</button>
+						<button type="button" @click="viewDetail(row)">Xem chi tiết</button>
+						<button type="button" @click="downloadPrescription(row)">Tải PDF</button>
 					</div>
 				</template>
 			</DataTable>
 		</section>
 
 		<section v-if="selectedRecord" class="panel">
-			<h2>Chi tiet ket qua kham</h2>
-			<p><strong>Ngay kham:</strong> {{ formatDate(selectedRecord.visitDate) }}</p>
-			<p><strong>Chan doan:</strong> {{ selectedRecord.diagnosis || 'Dang cap nhat' }}</p>
-			<p><strong>Bac si:</strong> {{ selectedRecord.doctorName || selectedRecord.doctorId || 'Dang cap nhat' }}</p>
-			<p><strong>Ghi chu:</strong> {{ selectedRecord.note || selectedRecord.description || 'Khong co' }}</p>
+			<h2>Chi tiết kết quả khám</h2>
+			<p><strong>Ngày khám:</strong> {{ formatDate(selectedRecord.visitDate) }}</p>
+			<p><strong>Chẩn đoán:</strong> {{ selectedRecord.diagnosis || 'Đang cập nhật' }}</p>
+			<p><strong>Bác sĩ:</strong> {{ selectedRecord.doctorName || selectedRecord.doctorId || 'Đang cập nhật' }}</p>
+			<p><strong>Ghi chú:</strong> {{ selectedRecord.note || selectedRecord.description || 'Không có' }}</p>
 		</section>
 
 		<p v-if="records.error" class="msg err">{{ records.error }}</p>
@@ -47,17 +47,17 @@ const auth = useAuthStore();
 const selectedRecord = ref(null);
 
 const columns = [
-	{ key: 'visitDate', label: 'Ngay kham', width: '160px' },
-	{ key: 'diagnosis', label: 'Chan doan' },
-	{ key: 'doctor', label: 'Bac si', width: '200px' },
-	{ key: 'actions', label: 'Thao tac', width: '220px' },
+	{ key: 'visitDate', label: 'Ngày khám', width: '160px' },
+	{ key: 'diagnosis', label: 'Chẩn đoán' },
+	{ key: 'doctor', label: 'Bác sĩ', width: '200px' },
+	{ key: 'actions', label: 'Thao tác', width: '220px' },
 ];
 
 const rows = computed(() => records.list.map((item, index) => ({
 	id: item.id || item.recordId || `record-${index + 1}`,
 	visitDate: item.visitDate || item.recordedAt || item.createdAt || null,
 	diagnosis: item.diagnosis || item.title || item.note || 'Ket qua kham',
-	doctor: item.doctorName || item.doctorId || 'Dang cap nhat',
+	doctor: item.doctorName || item.doctorId || 'Đang cập nhật',
 	doctorName: item.doctorName,
 	doctorId: item.doctorId,
 	note: item.note,
@@ -104,7 +104,7 @@ const downloadPrescription = async (row) => {
 		document.body.removeChild(link);
 		URL.revokeObjectURL(url);
 	} catch (error) {
-		records.error = error?.message || 'Khong the tai don thuoc.';
+		records.error = error?.message || 'Không thể tải đơn thuốc.';
 	}
 };
 </script>

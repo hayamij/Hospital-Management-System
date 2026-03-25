@@ -1,13 +1,11 @@
 import { AdminLoginUseCase } from '../../../application/use-cases/admin/adminLogin.usecase.js';
-import { ManageDoctorProfileUseCase } from '../../../application/use-cases/admin/manageDoctorProfile.usecase.js';
-import { ManageScheduleTemplateUseCase } from '../../../application/use-cases/admin/manageScheduleTemplate.usecase.js';
-import { PublishScheduleUseCase } from '../../../application/use-cases/admin/publishSchedule.usecase.js';
-import { OverrideDoctorScheduleUseCase } from '../../../application/use-cases/admin/overrideDoctorSchedule.usecase.js';
-import { ManageServiceCatalogUseCase } from '../../../application/use-cases/admin/manageServiceCatalog.usecase.js';
-import { ConfigureSystemSettingsUseCase } from '../../../application/use-cases/admin/configureSystemSettings.usecase.js';
-import { RunOperationalReportUseCase } from '../../../application/use-cases/admin/runOperationalReport.usecase.js';
-import { ProcessBackofficeBillingUseCase } from '../../../application/use-cases/admin/processBackofficeBilling.usecase.js';
-import { ReviewAuditLogUseCase } from '../../../application/use-cases/admin/reviewAuditLog.usecase.js';
+import { ManageDoctorSchedulesUseCase } from '../../../application/use-cases/admin/manageDoctorSchedules.usecase.js';
+import { OverrideAppointmentUseCase } from '../../../application/use-cases/admin/overrideAppointment.usecase.js';
+import { ConfigureServicesAndPricingUseCase } from '../../../application/use-cases/admin/configureServicesAndPricing.usecase.js';
+import { ManageSystemSettingsUseCase } from '../../../application/use-cases/admin/manageSystemSettings.usecase.js';
+import { RunReportsUseCase } from '../../../application/use-cases/admin/runReports.usecase.js';
+import { ManageBillingUseCase } from '../../../application/use-cases/admin/manageBilling.usecase.js';
+import { AuditMedicalRecordsUseCase } from '../../../application/use-cases/admin/auditMedicalRecords.usecase.js';
 import { ListUsersUseCase } from '../../../application/use-cases/admin/listUsers.usecase.js';
 import { CreateUserUseCase } from '../../../application/use-cases/admin/createUser.usecase.js';
 import { UpdateUserUseCase } from '../../../application/use-cases/admin/updateUser.usecase.js';
@@ -60,49 +58,59 @@ export const createAdminUseCases = ({
   doctorRepository,
   appointmentRepository,
   billingRepository,
+  medicalRecordRepository,
   serviceCatalogRepository,
+  settingsRepository,
   reportRepository,
   auditLogRepository,
   authService,
 }) => {
   const adminLoginClass = new AdminLoginUseCase({ userRepository, authService });
-  const manageDoctorProfileClass = new ManageDoctorProfileUseCase({
+  const manageDoctorSchedulesClass = new ManageDoctorSchedulesUseCase({
     doctorRepository,
-    notificationService: noopNotification,
+    userRepository,
   });
-  const manageScheduleTemplateClass = new ManageScheduleTemplateUseCase({
-    doctorRepository,
-    appointmentRepository,
-  });
-  const publishScheduleClass = new PublishScheduleUseCase({
+  const overrideAppointmentClass = new OverrideAppointmentUseCase({
+    userRepository,
     doctorRepository,
     appointmentRepository,
   });
-  const overrideDoctorScheduleClass = new OverrideDoctorScheduleUseCase({
-    doctorRepository,
-    appointmentRepository,
-  });
-  const manageServiceCatalogClass = new ManageServiceCatalogUseCase({
+  const configureServicesAndPricingClass = new ConfigureServicesAndPricingUseCase({
     serviceCatalogRepository,
+    userRepository,
   });
-  const configureSystemSettingsClass = new ConfigureSystemSettingsUseCase({
-    settingsRepository: {
-      async saveSettings(settings) {
-        return {
-          settings,
-          updatedAt: new Date().toISOString(),
-          version: 'v1',
-        };
+  const manageSystemSettingsClass = new ManageSystemSettingsUseCase({
+    settingsRepository:
+      settingsRepository || {
+        async getSettings() {
+          return {};
+        },
+        async save(settings) {
+          return {
+            settings,
+            updatedAt: new Date().toISOString(),
+            version: 'v1',
+          };
+        },
       },
-    },
+    userRepository,
   });
-  const runOperationalReportClass = new RunOperationalReportUseCase({
+  const runReportsClass = new RunReportsUseCase({
     reportRepository,
+    userRepository,
   });
-  const processBackofficeBillingClass = new ProcessBackofficeBillingUseCase({
+  const manageBillingClass = new ManageBillingUseCase({
     billingRepository,
+    userRepository,
   });
-  const reviewAuditLogClass = new ReviewAuditLogUseCase({ auditLogRepository });
+  const auditMedicalRecordsClass =
+    medicalRecordRepository && auditLogRepository
+      ? new AuditMedicalRecordsUseCase({
+          medicalRecordRepository,
+          auditLogRepository,
+          userRepository,
+        })
+      : null;
   const listUsersClass = new ListUsersUseCase({ userRepository });
   const createUserClass = new CreateUserUseCase({ userRepository, authService });
   const updateUserClass = new UpdateUserUseCase({ userRepository });
@@ -113,17 +121,17 @@ export const createAdminUseCases = ({
     (result) => ({ ...result, token: result.accessToken })
   );
   const manageDoctorProfileUseCase = adaptUseCase(
-    manageDoctorProfileClass,
+    manageDoctorSchedulesClass,
     (input) => {
-      const action = input?.action ?? 'update';
-      const payload =
-        action === 'create'
-          ? mapCreateDoctorInput(input)
-          : mapUpdateDoctorInput(input);
-
+      const payload = mapUpdateDoctorInput(input);
       return {
-        ...payload,
-        action,
+        adminId: normalizeIdentifier(input?.adminId) ?? normalizeIdentifier(input?.updatedBy),
+        doctorId: payload.doctorId,
+        slotsPerDay:
+          input?.slotsPerDay ??
+          input?.availableSlotsPerDay ??
+          input?.availability?.slotsPerDay ??
+          0,
       };
     },
     (result) => ({
@@ -134,56 +142,72 @@ export const createAdminUseCases = ({
     })
   );
   const runOperationalReportUseCase = adaptUseCase(
-    runOperationalReportClass,
+    runReportsClass,
     (input) => ({
-      reportType: input?.reportType,
-      startDate: input?.startDate,
-      endDate: input?.endDate,
-      format: input?.format,
-      generatedBy: input?.generatedBy,
-      includeDetails: input?.includeDetails,
-      filters: input?.filters,
-      metadata: input?.metadata,
+      adminId: input?.adminId ?? input?.generatedBy,
+      reportName: input?.reportType ?? input?.reportName,
+      params: {
+        startDate: input?.startDate,
+        endDate: input?.endDate,
+        format: input?.format,
+        includeDetails: input?.includeDetails,
+        filters: input?.filters,
+        metadata: input?.metadata,
+      },
     }),
     (result) => ({
-      reportId: result.reportId,
-      reportType: result.reportType,
-      generatedAt: result.generatedAt,
-      fileUrl: result.exportUrl,
-      format: result.format,
-      summary: result.summary,
-      generatedBy: result.generatedBy,
-      metadata: result.metadata,
-      data: result.rows,
-      rows: result.rows,
-      totals: result.totals,
+      reportId: `rep-${Date.now()}`,
+      reportType: result.reportName,
+      generatedAt: new Date().toISOString(),
+      data: result.data,
+      rows: result.data,
     })
   );
   const processBackofficeBillingUseCase = adaptUseCase(
-    processBackofficeBillingClass,
+    manageBillingClass,
     (input) => ({
       invoiceId: input?.billingId,
-      action: input?.action,
-      amount: input?.amount,
-      adjustedBy: input?.processedBy,
-      note: input?.note,
-      reason: input?.reason,
-      metadata: input?.metadata,
-      adjustedAt: input?.processedAt,
+      adminId: input?.adminId ?? input?.processedBy,
+      action:
+        String(input?.action || '').toLowerCase() === 'paid'
+          ? 'markPaid'
+          : String(input?.action || '').toLowerCase() === 'void'
+          ? 'void'
+          : 'issue',
+      dueDate: input?.dueDate ?? input?.processedAt,
     })
   );
+
+  const reviewAuditLogUseCase =
+    auditMedicalRecordsClass ||
+    adaptUseCase(
+      {
+        async execute() {
+          return { records: [] };
+        },
+      },
+      undefined,
+      (result) => result
+    );
 
   return {
     adminLoginUseCase,
     manageDoctorProfileUseCase,
-    manageScheduleTemplateUseCase: manageScheduleTemplateClass,
-    publishScheduleUseCase: publishScheduleClass,
-    overrideDoctorScheduleUseCase: overrideDoctorScheduleClass,
-    manageServiceCatalogUseCase: manageServiceCatalogClass,
-    configureSystemSettingsUseCase: configureSystemSettingsClass,
+    manageScheduleTemplateUseCase: manageDoctorSchedulesClass,
+    publishScheduleUseCase: manageDoctorSchedulesClass,
+    overrideDoctorScheduleUseCase: overrideAppointmentClass,
+    manageServiceCatalogUseCase: configureServicesAndPricingClass,
+    configureSystemSettingsUseCase: manageSystemSettingsClass,
     runOperationalReportUseCase,
     processBackofficeBillingUseCase,
-    reviewAuditLogUseCase: reviewAuditLogClass,
+    reviewAuditLogUseCase,
+    manageDoctorSchedulesUseCase: manageDoctorSchedulesClass,
+    overrideAppointmentUseCase: overrideAppointmentClass,
+    configureServicesAndPricingUseCase: configureServicesAndPricingClass,
+    manageSystemSettingsUseCase: manageSystemSettingsClass,
+    runReportUseCase: runOperationalReportUseCase,
+    manageBillingUseCase: processBackofficeBillingUseCase,
+    auditMedicalRecordsUseCase: reviewAuditLogUseCase,
     listUsersUseCase: listUsersClass,
     createUserUseCase: createUserClass,
     updateUserUseCase: updateUserClass,

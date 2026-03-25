@@ -87,7 +87,9 @@ export function createRealDeps() {
     doctorRepository,
     appointmentRepository,
     billingRepository,
+    medicalRecordRepository,
     serviceCatalogRepository,
+    settingsRepository,
     reportRepository: {
       async run(reportName) {
         const doctors = await doctorRepository.search();
@@ -104,7 +106,9 @@ export function createRealDeps() {
 
   const guestUseCases = createGuestUseCases({
     serviceCatalogRepository,
+    settingsRepository,
     doctorRepository,
+    patientRepository,
     contactLeadRepository,
   });
 

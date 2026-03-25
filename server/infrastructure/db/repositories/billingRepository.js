@@ -4,14 +4,25 @@ import { Billing } from '../../../domain/entities/billing.js';
 
 const ensureId = (id) => id || crypto.randomUUID();
 const toDate = (value) => (value ? new Date(value) : null);
+const normalizeCharges = (rawCharges) => {
+  if (!Array.isArray(rawCharges)) return [];
+  return rawCharges
+    .map((line) => ({
+      ...line,
+      description: String(line?.description ?? line?.item ?? '').trim(),
+      amount: Number(line?.amount ?? 0),
+    }))
+    .filter((line) => line.description && Number.isFinite(line.amount));
+};
 
 const toEntity = (row) => {
   if (!row) return null;
+  const rawCharges = typeof row.charges === 'string' ? JSON.parse(row.charges) : row.charges;
   return new Billing({
     id: row.id,
     invoiceNumber: row.invoice_number,
     patientId: row.patient_id,
-    charges: typeof row.charges === 'string' ? JSON.parse(row.charges) : row.charges,
+    charges: normalizeCharges(rawCharges),
     status: row.status,
     dueDate: row.due_date ? new Date(row.due_date) : null,
     createdAt: toDate(row.created_at),
@@ -37,7 +48,9 @@ export class SqlBillingRepository extends BillingRepositoryPort {
 
   async save(billing) {
     const id = ensureId(billing.id);
-    const charges = Array.isArray(billing.charges) ? JSON.stringify(billing.charges) : billing.charges;
+    const charges = Array.isArray(billing.charges)
+      ? JSON.stringify(normalizeCharges(billing.charges))
+      : billing.charges;
     const status = billing.status ?? 'draft';
     const dueDate = billing.dueDate ? new Date(billing.dueDate).toISOString() : null;
 

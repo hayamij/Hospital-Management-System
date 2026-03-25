@@ -3,16 +3,16 @@
     <header class="panel hero">
       <div class="hero-grid">
         <div>
-          <p class="eyebrow">Newsroom</p>
-          <h1>Tin tuc y khoa va thong bao</h1>
+          <p class="eyebrow">Tin tức</p>
+          <h1>Tin tức y khoa và thông báo</h1>
           <p class="lead">
-            Cap nhat kien thuc y khoa, thong bao van hanh va cac chuong trinh cham soc cong dong.
+            Cập nhật kiến thức y khoa, thông báo vận hành và các chương trình chăm sóc cộng đồng.
           </p>
         </div>
         <img
           class="hero-cover"
           src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=1200&q=80"
-          alt="Benh vien hien dai"
+          alt="Bệnh viện hiện đại"
           loading="lazy"
         />
       </div>
@@ -21,43 +21,43 @@
     <section class="panel layout">
       <main>
         <article v-for="post in visiblePosts" :key="post.id" class="post-card">
-          <img class="post-cover" :src="post.image" :alt="`Minh hoa tin tuc ${post.title}`" loading="lazy" />
+          <img class="post-cover" :src="post.image" :alt="`Minh họa tin tức ${post.title}`" loading="lazy" />
           <p class="meta">{{ post.date }} · {{ post.category }}</p>
           <h2>{{ post.title }}</h2>
           <p class="excerpt">{{ post.excerpt }}</p>
-          <RouterLink class="read-more" :to="`/home-feature/news/${post.id}`">Doc tiep</RouterLink>
+          <RouterLink class="read-more" :to="`/home-feature/news/${post.id}`">Đọc tiếp</RouterLink>
         </article>
 
-        <p v-if="!loading && visiblePosts.length === 0" class="empty">Chua co bai viet phu hop bo loc.</p>
+        <p v-if="!loading && visiblePosts.length === 0" class="empty">Chưa có bài viết phù hợp bộ lọc.</p>
       </main>
 
       <aside class="sidebar">
         <section class="widget">
-          <h3>Loc bai viet</h3>
+          <h3>Lọc bài viết</h3>
           <input
             v-model.trim="keyword"
             type="text"
-            placeholder="Tim theo tieu de"
-            aria-label="Tim theo tieu de"
+            placeholder="Tìm theo tiêu đề"
+            aria-label="Tìm theo tiêu đề"
           />
-          <select v-model="selectedCategory" aria-label="Loc theo danh muc">
-            <option value="">Tat ca danh muc</option>
+          <select v-model="selectedCategory" aria-label="Lọc theo danh mục">
+            <option value="">Tất cả danh mục</option>
             <option v-for="item in categories" :key="item" :value="item">{{ item }}</option>
           </select>
         </section>
 
         <section class="widget">
-          <h3>Thong bao nhanh</h3>
+          <h3>Thông báo nhanh</h3>
           <ul>
-            <li>Kham tong quat giam tai 20% cho lich dat online truoc 48 gio.</li>
-            <li>Trung tam xet nghiem mo rong khung gio den 20:30 hang ngay.</li>
-            <li>Duong day tu van 24/7: 1900 3493.</li>
+            <li>Khám tổng quát giảm tới 20% cho lịch đặt online trước 48 giờ.</li>
+            <li>Trung tâm xét nghiệm mở rộng khung giờ đến 20:30 hằng ngày.</li>
+            <li>Đường dây tư vấn 24/7: 1900 3493.</li>
           </ul>
         </section>
       </aside>
     </section>
 
-    <p v-if="loading" class="msg">Dang tai bai viet...</p>
+    <p v-if="loading" class="msg">Đang tải bài viết...</p>
     <p v-if="error" class="msg err">{{ error }}</p>
   </div>
 </template>
@@ -81,33 +81,33 @@ const fallbackPosts = [
   {
     id: 'outpatient-expand',
     date: '2026-03-24',
-    category: 'Thong bao',
-    title: 'Mo rong khu kham ngoai tru',
-    excerpt: 'Tang so quay tiep nhan va toi uu thoi gian cho cua benh nhan.',
+    category: 'Thông báo',
+    title: 'Mở rộng khu khám ngoại trú',
+    excerpt: 'Tăng số quầy tiếp nhận và tối ưu thời gian chờ của bệnh nhân.',
     image: newsImages[0],
   },
   {
     id: 'new-specialists',
     date: '2026-03-20',
     category: 'Y khoa',
-    title: 'Bo sung doi ngu bac si chuyen khoa',
-    excerpt: 'Them bac si tim mach, nhi khoa va noi tong quat trong quy nay.',
+    title: 'Bổ sung đội ngũ bác sĩ chuyên khoa',
+    excerpt: 'Thêm bác sĩ tim mạch, nhi khoa và nội tổng quát trong quý này.',
     image: newsImages[1],
   },
   {
     id: 'online-queue',
     date: '2026-03-15',
-    category: 'Cong nghe',
-    title: 'Thong bao hang doi truc tuyen duoc trien khai',
-    excerpt: 'Nguoi benh co the theo doi thu tu kham ngay tren he thong.',
+    category: 'Công nghệ',
+    title: 'Thông báo hàng đợi trực tuyến được triển khai',
+    excerpt: 'Người bệnh có thể theo dõi thứ tự khám ngay trên hệ thống.',
     image: newsImages[2],
   },
   {
     id: 'community-campaign',
     date: '2026-03-10',
-    category: 'Cong dong',
-    title: 'Chuoi tu van suc khoe cong dong thang 3',
-    excerpt: 'Hoat dong tu van mien phi cho nguoi cao tuoi tai 4 diem dan cu.',
+    category: 'Cộng đồng',
+    title: 'Chuỗi tư vấn sức khỏe cộng đồng tháng 3',
+    excerpt: 'Hoạt động tư vấn miễn phí cho người cao tuổi tại 4 điểm dân cư.',
     image: newsImages[3],
   },
 ];
@@ -143,14 +143,14 @@ const loadPosts = async () => {
       posts.value = notices.map((item, index) => ({
         id: item?.id || `news-${index + 1}`,
         date: item?.date || 'N/A',
-        category: item?.category || 'Thong bao',
-        title: item?.title || 'Bai viet',
+        category: item?.category || 'Thông báo',
+        title: item?.title || 'Bài viết',
         excerpt: item?.summary || item?.excerpt || '',
         image: item?.image || newsImages[index % newsImages.length],
       }));
     }
   } catch (e) {
-    error.value = e?.message || 'Khong the tai danh sach bai viet.';
+    error.value = e?.message || 'Không thể tải danh sách bài viết.';
   } finally {
     loading.value = false;
   }

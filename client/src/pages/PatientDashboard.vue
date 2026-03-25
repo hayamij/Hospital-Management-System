@@ -3,32 +3,32 @@
     <section class="panel spotlight">
       <div class="spotlight-head">
         <div>
-          <p class="eyebrow">Upcoming Appointment</p>
-          <h1>Lich kham sap toi</h1>
+          <p class="eyebrow">Lịch hẹn sắp tới</p>
+          <h1>Lịch khám sắp tới</h1>
         </div>
         <RouterLink class="quick-action" to="/patient/booking">Đặt lịch khám</RouterLink>
       </div>
 
-      <p v-if="loading" class="message">Dang tai du lieu lich kham...</p>
+      <p v-if="loading" class="message">Đang tải dữ liệu lịch khám...</p>
       <p v-else-if="upcomingError" class="message err">{{ upcomingError }}</p>
 
       <div v-else-if="upcomingAppointment" class="appointment-card">
         <h2>{{ upcomingAppointment.serviceName }}</h2>
-        <p><strong>Bac si:</strong> {{ upcomingAppointment.doctorName }}</p>
-        <p><strong>Ngay kham:</strong> {{ formatDate(upcomingAppointment.date) }}</p>
-        <p><strong>Trang thai:</strong> {{ upcomingAppointment.status }}</p>
+        <p><strong>Bác sĩ:</strong> {{ upcomingAppointment.doctorName }}</p>
+        <p><strong>Ngày khám:</strong> {{ formatDate(upcomingAppointment.date) }}</p>
+        <p><strong>Trạng thái:</strong> {{ upcomingAppointment.status }}</p>
       </div>
 
-      <p v-else class="message">Ban chua co lich kham sap toi. Hay dat lich moi ngay hom nay.</p>
+      <p v-else class="message">Bạn chưa có lịch khám sắp tới. Hãy đặt lịch mới ngay hôm nay.</p>
     </section>
 
     <section class="panel">
       <header class="section-head">
-        <h2>3 ket qua kham / hoa don gan nhat</h2>
-        <RouterLink to="/patient/records" class="view-all">Xem ho so benh an</RouterLink>
+        <h2>3 kết quả khám / hóa đơn gần nhất</h2>
+        <RouterLink to="/patient/records" class="view-all">Xem hồ sơ bệnh án</RouterLink>
       </header>
 
-      <p v-if="loading" class="message">Dang tai danh sach tom tat...</p>
+      <p v-if="loading" class="message">Đang tải danh sách tóm tắt...</p>
       <p v-else-if="summaryError" class="message err">{{ summaryError }}</p>
 
       <div v-else-if="latestSummary.length > 0" class="summary-list">
@@ -40,7 +40,7 @@
         </article>
       </div>
 
-      <p v-else class="message">Chua co du lieu ket qua kham hoac hoa don gan day.</p>
+      <p v-else class="message">Chưa có dữ liệu kết quả khám hoặc hóa đơn gần đây.</p>
     </section>
   </div>
 </template>
@@ -62,7 +62,7 @@ const summaryError = ref('');
 
 const formatDate = (value) => {
   const d = new Date(value || '');
-  if (Number.isNaN(d.getTime())) return 'Chua xac dinh';
+  if (Number.isNaN(d.getTime())) return 'Chưa xác định';
   return d.toLocaleDateString('vi-VN', {
     year: 'numeric',
     month: '2-digit',
@@ -72,7 +72,7 @@ const formatDate = (value) => {
 
 const formatMoney = (value) => {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
-    return 'Dang cap nhat';
+    return 'Đang cập nhật';
   }
   return Number(value).toLocaleString('vi-VN') + ' VND';
 };
@@ -109,11 +109,11 @@ const loadDashboard = async () => {
   ]);
 
   if (appointmentsResult.status === 'rejected') {
-    upcomingError.value = appointmentsResult.reason?.message || 'Khong the tai lich kham sap toi.';
+    upcomingError.value = appointmentsResult.reason?.message || 'Không thể tải lịch khám sắp tới.';
   }
 
   if (recordsResult.status === 'rejected' || billingResult.status === 'rejected') {
-    summaryError.value = 'Khong the tai day du du lieu ket qua kham/hoa don. Vui long thu lai sau.';
+    summaryError.value = 'Không thể tải đầy đủ dữ liệu kết quả khám/hóa đơn. Vui lòng thử lại sau.';
   }
 
   loading.value = false;

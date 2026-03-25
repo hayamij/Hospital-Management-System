@@ -21,12 +21,12 @@ import { useRoute } from 'vue-router';
 const route = useRoute();
 
 const adminItems = [
-  { label: 'Dashboard', path: '/admin/dashboard', icon: 'DB' },
-  { label: 'Quan ly Nhan su', path: '/admin/ops#staff', icon: 'HR' },
-  { label: 'Quan ly Benh nhan', path: '/admin/patients', icon: 'PT' },
-  { label: 'Quan ly Dich vu', path: '/admin/ops#services', icon: 'SV' },
-  { label: 'Lich trinh', path: '/admin/appointments', icon: 'SC' },
-  { label: 'Tai chinh', path: '/admin/billing', icon: 'FN' },
+  { label: 'Bảng điều khiển', path: '/admin/dashboard', icon: 'DB' },
+  { label: 'Quản lý nhân sự', path: '/admin/ops#staff', icon: 'HR' },
+  { label: 'Quản lý bệnh nhân', path: '/admin/patients', icon: 'PT' },
+  { label: 'Quản lý dịch vụ', path: '/admin/ops#services', icon: 'SV' },
+  { label: 'Lịch trình', path: '/admin/appointments', icon: 'SC' },
+  { label: 'Tài chính', path: '/admin/billing', icon: 'FN' },
 ];
 </script>
 

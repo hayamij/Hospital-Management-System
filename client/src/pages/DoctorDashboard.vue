@@ -3,30 +3,30 @@
     <header class="panel">
       <div class="head-row">
         <div>
-          <h1>Today's Schedule</h1>
-          <p>Danh sach benh nhan cho kham trong ngay cua bac si.</p>
+            <h1>Lịch khám hôm nay</h1>
+            <p>Danh sách bệnh nhân chờ khám trong ngày của bác sĩ.</p>
         </div>
-        <button type="button" @click="refresh" :disabled="appointments.loading">Lam moi</button>
+          <button type="button" @click="refresh" :disabled="appointments.loading">Làm mới</button>
       </div>
 
       <div class="filters">
         <label>
           <span>Trang thai</span>
           <select v-model="statusFilter">
-            <option value="all">Tat ca</option>
-            <option value="waiting">Dang cho</option>
-            <option value="completed">Da kham</option>
+            <option value="all">Tất cả</option>
+            <option value="waiting">Đang chờ</option>
+            <option value="completed">Đã khám</option>
           </select>
         </label>
       </div>
     </header>
 
     <section class="panel">
-      <h2>Lich timeline hom nay</h2>
+      <h2>Lịch theo timeline hôm nay</h2>
 
-      <p v-if="appointments.loading" class="muted">Dang tai lich lam viec...</p>
+      <p v-if="appointments.loading" class="muted">Đang tải lịch làm việc...</p>
       <p v-else-if="appointments.error" class="msg err">{{ appointments.error }}</p>
-      <p v-else-if="filteredTodayItems.length === 0" class="muted">Khong co benh nhan phu hop bo loc.</p>
+      <p v-else-if="filteredTodayItems.length === 0" class="muted">Không có bệnh nhân phù hợp bộ lọc.</p>
 
       <div v-else class="timeline">
         <article v-for="item in filteredTodayItems" :key="item.id" class="timeline-item" :class="item.visualStatus">
@@ -34,14 +34,14 @@
           <div class="content">
             <p class="time">{{ item.timeRange }}</p>
             <h3>{{ item.patientName }}</h3>
-            <p><strong>Ly do:</strong> {{ item.reason }}</p>
-            <p><strong>Trang thai:</strong> {{ item.statusLabel }}</p>
+            <p><strong>Lý do:</strong> {{ item.reason }}</p>
+            <p><strong>Trạng thái:</strong> {{ item.statusLabel }}</p>
             <RouterLink
               v-if="item.patientId"
               class="consult-link"
               :to="`/doctor/consultation/${encodeURIComponent(item.patientId)}`"
             >
-              Vao ca kham
+              Vào ca khám
             </RouterLink>
           </div>
         </article>
@@ -86,7 +86,7 @@ const normalizedItems = computed(() => {
       const patientName = raw.patientName || raw.patientFullName || raw.patientId || `Patient ${index + 1}`;
 
       const visualStatus = waitingStatuses.has(status) ? 'waiting' : status === 'completed' ? 'completed' : 'waiting';
-      const statusLabel = visualStatus === 'completed' ? 'Da kham' : 'Dang cho';
+      const statusLabel = visualStatus === 'completed' ? 'Đã khám' : 'Đang chờ';
 
       return {
         id: raw.id || raw.appointmentId || `appointment-${index + 1}`,

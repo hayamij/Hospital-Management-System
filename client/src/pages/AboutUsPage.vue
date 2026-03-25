@@ -3,55 +3,55 @@
     <header class="hero panel">
       <div class="hero-grid">
         <div>
-          <p class="eyebrow">About Us</p>
-          <h1>Lich su hinh thanh va phat trien</h1>
+          <p class="eyebrow">Về chúng tôi</p>
+          <h1>Lịch sử hình thành và phát triển</h1>
           <p class="lead">
-            Benh vien duoc xay dung voi muc tieu mang den dich vu y te chuyen nghiep,
-            de tiep can va dat nguoi benh lam trung tam.
+            Bệnh viện được xây dựng với mục tiêu mang đến dịch vụ y tế chuyên nghiệp,
+            dễ tiếp cận và đặt người bệnh làm trung tâm.
           </p>
         </div>
-        <img class="hero-image" src="/assets/images/doctor-image.png" alt="Bac si cham soc benh nhan cao tuoi" loading="lazy" />
+        <img class="hero-image" src="/assets/images/doctor-image.png" alt="Bác sĩ chăm sóc bệnh nhân cao tuổi" loading="lazy" />
       </div>
     </header>
 
     <section class="panel content-grid">
       <article class="prose">
-        <h2>Lich su hinh thanh</h2>
+        <h2>Lịch sử hình thành</h2>
         <p>
-          Khoi dau tu mot phong kham quy mo nho nam 2008, benh vien da mo rong
-          he thong kham ngoai tru, can lam sang va dieu tri noi tru qua nhieu giai doan.
+          Khởi đầu từ một phòng khám quy mô nhỏ năm 2008, bệnh viện đã mở rộng
+          hệ thống khám ngoại trú, cận lâm sàng và điều trị nội trú qua nhiều giai đoạn.
         </p>
         <p>
-          Tu nam 2018, chung toi day manh chuyen doi so, toi uu quy trinh tiep don,
-          quan ly ho so benh an va dat lich kham truc tuyen.
-        </p>
-
-        <h2>Tam nhin</h2>
-        <p>
-          Tro thanh he thong cham soc suc khoe duoc tin cay hang dau tai khu vuc,
-          ket hop chat luong dieu tri, dao duc nghe nghiep va trai nghiem benh nhan hien dai.
+          Từ năm 2018, chúng tôi đẩy mạnh chuyển đổi số, tối ưu quy trình tiếp đón,
+          quản lý hồ sơ bệnh án và đặt lịch khám trực tuyến.
         </p>
 
-        <h2>Su menh</h2>
+        <h2>Tầm nhìn</h2>
         <p>
-          Cung cap dich vu y te an toan, minh bach va lien tuc cai tien,
-          dong thoi tao moi truong phat trien ben vung cho doi ngu y bac si.
+          Trở thành hệ thống chăm sóc sức khỏe được tin cậy hàng đầu tại khu vực,
+          kết hợp chất lượng điều trị, đạo đức nghề nghiệp và trải nghiệm bệnh nhân hiện đại.
+        </p>
+
+        <h2>Sứ mệnh</h2>
+        <p>
+          Cung cấp dịch vụ y tế an toàn, minh bạch và liên tục cải tiến,
+          đồng thời tạo môi trường phát triển bền vững cho đội ngũ y bác sĩ.
         </p>
       </article>
 
       <aside class="sidebar">
         <section class="meta-card">
-          <h3>Thong tin nhanh</h3>
+          <h3>Thông tin nhanh</h3>
           <ul>
-            <li>Thanh lap: 2008</li>
-            <li>Chuyen khoa: {{ metrics.specialties }}</li>
-            <li>Dich vu dang van hanh: {{ metrics.services }}</li>
-            <li>He thong ho tro 24/7</li>
+            <li>Thành lập: 2008</li>
+            <li>Chuyên khoa: {{ metrics.specialties }}</li>
+            <li>Dịch vụ đang vận hành: {{ metrics.services }}</li>
+            <li>Hệ thống hỗ trợ 24/7</li>
           </ul>
         </section>
 
         <section class="meta-card">
-          <h3>Doi ngu lanh dao</h3>
+          <h3>Đội ngũ lãnh đạo</h3>
           <div v-for="leader in leadership" :key="leader.name" class="leader-item">
             <p class="leader-name">{{ leader.name }}</p>
             <p>{{ leader.role }}</p>
@@ -69,19 +69,19 @@ import { guestApi } from '../services/api.js';
 
 const leadership = [
   {
-    name: 'BS. Nguyen Hoang Minh',
-    role: 'Giam doc dieu hanh',
-    focus: 'Quan tri van hanh va nang cao chat luong kham chua benh.',
+    name: 'BS. Nguyễn Hoàng Minh',
+    role: 'Giám đốc điều hành',
+    focus: 'Quản trị vận hành và nâng cao chất lượng khám chữa bệnh.',
   },
   {
-    name: 'TS. Tran Thu Ha',
-    role: 'Giam doc chuyen mon',
-    focus: 'Phat trien huong dieu tri dua tren bang chung y hoc.',
+    name: 'TS. Trần Thu Hà',
+    role: 'Giám đốc chuyên môn',
+    focus: 'Phát triển hướng điều trị dựa trên bằng chứng y học.',
   },
   {
-    name: 'ThS. Le Quang Phuoc',
-    role: 'Giam doc cong nghe va du lieu',
-    focus: 'Trien khai he thong so va bao mat du lieu y te.',
+    name: 'ThS. Lê Quang Phước',
+    role: 'Giám đốc công nghệ và dữ liệu',
+    focus: 'Triển khai hệ thống số và bảo mật dữ liệu y tế.',
   },
 ];
 

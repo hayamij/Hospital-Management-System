@@ -3,7 +3,7 @@
     <div class="header-inner">
       <RouterLink class="brand" to="/">Hospital Management</RouterLink>
 
-      <button type="button" class="hamburger" @click="isMenuOpen = !isMenuOpen" aria-label="Toggle menu">
+      <button type="button" class="hamburger" @click="isMenuOpen = !isMenuOpen" aria-label="Mở/đóng menu">
         <span></span>
         <span></span>
         <span></span>
@@ -12,26 +12,26 @@
       <div class="right-zone" :class="{ open: isMenuOpen }">
         <nav class="menu">
           <RouterLink to="/" @click="closeMenu">Home</RouterLink>
-          <RouterLink to="/services" @click="closeMenu">Services</RouterLink>
-          <RouterLink to="/doctors" @click="closeMenu">Doctors</RouterLink>
-          <RouterLink to="/news" @click="closeMenu">News</RouterLink>
+          <RouterLink to="/services" @click="closeMenu">Dịch vụ</RouterLink>
+          <RouterLink to="/doctors" @click="closeMenu">Bác sĩ</RouterLink>
+          <RouterLink to="/news" @click="closeMenu">Tin tức</RouterLink>
           <RouterLink to="/about" @click="closeMenu">About</RouterLink>
         </nav>
 
         <div class="auth-zone">
           <template v-if="!auth.isAuthenticated">
-            <RouterLink to="/login" class="action" @click="closeMenu">Login</RouterLink>
-            <RouterLink to="/register" class="action" @click="closeMenu">Register</RouterLink>
+            <RouterLink to="/login" class="action" @click="closeMenu">Đăng nhập</RouterLink>
+            <RouterLink to="/register" class="action" @click="closeMenu">Đăng ký</RouterLink>
           </template>
           <template v-else-if="auth.role === 'patient'">
-            <div class="avatar" :title="auth.email || 'Patient'">{{ avatarInitial }}</div>
-            <RouterLink to="/patient/dashboard" class="action" @click="closeMenu">My Dashboard</RouterLink>
-            <RouterLink to="/patient/profile" class="action" @click="closeMenu">My Profile</RouterLink>
-            <button type="button" class="action" @click="handleLogout">Logout</button>
+            <div class="avatar" :title="auth.email || 'Bệnh nhân'">{{ avatarInitial }}</div>
+            <RouterLink to="/patient/dashboard" class="action" @click="closeMenu">Tổng quan của tôi</RouterLink>
+            <RouterLink to="/patient/profile" class="action" @click="closeMenu">Hồ sơ của tôi</RouterLink>
+            <button type="button" class="action" @click="handleLogout">Đăng xuất</button>
           </template>
           <template v-else>
             <RouterLink :to="auth.role === 'admin' ? '/admin/dashboard' : '/doctor/dashboard'" class="action" @click="closeMenu">Backoffice</RouterLink>
-            <button type="button" class="action" @click="handleLogout">Logout</button>
+            <button type="button" class="action" @click="handleLogout">Đăng xuất</button>
           </template>
         </div>
       </div>

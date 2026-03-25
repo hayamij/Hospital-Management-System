@@ -1,6 +1,9 @@
 import { createHandler } from '../createHandler.js';
 import { RegisterPatientAccountViewModel, UpdatePatientProfileViewModel } from '../../../viewmodels/patientViewModels.js';
 
+const resolvePatientId = (req, fallback) =>
+  req.user?.patientId ?? req.user?.id ?? fallback;
+
 export function buildPatientProfileControllers({ registerPatientAccountUseCase, updatePatientProfileUseCase }) {
   return {
     registerPatientAccount: createHandler({
@@ -11,7 +14,7 @@ export function buildPatientProfileControllers({ registerPatientAccountUseCase, 
     }),
     updatePatientProfile: createHandler({
       useCase: updatePatientProfileUseCase,
-      mapInput: (req) => ({ patientId: req.user?.id ?? req.body?.patientId, ...req.body }),
+      mapInput: (req) => ({ patientId: resolvePatientId(req, req.body?.patientId), ...req.body }),
       mapOutput: (result) => new UpdatePatientProfileViewModel(result),
     }),
   };
