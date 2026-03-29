@@ -1,107 +1,26 @@
 <template>
   <div class="profile-page">
-    <section class="panel">
-      <h1>Thông tin cá nhân</h1>
-      <p>Cập nhật hồ sơ bệnh nhân trước khi đặt lịch để nhận tư vấn chính xác hơn.</p>
+    <PatientProfileInfoForm
+      :form="profileForm"
+      :errors="profileErrors"
+      :show-field-error="showFieldError"
+      :loading="patients.loading"
+      :success="profileSuccess"
+      :error="patients.error"
+      @submit="submitProfile"
+      @touch-field="touchField"
+    />
 
-      <form class="grid two-col" @submit.prevent="submitProfile">
-        <label class="field">
-          <span>Tên</span>
-          <input
-            v-model.trim="profileForm.name"
-            type="text"
-            placeholder="Nguyen Van A"
-            @blur="touchField('name')"
-          />
-          <small v-if="showFieldError('name')" class="field-error">{{ profileErrors.name }}</small>
-        </label>
-
-        <label class="field">
-          <span>SĐT</span>
-          <input
-            v-model.trim="profileForm.phone"
-            type="text"
-            placeholder="0901234567"
-            @blur="touchField('phone')"
-          />
-          <small v-if="showFieldError('phone')" class="field-error">{{ profileErrors.phone }}</small>
-        </label>
-
-        <label class="field full-row">
-          <span>Địa chỉ</span>
-          <input
-            v-model.trim="profileForm.address"
-            type="text"
-            placeholder="123 Đường ABC, Quận 1, TP.HCM"
-            @blur="touchField('address')"
-          />
-          <small v-if="showFieldError('address')" class="field-error">{{ profileErrors.address }}</small>
-        </label>
-
-        <label class="field full-row">
-          <span>Tiền sử dị ứng</span>
-          <textarea
-            v-model.trim="profileForm.allergies"
-            rows="4"
-            placeholder="Ví dụ: dị ứng penicillin, hải sản..."
-            @blur="touchField('allergies')"
-          ></textarea>
-          <small v-if="showFieldError('allergies')" class="field-error">{{ profileErrors.allergies }}</small>
-        </label>
-
-        <div class="full-row actions">
-          <button type="submit" :disabled="patients.loading">Lưu thông tin</button>
-        </div>
-      </form>
-
-      <p v-if="profileSuccess" class="msg ok">{{ profileSuccess }}</p>
-      <p v-if="patients.error" class="msg err">{{ patients.error }}</p>
-    </section>
-
-    <section class="panel">
-      <h2>Đổi mật khẩu</h2>
-      <form class="grid two-col" @submit.prevent="submitPassword">
-        <label class="field full-row">
-          <span>Mật khẩu hiện tại</span>
-          <input
-            v-model="passwordForm.currentPassword"
-            type="password"
-            placeholder="Nhập mật khẩu hiện tại"
-            @blur="touchPasswordField('currentPassword')"
-          />
-          <small v-if="showPasswordError('currentPassword')" class="field-error">{{ passwordErrors.currentPassword }}</small>
-        </label>
-
-        <label class="field">
-          <span>Mật khẩu mới</span>
-          <input
-            v-model="passwordForm.newPassword"
-            type="password"
-            placeholder="Tối thiểu 8 ký tự"
-            @blur="touchPasswordField('newPassword')"
-          />
-          <small v-if="showPasswordError('newPassword')" class="field-error">{{ passwordErrors.newPassword }}</small>
-        </label>
-
-        <label class="field">
-          <span>Xác nhận mật khẩu mới</span>
-          <input
-            v-model="passwordForm.confirmPassword"
-            type="password"
-            placeholder="Nhập lại mật khẩu mới"
-            @blur="touchPasswordField('confirmPassword')"
-          />
-          <small v-if="showPasswordError('confirmPassword')" class="field-error">{{ passwordErrors.confirmPassword }}</small>
-        </label>
-
-        <div class="full-row actions">
-          <button type="submit" :disabled="passwordSubmitting">Đổi mật khẩu</button>
-        </div>
-      </form>
-
-      <p v-if="passwordSuccess" class="msg ok">{{ passwordSuccess }}</p>
-      <p v-if="passwordError" class="msg err">{{ passwordError }}</p>
-    </section>
+    <PatientPasswordChangeForm
+      :form="passwordForm"
+      :errors="passwordErrors"
+      :show-password-error="showPasswordError"
+      :submitting="passwordSubmitting"
+      :success="passwordSuccess"
+      :error="passwordError"
+      @submit="submitPassword"
+      @touch-field="touchPasswordField"
+    />
   </div>
 </template>
 
@@ -110,6 +29,8 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { authApi } from '../services/api.js';
 import { usePatientsStore } from '../stores/patients.js';
 import { useAuthStore } from '../stores/auth.js';
+import PatientProfileInfoForm from '../components/patient/PatientProfileInfoForm.vue';
+import PatientPasswordChangeForm from '../components/patient/PatientPasswordChangeForm.vue';
 
 const auth = useAuthStore();
 const patients = usePatientsStore();
@@ -269,33 +190,5 @@ onMounted(() => {
 .profile-page {
   display: grid;
   gap: 20px;
-}
-
-.two-col {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-}
-
-.full-row {
-  grid-column: 1 / -1;
-}
-
-.field {
-  display: grid;
-  gap: 8px;
-}
-
-.field span {
-  color: #334155;
-  font-weight: 600;
-}
-
-.field-error {
-  color: #b91c1c;
-  font-size: 13px;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-start;
 }
 </style>

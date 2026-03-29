@@ -1,22 +1,6 @@
 <template>
   <div class="news-page">
-    <header class="panel hero">
-      <div class="hero-grid">
-        <div>
-          <p class="eyebrow">Tin tức</p>
-          <h1>Tin tức y khoa và thông báo</h1>
-          <p class="lead">
-            Cập nhật kiến thức y khoa, thông báo vận hành và các chương trình chăm sóc cộng đồng.
-          </p>
-        </div>
-        <img
-          class="hero-cover"
-          src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=1200&q=80"
-          alt="Bệnh viện hiện đại"
-          loading="lazy"
-        />
-      </div>
-    </header>
+    <PublicNewsHeroSection cover-image="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=1200&q=80" />
 
     <section class="panel layout">
       <main>
@@ -31,30 +15,13 @@
         <p v-if="!loading && visiblePosts.length === 0" class="empty">Chưa có bài viết phù hợp bộ lọc.</p>
       </main>
 
-      <aside class="sidebar">
-        <section class="widget">
-          <h3>Lọc bài viết</h3>
-          <input
-            v-model.trim="keyword"
-            type="text"
-            placeholder="Tìm theo tiêu đề"
-            aria-label="Tìm theo tiêu đề"
-          />
-          <select v-model="selectedCategory" aria-label="Lọc theo danh mục">
-            <option value="">Tất cả danh mục</option>
-            <option v-for="item in categories" :key="item" :value="item">{{ item }}</option>
-          </select>
-        </section>
-
-        <section class="widget">
-          <h3>Thông báo nhanh</h3>
-          <ul>
-            <li>Khám tổng quát giảm tới 20% cho lịch đặt online trước 48 giờ.</li>
-            <li>Trung tâm xét nghiệm mở rộng khung giờ đến 20:30 hằng ngày.</li>
-            <li>Đường dây tư vấn 24/7: 1900 3493.</li>
-          </ul>
-        </section>
-      </aside>
+      <PublicNewsSidebarPanel
+        :keyword="keyword"
+        :selected-category="selectedCategory"
+        :categories="categories"
+        @update:keyword="keyword = $event"
+        @update:selected-category="selectedCategory = $event"
+      />
     </section>
 
     <p v-if="loading" class="msg">Đang tải bài viết...</p>
@@ -65,6 +32,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { guestApi } from '../services/api.js';
+import PublicNewsHeroSection from '../components/public/PublicNewsHeroSection.vue';
+import PublicNewsSidebarPanel from '../components/public/PublicNewsSidebarPanel.vue';
 
 const loading = ref(false);
 const error = ref('');
@@ -165,44 +134,6 @@ onMounted(loadPosts);
   gap: 20px;
 }
 
-.hero {
-  background: linear-gradient(120deg, #fff7ed 0%, #fffbeb 100%);
-}
-
-.hero-grid {
-  display: grid;
-  gap: 18px;
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 1fr);
-  align-items: center;
-}
-
-.hero-cover {
-  width: 100%;
-  height: 230px;
-  object-fit: cover;
-  border: 1px solid #fed7aa;
-}
-
-.eyebrow {
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 12px;
-  color: #b45309;
-}
-
-.hero h1 {
-  margin: 8px 0 0;
-  font-size: 34px;
-  line-height: 1.2;
-}
-
-.lead {
-  margin: 12px 0 0;
-  max-width: 760px;
-  color: #334155;
-}
-
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
@@ -255,51 +186,14 @@ onMounted(loadPosts);
   border-bottom: 1px solid #93c5fd;
 }
 
-.sidebar {
-  display: grid;
-  gap: 14px;
-  align-content: start;
-}
-
-.widget {
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  padding: 16px;
-  display: grid;
-  gap: 10px;
-}
-
-.widget h3 {
-  margin: 0;
-}
-
-.widget ul {
-  margin: 0;
-  padding-left: 18px;
-  color: #334155;
-  line-height: 1.6;
-}
-
 .empty {
   margin: 0;
   color: #475569;
 }
 
 @media (max-width: 900px) {
-  .hero-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .hero-cover {
-    height: 190px;
-  }
-
   .layout {
     grid-template-columns: 1fr;
-  }
-
-  .hero h1 {
-    font-size: 28px;
   }
 }
 </style>
