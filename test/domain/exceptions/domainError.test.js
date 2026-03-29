@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { DomainError } from '../../../src/domain/exceptions/domainError.js';
+import { DomainError } from '../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 async function run() {

@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { GuestSearchDoctorsUseCase } from '../../../../src/application/use-cases/guest/guestSearchDoctors.usecase.js';
-import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { GuestSearchDoctorsUseCase } from '../../../../server/application/use-cases/guest/guestSearchDoctors.usecase.js';
+import { DomainError } from '../../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeDoctorRepository {

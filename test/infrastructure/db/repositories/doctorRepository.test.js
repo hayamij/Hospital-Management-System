@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { SqlDoctorRepository } from '../../../../src/infrastructure/db/repositories/doctorRepository.js';
+import { SqlDoctorRepository } from '../../../../server/infrastructure/db/repositories/doctorRepository.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePool {

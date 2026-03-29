@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { ManageDoctorSchedulesUseCase } from '../../../../src/application/use-cases/admin/manageDoctorSchedules.usecase.js';
-import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { ManageDoctorSchedulesUseCase } from '../../../../server/application/use-cases/admin/manageDoctorSchedules.usecase.js';
+import { DomainError } from '../../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeDoctor {

@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { ViewAppointmentsUseCase } from '../../../../src/application/use-cases/patient/viewAppointments.usecase.js';
-import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { ViewAppointmentsUseCase } from '../../../../server/application/use-cases/patient/viewAppointments.usecase.js';
+import { DomainError } from '../../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakePatientRepository {

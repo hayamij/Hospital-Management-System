@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { ManageBillingUseCase } from '../../../../src/application/use-cases/admin/manageBilling.usecase.js';
-import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { ManageBillingUseCase } from '../../../../server/application/use-cases/admin/manageBilling.usecase.js';
+import { DomainError } from '../../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeBilling {

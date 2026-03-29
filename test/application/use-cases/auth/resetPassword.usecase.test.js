@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { ResetPasswordUseCase } from '../../../../src/application/use-cases/auth/resetPassword.usecase.js';
-import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { ResetPasswordUseCase } from '../../../../server/application/use-cases/auth/resetPassword.usecase.js';
+import { DomainError } from '../../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeUser {

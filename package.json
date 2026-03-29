@@ -15,11 +15,11 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "vite --config frontend/vite.config.js",
-    "dev:api": "node --env-file=.env src/infrastructure/http/server.js",
-    "dev:api:mssql": "node --env-file=.env src/infrastructure/http/server.js",
-    "build": "vite build --config frontend/vite.config.js",
-    "preview": "vite preview --config frontend/vite.config.js",
+    "dev": "vite --config client/vite.config.js",
+    "dev:api": "node --env-file=.env server/infrastructure/http/server.js",
+    "dev:api:mssql": "node --env-file=.env server/infrastructure/http/server.js",
+    "build": "vite build --config client/vite.config.js",
+    "preview": "vite preview --config client/vite.config.js",
     "test": "vitest run --config test/vitest.config.js"
   },
   "dependencies": {

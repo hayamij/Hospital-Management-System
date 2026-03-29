@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { RunReportsUseCase } from '../../../../src/application/use-cases/admin/runReports.usecase.js';
-import { DomainError } from '../../../../src/domain/exceptions/domainError.js';
+import { RunReportsUseCase } from '../../../../server/application/use-cases/admin/runReports.usecase.js';
+import { DomainError } from '../../../../server/domain/exceptions/domainError.js';
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeReportRepository {
