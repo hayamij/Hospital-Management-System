@@ -1,23 +1,12 @@
 import jwt from 'jsonwebtoken';
 
-// Auth middleware with JWT verification. Supports dev tokens of form "userId:role" for convenience.
+// Auth middleware with strict JWT verification.
 export function buildAuthMiddleware({ userRepository } = {}) {
   const secret = process.env.JWT_SECRET || 'dev-secret-change-me';
 
   const parseBearer = (header) => {
     if (!header || !header.toLowerCase().startsWith('bearer ')) return null;
     return header.slice(7).trim();
-  };
-
-  const decodeDevToken = (token) => {
-    if (token.includes(':')) {
-      const [id, role] = token.split(':');
-      return { id, role };
-    }
-    if (token === 'admin-token') return { id: 'admin-1', role: 'admin' };
-    if (token === 'doctor-token') return { id: 'doc-1', role: 'doctor' };
-    if (token === 'mock-token') return { id: 'pat-1', role: 'patient' };
-    return null;
   };
 
   const authenticate = async (req, res, next) => {
@@ -40,15 +29,6 @@ export function buildAuthMiddleware({ userRepository } = {}) {
 
       return next?.();
     } catch (err) {
-      const dev = decodeDevToken(token);
-      if (dev) {
-        req.user = {
-          ...dev,
-          patientId: dev.role === 'patient' ? dev.id : null,
-          doctorId: dev.role === 'doctor' ? dev.id : null,
-        };
-        return next?.();
-      }
       return res.status(401).json({ data: null, code: 'invalid_token', message: 'Invalid token' });
     }
   };

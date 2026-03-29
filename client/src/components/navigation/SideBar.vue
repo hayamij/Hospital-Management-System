@@ -28,8 +28,10 @@ const navByRole = {
 		{ label: 'Vận hành bác sĩ', path: '/doctor/dashboard', icon: 'DO' },
 		{ label: 'Khám bệnh', path: '/doctor/consultation', icon: 'CS' },
 		{ label: 'Lịch hẹn', path: '/doctor/appointments', icon: 'SC' },
+		{ label: 'Xét nghiệm', path: '/doctor/lab-results', icon: 'LB' },
 		{ label: 'Bệnh nhân', path: '/doctor/patients', icon: 'PT' },
 		{ label: 'Hồ sơ', path: '/doctor/records', icon: 'MR' },
+		{ label: 'Hồ sơ bác sĩ', path: '/doctor/profile', icon: 'PR' },
 		{ label: 'Tin nhắn', path: '/doctor/communications', icon: 'MS' },
 	],
 	admin: [

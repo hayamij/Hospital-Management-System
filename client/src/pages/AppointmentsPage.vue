@@ -6,7 +6,9 @@
 			<div class="row">
 				<select v-model="filters.status" @change="refresh">
 					<option value="">Tất cả trạng thái</option>
+					<option value="pending">Chờ bác sĩ duyệt</option>
 					<option value="scheduled">Đã lên lịch</option>
+					<option value="in_progress">Đang khám</option>
 					<option value="completed">Hoàn tất</option>
 					<option value="cancelled">Đã hủy</option>
 					<option value="no_show">Vắng mặt</option>
@@ -14,6 +16,25 @@
 				<button type="button" @click="refresh">Làm mới</button>
 			</div>
 		</header>
+
+		<div v-if="auth.role === 'doctor'" class="panel">
+			<h2>Yêu cầu lịch hẹn mới</h2>
+			<p class="muted">Duyệt nhanh các lịch hẹn mới gửi tới bác sĩ.</p>
+			<div v-if="doctorPendingAppointments.length === 0">Không có yêu cầu chờ duyệt.</div>
+			<div v-else class="list-grid">
+				<div v-for="item in doctorPendingAppointments" :key="`pending-${item.id || item.appointmentId}`" class="item">
+					<div>
+						<p><strong>{{ item.reason || 'Lịch hẹn mới' }}</strong></p>
+						<p>{{ item.startAt }} -> {{ item.endAt }}</p>
+						<p>Bệnh nhân: {{ item.patientId || item.patient?.id || 'Chưa xác định' }}</p>
+					</div>
+					<div class="row">
+						<button type="button" @click="decide(item, 'accept')" :disabled="appointments.loading">Chấp nhận</button>
+						<button type="button" @click="decide(item, 'reject')" :disabled="appointments.loading">Từ chối</button>
+					</div>
+				</div>
+			</div>
+		</div>
 
 		<div v-if="auth.role === 'patient'" class="panel">
 			<h2>Đặt lịch mới</h2>
@@ -38,7 +59,7 @@
 					<div>
 						<p><strong>{{ item.reason || 'Lịch hẹn' }}</strong></p>
 						<p>{{ item.startAt }} -> {{ item.endAt }}</p>
-						<p>Trạng thái: {{ item.status }}</p>
+						<p>Trạng thái: {{ formatStatus(item.status) }}</p>
 						<p>Bác sĩ: {{ item.doctorId || item.doctor?.id || 'Chưa xác định' }}</p>
 					</div>
 					<div class="row">
@@ -47,17 +68,13 @@
 							<button type="button" @click="openReschedule(item)">Đổi lịch</button>
 						</template>
 						<template v-else-if="auth.role === 'doctor'">
-							<select v-model="item.decisionUpdate" @change="updateDecision(item)">
-								<option disabled value="">Quyết định</option>
-								<option value="accepted">Chấp nhận</option>
-								<option value="rejected">Từ chối</option>
-							</select>
-							<select v-model="item.statusUpdate" @change="updateStatus(item)">
+							<select v-if="canUpdateStatus(item)" v-model="item.statusUpdate" @change="updateStatus(item)">
 								<option disabled value="">Cập nhật</option>
 								<option value="completed">Hoàn tất</option>
 								<option value="no_show">Vắng mặt</option>
 								<option value="cancelled">Đã hủy</option>
 							</select>
+							<p v-else class="muted">Đợi quyết định duyệt ở mục "Yêu cầu lịch hẹn mới".</p>
 						</template>
 					</div>
 				</div>
@@ -81,7 +98,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
 import { useAppointmentsStore } from '../stores/appointments.js';
 
@@ -92,6 +109,32 @@ const filters = reactive({ status: '' });
 const createForm = reactive({ doctorId: '', startAt: '', endAt: '', reason: '' });
 const rescheduleForm = reactive({ startAt: '', endAt: '' });
 const showReschedule = ref(null);
+
+const doctorPendingAppointments = computed(() => {
+	if (auth.role !== 'doctor') return [];
+	return appointments.items.filter((item) => {
+		const status = String(item.status || '').toLowerCase();
+		return status === 'pending' || status === 'requested';
+	});
+});
+
+const canUpdateStatus = (item) => {
+	if (auth.role !== 'doctor') return false;
+	const status = String(item.status || '').toLowerCase();
+	return status === 'scheduled' || status === 'in_progress';
+};
+
+const statusLabelMap = {
+	pending: 'Chờ duyệt',
+	requested: 'Yêu cầu mới',
+	scheduled: 'Đã lên lịch',
+	in_progress: 'Đang khám',
+	completed: 'Hoàn tất',
+	cancelled: 'Đã hủy',
+	no_show: 'Vắng mặt',
+};
+
+const formatStatus = (status) => statusLabelMap[String(status || '').toLowerCase()] || status || 'Chưa rõ';
 
 const refresh = () => appointments.fetchAppointments({ status: filters.status });
 
@@ -129,10 +172,8 @@ const updateStatus = async (item) => {
 	item.statusUpdate = '';
 };
 
-const updateDecision = async (item) => {
-	if (!item.decisionUpdate) return;
-	await appointments.updateStatus(item.id || item.appointmentId, { decision: item.decisionUpdate });
-	item.decisionUpdate = '';
+const decide = async (item, decision) => {
+	await appointments.updateStatus(item.id || item.appointmentId, { decision });
 };
 </script>
 

@@ -22,6 +22,8 @@ import CommunicationsPage from '../pages/CommunicationsPage.vue';
 import AdminOpsPage from '../pages/AdminOpsPage.vue';
 import ConsultationPage from '../pages/ConsultationPage.vue';
 import DoctorDashboard from '../pages/DoctorDashboard.vue';
+import DoctorLabResultsPage from '../pages/DoctorLabResultsPage.vue';
+import DoctorProfilePage from '../pages/DoctorProfilePage.vue';
 import HomePage from '../pages/HomePage.vue';
 import DoctorDirectoryPage from '../pages/DoctorDirectoryPage.vue';
 import HomeFeaturePage from '../pages/HomeFeaturePage.vue';
@@ -90,8 +92,10 @@ const routes = [
 			{ path: 'dashboard', component: DoctorDashboard },
 			{ path: 'consultation/:patientId?', component: ConsultationPage },
 			{ path: 'appointments', component: AppointmentsPage },
+			{ path: 'lab-results', component: DoctorLabResultsPage },
 			{ path: 'patients', component: PatientsPage },
 			{ path: 'records', component: BackofficeMedicalRecordsPage },
+			{ path: 'profile', component: DoctorProfilePage },
 			{ path: 'communications', component: CommunicationsPage },
 		],
 	},
