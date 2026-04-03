@@ -231,82 +231,267 @@ GO
 INSERT INTO doctors (id, full_name, specialization, department, available_slots_per_day, contact_email, contact_phone, status)
 VALUES
 	(N'doc-1', N'Dr. Demo', N'General', N'Outpatient', 8, N'doc@example.com', N'0900000001', N'active'),
-	(N'doc-2', N'Dr. Alice', N'Cardiology', N'Heart Center', 10, N'doc2@example.com', N'0900000002', N'active');
+	(N'doc-2', N'Dr. Alice', N'Cardiology', N'Heart Center', 10, N'doc2@example.com', N'0900000002', N'active'),
+	(N'doc-3', N'Dr. Minh Tran', N'Neurology', N'Neuro Clinic', 6, N'doc3@example.com', N'0900000003', N'active'),
+	(N'doc-4', N'Dr. Maria Nguyen', N'Pediatrics', N'Children Department', 12, N'doc4@example.com', N'0900000004', N'active'),
+	(N'doc-5', N'Dr. David Pham', N'Orthopedics', N'Orthopedic Center', 7, N'doc5@example.com', N'0900000005', N'active'),
+	(N'doc-6', N'Dr. Emily Tran', N'Dermatology', N'Skin Clinic', 9, N'doc6@example.com', N'0900000006', N'active'),
+	(N'doc-7', N'Dr. Brian Le', N'Oncology', N'Cancer Center', 5, N'doc7@example.com', N'0900000007', N'active'),
+	(N'doc-8', N'Dr. Helen Vu', N'Endocrinology', N'Metabolic Clinic', 8, N'doc8@example.com', N'0900000008', N'active'),
+	(N'doc-9', N'Dr. Peter Dao', N'Gastroenterology', N'Digestive Center', 7, N'doc9@example.com', N'0900000009', N'active'),
+	(N'doc-10', N'Dr. Tina Bui', N'Pulmonology', N'Respiratory Unit', 6, N'doc10@example.com', N'0900000010', N'active'),
+	(N'doc-11', N'Dr. Kevin Phan', N'Ophthalmology', N'Eye Clinic', 10, N'doc11@example.com', N'0900000011', N'active'),
+	(N'doc-12', N'Dr. Susan Nguyen', N'ENT', N'ENT Clinic', 9, N'doc12@example.com', N'0900000012', N'active'),
+	(N'doc-13', N'Dr. Victor Nguyen', N'Nephrology', N'Kidney Center', 6, N'doc13@example.com', N'0900000013', N'active'),
+	(N'doc-14', N'Dr. Linda Ho', N'Rheumatology', N'Joint Clinic', 7, N'doc14@example.com', N'0900000014', N'active'),
+	(N'doc-15', N'Dr. Oliver Nguyen', N'Psychiatry', N'Mental Health Unit', 8, N'doc15@example.com', N'0900000015', N'active');
 
 INSERT INTO patients (id, full_name, date_of_birth, contact_email, contact_phone, contact_address, emergency_contact, status, assigned_doctor_id)
 VALUES
 	(N'pat-1', N'Alice Patient', '1995-03-20T00:00:00', N'patient@example.com', N'0911111111', N'District 1, Ho Chi Minh City', N'{"name":"Bob Patient","phone":"0922222222"}', N'active', N'doc-1'),
-	(N'pat-2', N'John Smith', '1989-09-12T00:00:00', N'john@example.com', N'0933333333', N'District 7, Ho Chi Minh City', N'{"name":"Mary Smith","phone":"0944444444"}', N'active', N'doc-2');
+	(N'pat-2', N'John Smith', '1989-09-12T00:00:00', N'john@example.com', N'0933333333', N'District 7, Ho Chi Minh City', N'{"name":"Mary Smith","phone":"0944444444"}', N'active', N'doc-2'),
+	(N'pat-3', N'Lan Ho', '2001-01-05T00:00:00', N'lan@example.com', N'0955555555', N'Thu Duc City, Ho Chi Minh City', N'{"name":"Khanh Ho","phone":"0966666666"}', N'active', N'doc-4'),
+	(N'pat-4', N'Bao Nguyen', '1976-06-18T00:00:00', N'bao@example.com', N'0977777777', N'Binh Thanh, Ho Chi Minh City', N'{"name":"Linh Nguyen","phone":"0988888888"}', N'active', N'doc-3'),
+	(N'pat-5', N'Thomas Lee', '1992-11-02T00:00:00', N'thomas@example.com', N'0999999999', N'District 3, Ho Chi Minh City', N'{"name":"Anne Lee","phone":"0901111222"}', N'active', N'doc-5'),
+	(N'pat-6', N'Kim Nguyen', '1984-02-14T00:00:00', N'kim@example.com', N'0901111111', N'District 10, Ho Chi Minh City', N'{"name":"Huy Nguyen","phone":"0901111112"}', N'active', N'doc-6'),
+	(N'pat-7', N'Quang Pham', '1990-07-23T00:00:00', N'quang@example.com', N'0902222222', N'Go Vap, Ho Chi Minh City', N'{"name":"My Pham","phone":"0902222223"}', N'active', N'doc-7'),
+	(N'pat-8', N'Minh Le', '1979-12-03T00:00:00', N'minhle@example.com', N'0903333333', N'District 2, Ho Chi Minh City', N'{"name":"Thanh Le","phone":"0903333334"}', N'active', N'doc-8'),
+	(N'pat-9', N'Trang Vu', '1998-09-30T00:00:00', N'trang@example.com', N'0904444444', N'Binh Tan, Ho Chi Minh City', N'{"name":"Tuan Vu","phone":"0904444445"}', N'active', N'doc-9'),
+	(N'pat-10', N'Khoa Tran', '2000-05-09T00:00:00', N'khoa@example.com', N'0905555555', N'District 5, Ho Chi Minh City', N'{"name":"Linh Tran","phone":"0905555556"}', N'active', N'doc-10'),
+	(N'pat-11', N'Phuong Do', '1982-01-19T00:00:00', N'phuong@example.com', N'0906666666', N'District 6, Ho Chi Minh City', N'{"name":"Duc Do","phone":"0906666667"}', N'active', N'doc-11'),
+	(N'pat-12', N'Hoa Dang', '1971-08-27T00:00:00', N'hoa@example.com', N'0907777777', N'Binh Chanh, Ho Chi Minh City', N'{"name":"Tam Dang","phone":"0907777778"}', N'active', N'doc-12'),
+	(N'pat-13', N'Ngoc Phan', '1993-04-16T00:00:00', N'ngoc@example.com', N'0908888888', N'District 4, Ho Chi Minh City', N'{"name":"Bao Phan","phone":"0908888889"}', N'active', N'doc-13'),
+	(N'pat-14', N'Thien Nguyen', '1987-10-01T00:00:00', N'thien@example.com', N'0909999999', N'District 8, Ho Chi Minh City', N'{"name":"Quyen Nguyen","phone":"0909999990"}', N'active', N'doc-14'),
+	(N'pat-15', N'Anh Vo', '1996-06-06T00:00:00', N'anh@example.com', N'0901212121', N'Phu Nhuan, Ho Chi Minh City', N'{"name":"Tien Vo","phone":"0901212122"}', N'active', N'doc-15');
 
 INSERT INTO users (id, email, password_hash, role, status, patient_id, doctor_id, full_name)
 VALUES
-	(N'admin-1', N'admin@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'admin', N'active', NULL, NULL, N'Admin User'),
-	(N'doc-1', N'doc@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'doctor', N'active', NULL, N'doc-1', N'Dr. Demo'),
+	(N'admin-1', N'admin@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'admin', N'active', NULL, NULL, N'Admin User'),
+	(N'admin-2', N'admin2@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'admin', N'active', NULL, NULL, N'Admin Two'),
+	(N'admin-3', N'admin3@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'admin', N'active', NULL, NULL, N'Admin Three'),
+	(N'doc-1', N'doc@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-1', N'Dr. Demo'),
 	(N'doc-2', N'doc2@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'doctor', N'active', NULL, N'doc-2', N'Dr. Alice'),
+	(N'doc-3', N'doc3@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-3', N'Dr. Minh Tran'),
+	(N'doc-4', N'doc4@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-4', N'Dr. Maria Nguyen'),
+	(N'doc-5', N'doc5@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-5', N'Dr. David Pham'),
+	(N'doc-6', N'doc6@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-6', N'Dr. Emily Tran'),
+	(N'doc-7', N'doc7@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-7', N'Dr. Brian Le'),
+	(N'doc-8', N'doc8@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-8', N'Dr. Helen Vu'),
+	(N'doc-9', N'doc9@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-9', N'Dr. Peter Dao'),
+	(N'doc-10', N'doc10@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-10', N'Dr. Tina Bui'),
+	(N'doc-11', N'doc11@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-11', N'Dr. Kevin Phan'),
+	(N'doc-12', N'doc12@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-12', N'Dr. Susan Nguyen'),
+	(N'doc-13', N'doc13@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-13', N'Dr. Victor Nguyen'),
+	(N'doc-14', N'doc14@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-14', N'Dr. Linda Ho'),
+	(N'doc-15', N'doc15@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-15', N'Dr. Oliver Nguyen'),
 	(N'pat-1', N'patient@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-1', NULL, N'Alice Patient'),
-	(N'pat-2', N'john@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-2', NULL, N'John Smith');
+	(N'pat-2', N'john@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-2', NULL, N'John Smith'),
+	(N'pat-3', N'lan@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-3', NULL, N'Lan Ho'),
+	(N'pat-4', N'bao@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-4', NULL, N'Bao Nguyen'),
+	(N'pat-5', N'thomas@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-5', NULL, N'Thomas Lee'),
+	(N'pat-6', N'kim@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-6', NULL, N'Kim Nguyen'),
+	(N'pat-7', N'quang@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-7', NULL, N'Quang Pham'),
+	(N'pat-8', N'minhle@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-8', NULL, N'Minh Le'),
+	(N'pat-9', N'trang@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-9', NULL, N'Trang Vu'),
+	(N'pat-10', N'khoa@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-10', NULL, N'Khoa Tran'),
+	(N'pat-11', N'phuong@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-11', NULL, N'Phuong Do'),
+	(N'pat-12', N'hoa@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-12', NULL, N'Hoa Dang'),
+	(N'pat-13', N'ngoc@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-13', NULL, N'Ngoc Phan'),
+	(N'pat-14', N'thien@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-14', NULL, N'Thien Nguyen'),
+	(N'pat-15', N'anh@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'patient', N'active', N'pat-15', NULL, N'Anh Vo');
 
 INSERT INTO appointments (id, patient_id, doctor_id, start_at, end_at, reason, status)
 VALUES
 	(N'apt-1', N'pat-1', N'doc-1', DATEADD(MINUTE, 30, SYSUTCDATETIME()), DATEADD(MINUTE, 60, SYSUTCDATETIME()), N'General consultation', N'scheduled'),
-	(N'apt-2', N'pat-2', N'doc-2', DATEADD(HOUR, 24, SYSUTCDATETIME()), DATEADD(HOUR, 25, SYSUTCDATETIME()), N'Cardiology follow-up', N'pending');
+	(N'apt-2', N'pat-2', N'doc-2', DATEADD(HOUR, 24, SYSUTCDATETIME()), DATEADD(HOUR, 25, SYSUTCDATETIME()), N'Cardiology follow-up', N'pending'),
+	(N'apt-3', N'pat-3', N'doc-4', DATEADD(HOUR, 30, SYSUTCDATETIME()), DATEADD(HOUR, 31, SYSUTCDATETIME()), N'Pediatric checkup', N'scheduled'),
+	(N'apt-4', N'pat-4', N'doc-3', DATEADD(HOUR, 48, SYSUTCDATETIME()), DATEADD(HOUR, 49, SYSUTCDATETIME()), N'Neurology consultation', N'confirmed'),
+	(N'apt-5', N'pat-5', N'doc-5', DATEADD(HOUR, 72, SYSUTCDATETIME()), DATEADD(HOUR, 73, SYSUTCDATETIME()), N'Orthopedic follow-up', N'pending'),
+	(N'apt-6', N'pat-6', N'doc-6', DATEADD(HOUR, 80, SYSUTCDATETIME()), DATEADD(HOUR, 81, SYSUTCDATETIME()), N'Skin rash check', N'scheduled'),
+	(N'apt-7', N'pat-7', N'doc-7', DATEADD(HOUR, 96, SYSUTCDATETIME()), DATEADD(HOUR, 97, SYSUTCDATETIME()), N'Oncology follow-up', N'pending'),
+	(N'apt-8', N'pat-8', N'doc-8', DATEADD(HOUR, 110, SYSUTCDATETIME()), DATEADD(HOUR, 111, SYSUTCDATETIME()), N'Diabetes management', N'confirmed'),
+	(N'apt-9', N'pat-9', N'doc-9', DATEADD(HOUR, 128, SYSUTCDATETIME()), DATEADD(HOUR, 129, SYSUTCDATETIME()), N'Abdominal pain review', N'scheduled'),
+	(N'apt-10', N'pat-10', N'doc-10', DATEADD(HOUR, 144, SYSUTCDATETIME()), DATEADD(HOUR, 145, SYSUTCDATETIME()), N'Shortness of breath', N'pending'),
+	(N'apt-11', N'pat-11', N'doc-11', DATEADD(HOUR, 160, SYSUTCDATETIME()), DATEADD(HOUR, 161, SYSUTCDATETIME()), N'Vision screening', N'scheduled'),
+	(N'apt-12', N'pat-12', N'doc-12', DATEADD(HOUR, 176, SYSUTCDATETIME()), DATEADD(HOUR, 177, SYSUTCDATETIME()), N'Sinus symptoms', N'confirmed'),
+	(N'apt-13', N'pat-13', N'doc-13', DATEADD(HOUR, 192, SYSUTCDATETIME()), DATEADD(HOUR, 193, SYSUTCDATETIME()), N'Kidney check', N'pending'),
+	(N'apt-14', N'pat-14', N'doc-14', DATEADD(HOUR, 208, SYSUTCDATETIME()), DATEADD(HOUR, 209, SYSUTCDATETIME()), N'Joint pain follow-up', N'scheduled'),
+	(N'apt-15', N'pat-15', N'doc-15', DATEADD(HOUR, 224, SYSUTCDATETIME()), DATEADD(HOUR, 225, SYSUTCDATETIME()), N'Anxiety consultation', N'confirmed');
 
 INSERT INTO billings (id, invoice_number, patient_id, charges, status, due_date)
 VALUES
-	(N'inv-1', N'INV-001', N'pat-1', N'[{"item":"Consultation","amount":50}]', N'open', DATEADD(HOUR, 24, SYSUTCDATETIME())),
-	(N'inv-2', N'INV-002', N'pat-2', N'[{"item":"ECG","amount":120}]', N'draft', DATEADD(HOUR, 24, SYSUTCDATETIME()));
+	(N'inv-1', N'INV-001', N'pat-1', N'[{"item":"Consultation","amount":5000000}]', N'open', DATEADD(HOUR, 24, SYSUTCDATETIME())),
+	(N'inv-2', N'INV-002', N'pat-2', N'[{"item":"ECG","amount":12000000}]', N'draft', DATEADD(HOUR, 24, SYSUTCDATETIME())),
+	(N'inv-3', N'INV-003', N'pat-3', N'[{"item":"Pediatric checkup","amount":4500000},{"item":"Vaccine","amount":2500000}]', N'open', DATEADD(HOUR, 48, SYSUTCDATETIME())),
+	(N'inv-4', N'INV-004', N'pat-4', N'[{"item":"MRI","amount":3000000}]', N'open', DATEADD(HOUR, 72, SYSUTCDATETIME())),
+	(N'inv-5', N'INV-005', N'pat-5', N'[{"item":"X-Ray","amount":9000000},{"item":"Consultation","amount":5000000}]', N'draft', DATEADD(HOUR, 96, SYSUTCDATETIME())),
+	(N'inv-6', N'INV-006', N'pat-6', N'[{"item":"Dermatology consult","amount":6000000}]', N'open', DATEADD(HOUR, 120, SYSUTCDATETIME())),
+	(N'inv-7', N'INV-007', N'pat-7', N'[{"item":"Oncology consult","amount":2000000}]', N'draft', DATEADD(HOUR, 144, SYSUTCDATETIME())),
+	(N'inv-8', N'INV-008', N'pat-8', N'[{"item":"Lab Test","amount":7000000},{"item":"Consultation","amount":5000000}]', N'open', DATEADD(HOUR, 168, SYSUTCDATETIME())),
+	(N'inv-9', N'INV-009', N'pat-9', N'[{"item":"Ultrasound","amount":11000000}]', N'open', DATEADD(HOUR, 192, SYSUTCDATETIME())),
+	(N'inv-10', N'INV-010', N'pat-10', N'[{"item":"Pulmonary test","amount":13000000}]', N'draft', DATEADD(HOUR, 216, SYSUTCDATETIME())),
+	(N'inv-11', N'INV-011', N'pat-11', N'[{"item":"Vision screening","amount":4000000}]', N'open', DATEADD(HOUR, 240, SYSUTCDATETIME())),
+	(N'inv-12', N'INV-012', N'pat-12', N'[{"item":"ENT consult","amount":5500000}]', N'open', DATEADD(HOUR, 264, SYSUTCDATETIME())),
+	(N'inv-13', N'INV-013', N'pat-13', N'[{"item":"Kidney panel","amount":1500000]}]', N'draft', DATEADD(HOUR, 288, SYSUTCDATETIME())),
+	(N'inv-14', N'INV-014', N'pat-14', N'[{"item":"Rheumatology consult","amount":7500000}]', N'open', DATEADD(HOUR, 312, SYSUTCDATETIME())),
+	(N'inv-15', N'INV-015', N'pat-15', N'[{"item":"Psychiatry consult","amount":9000000}]', N'open', DATEADD(HOUR, 336, SYSUTCDATETIME()));
 
 INSERT INTO payments (id, patient_id, invoice_id, amount, method, status)
 VALUES
-	(N'pay-1', N'pat-1', N'inv-1', 50, N'card', N'completed');
+	(N'pay-1', N'pat-1', N'inv-1', 5, N'card', N'completed'),
+	(N'pay-2', N'pat-3', N'inv-3', 7, N'cash', N'completed'),
+	(N'pay-3', N'pat-4', N'inv-4', 15, N'bank_transfer', N'partial'),
+	(N'pay-4', N'pat-6', N'inv-6', 6, N'card', N'completed'),
+	(N'pay-5', N'pat-7', N'inv-7', 10, N'cash', N'partial'),
+	(N'pay-6', N'pat-8', N'inv-8', 12, N'bank_transfer', N'completed'),
+	(N'pay-7', N'pat-9', N'inv-9', 11, N'card', N'completed'),
+	(N'pay-8', N'pat-10', N'inv-10', 5, N'cash', N'initiated'),
+	(N'pay-9', N'pat-11', N'inv-11', 4, N'card', N'completed');
 
 INSERT INTO medical_records (id, patient_id, entries)
 VALUES
 	(N'mr-1', N'pat-1', N'[{"type":"visit","note":"Stable vitals"}]'),
-	(N'mr-2', N'pat-2', N'[{"type":"visit","note":"Mild chest pain"}]');
+	(N'mr-2', N'pat-2', N'[{"type":"visit","note":"Mild chest pain"}]'),
+	(N'mr-3', N'pat-3', N'[{"type":"visit","note":"Vaccination schedule updated"}]'),
+	(N'mr-4', N'pat-4', N'[{"type":"visit","note":"Headache improving"}]'),
+	(N'mr-5', N'pat-5', N'[{"type":"visit","note":"Knee pain under observation"}]'),
+	(N'mr-6', N'pat-6', N'[{"type":"visit","note":"Skin irritation improving"}]'),
+	(N'mr-7', N'pat-7', N'[{"type":"visit","note":"Chemotherapy follow-up scheduled"}]'),
+	(N'mr-8', N'pat-8', N'[{"type":"visit","note":"Blood sugar trending down"}]'),
+	(N'mr-9', N'pat-9', N'[{"type":"visit","note":"Abdominal ultrasound ordered"}]'),
+	(N'mr-10', N'pat-10', N'[{"type":"visit","note":"Inhaler prescribed"}]'),
+	(N'mr-11', N'pat-11', N'[{"type":"visit","note":"Vision stable"}]'),
+	(N'mr-12', N'pat-12', N'[{"type":"visit","note":"Sinus congestion improved"}]'),
+	(N'mr-13', N'pat-13', N'[{"type":"visit","note":"Kidney function monitored"}]'),
+	(N'mr-14', N'pat-14', N'[{"type":"visit","note":"Joint swelling reduced"}]'),
+	(N'mr-15', N'pat-15', N'[{"type":"visit","note":"Sleep quality improving"}]');
 
 INSERT INTO prescriptions (id, patient_id, doctor_id, content)
 VALUES
-	(N'rx-1', N'pat-1', N'doc-1', N'{"medicines":["Paracetamol"],"note":"After meals"}');
+	(N'rx-1', N'pat-1', N'doc-1', N'{"medicines":["Paracetamol"],"note":"After meals"}'),
+	(N'rx-2', N'pat-2', N'doc-2', N'{"medicines":["Aspirin"],"note":"Daily in the morning"}'),
+	(N'rx-3', N'pat-4', N'doc-3', N'{"medicines":["Ibuprofen"],"note":"As needed"}'),
+	(N'rx-4', N'pat-6', N'doc-6', N'{"medicines":["Hydrocortisone"],"note":"Apply twice daily"}'),
+	(N'rx-5', N'pat-7', N'doc-7', N'{"medicines":["Ondansetron"],"note":"After treatment"}'),
+	(N'rx-6', N'pat-8', N'doc-8', N'{"medicines":["Metformin"],"note":"With meals"}'),
+	(N'rx-7', N'pat-9', N'doc-9', N'{"medicines":["Omeprazole"],"note":"Before breakfast"}'),
+	(N'rx-8', N'pat-10', N'doc-10', N'{"medicines":["Albuterol"],"note":"As needed"}'),
+	(N'rx-9', N'pat-11', N'doc-11', N'{"medicines":["Artificial tears"],"note":"Three times daily"}');
 
 INSERT INTO messages (id, from_patient_id, to_doctor_id, from_doctor_id, to_patient_id, subject, content)
 VALUES
 	(N'msg-1', N'pat-1', N'doc-1', NULL, NULL, N'Need advice', N'I have mild fever.'),
-	(N'msg-2', NULL, NULL, N'doc-1', N'pat-1', N'Follow up', N'Please monitor your temperature.');
+	(N'msg-2', NULL, NULL, N'doc-1', N'pat-1', N'Follow up', N'Please monitor your temperature.'),
+	(N'msg-3', N'pat-3', N'doc-4', NULL, NULL, N'Vaccination', N'Is booster needed this month?'),
+	(N'msg-4', NULL, NULL, N'doc-4', N'pat-3', N'Reply', N'We can schedule a booster next week.'),
+	(N'msg-5', N'pat-6', N'doc-6', NULL, NULL, N'Skin allergy', N'Rash still itchy after two days.'),
+	(N'msg-6', NULL, NULL, N'doc-6', N'pat-6', N'Re: Skin allergy', N'Try the ointment twice daily.'),
+	(N'msg-7', N'pat-7', N'doc-7', NULL, NULL, N'Follow-up', N'When is the next appointment?'),
+	(N'msg-8', NULL, NULL, N'doc-7', N'pat-7', N'Reply', N'We will confirm the schedule tomorrow.'),
+	(N'msg-9', N'pat-9', N'doc-9', NULL, NULL, N'Diet question', N'Can I eat spicy food?'),
+	(N'msg-10', NULL, NULL, N'doc-9', N'pat-9', N'Reply', N'Please avoid spicy food for two weeks.'),
+	(N'msg-11', N'pat-10', N'doc-10', NULL, NULL, N'Shortness of breath', N'Symptoms worsen at night.'),
+	(N'msg-12', NULL, NULL, N'doc-10', N'pat-10', N'Reply', N'Use inhaler and rest.');
 
 INSERT INTO services (id, name, price, description)
 VALUES
-	(N'svc-1', N'Consultation', 50, N'General clinic consultation service.'),
-	(N'svc-2', N'Lab Test', 70, N'Basic laboratory testing service.'),
-	(N'svc-3', N'ECG', 120, N'Electrocardiogram service.');
+	(N'svc-1', N'Consultation', 5000000, N'General clinic consultation service.'),
+	(N'svc-2', N'Lab Test', 7000000, N'Basic laboratory testing service.'),
+	(N'svc-3', N'ECG', 12000000, N'Electrocardiogram service.'),
+	(N'svc-4', N'X-Ray', 9000000, N'Radiology imaging for bones and joints.'),
+	(N'svc-5', N'Vaccination', 2500000, N'Routine vaccination service for children.'),
+	(N'svc-6', N'Dermatology Consult', 6000000, N'Skin specialist consultation.'),
+	(N'svc-7', N'Oncology Consult', 2000000, N'Cancer treatment consultation.'),
+	(N'svc-8', N'Ultrasound', 11000000, N'Abdominal ultrasound service.'),
+	(N'svc-9', N'Pulmonary Test', 13000000, N'Lung function testing.'),
+	(N'svc-10', N'Vision Screening', 4000000, N'Basic eye exam.'),
+	(N'svc-11', N'ENT Consult', 5500000, N'Ear, nose, and throat consultation.'),
+	(N'svc-12', N'Kidney Panel', 15000000, N'Lab test for kidney function.'),
+	(N'svc-13', N'Rheumatology Consult', 7500000, N'Joint and autoimmune consult.'),
+	(N'svc-14', N'Psychiatry Consult', 9000000, N'Mental health consultation.'),
+	(N'svc-15', N'Physical Therapy', 8000000, N'Rehabilitation therapy session.');
 
 INSERT INTO insurance_plans (id, provider, plan_name, coverage_summary, copay_amount)
 VALUES
-	(N'ins-1', N'Blue Health', N'Standard Care', N'Outpatient consultation and basic lab coverage up to 80%.', 15),
-	(N'ins-2', N'Sunrise Insurance', N'Family Plus', N'Family package with pediatric and maternity support.', 10);
+	(N'ins-1', N'Blue Health', N'Standard Care', N'Outpatient consultation and basic lab coverage up to 80%.', 1500000),
+	(N'ins-2', N'Sunrise Insurance', N'Family Plus', N'Family package with pediatric and maternity support.', 1000000),
+	(N'ins-3', N'Prime Shield', N'Premium Gold', N'Extended inpatient and emergency coverage up to 90%.', 500000),
+	(N'ins-4', N'HealthFirst', N'Basic Saver', N'General outpatient coverage up to 60%.', 2000000),
+	(N'ins-5', N'VitaCare', N'Wellness Plus', N'Annual checkup and lab coverage.', 1200000),
+	(N'ins-6', N'Pacific Guard', N'Silver Care', N'Inpatient coverage up to 70%.', 1800000),
+	(N'ins-7', N'Skyline Insurance', N'Flex Plan', N'Flexible coverage with optional add-ons.', 2500000),
+	(N'ins-8', N'Nova Life', N'Family Standard', N'Maternity and pediatric support.', 1500000),
+	(N'ins-9', N'Guardian Health', N'Platinum', N'Extended coverage with lower copay.', 800000);
 
 INSERT INTO booking_constraints (id, code, title, description, applies_to_role, constraint_value)
 VALUES
 	(N'bc-1', N'MAX_ACTIVE_APPOINTMENTS', N'Active booking limit', N'Each patient can keep at most 3 active appointments.', N'patient', 3),
-	(N'bc-2', N'MIN_BOOKING_NOTICE_HOURS', N'Minimum booking notice', N'Appointments must be booked at least 24 hours in advance.', N'patient', 24);
+	(N'bc-2', N'MIN_BOOKING_NOTICE_HOURS', N'Minimum booking notice', N'Appointments must be booked at least 24 hours in advance.', N'patient', 24),
+	(N'bc-3', N'MAX_DAILY_APPOINTMENTS_PER_DOCTOR', N'Daily limit per doctor', N'Limit number of appointments per doctor per day.', N'doctor', 12),
+	(N'bc-4', N'MAX_BOOKINGS_PER_WEEK', N'Weekly booking limit', N'Each patient can create at most 5 bookings per week.', N'patient', 5),
+	(N'bc-5', N'RESCHEDULE_WINDOW_HOURS', N'Reschedule window', N'Rescheduling allowed up to 12 hours before appointment.', N'patient', 12),
+	(N'bc-6', N'DOCTOR_BUFFER_MINUTES', N'Doctor buffer', N'Buffer time between appointments.', N'doctor', 15),
+	(N'bc-7', N'MAX_CANCELS_PER_MONTH', N'Cancel limit', N'Each patient can cancel at most 2 appointments per month.', N'patient', 2),
+	(N'bc-8', N'BOOKING_OPEN_DAYS', N'Advance booking days', N'Appointments can be booked up to 30 days ahead.', N'patient', 30),
+	(N'bc-9', N'NO_SHOW_PENALTY_DAYS', N'No-show penalty', N'No-show limits new bookings for 7 days.', N'patient', 7);
 
 INSERT INTO settings (id, data)
 VALUES
-	(N'singleton', N'{"clinicName":"Hospital Management Demo","timezone":"Asia/Ho_Chi_Minh","currency":"VND"}');
+	(N'singleton', N'{"clinicName":"Hospital Management Demo","timezone":"Asia/Ho_Chi_Minh","currency":"VND"}'),
+	(N'billing', N'{"taxRate":0.1,"invoicePrefix":"INV"}'),
+	(N'notifications', N'{"emailEnabled":true,"smsEnabled":false}'),
+	(N'ui', N'{"theme":"light","brandColor":"#1e88e5"}'),
+	(N'scheduling', N'{"slotDurationMinutes":30,"workingHours":"08:00-17:00"}'),
+	(N'security', N'{"passwordMinLength":8,"lockoutMinutes":15}'),
+	(N'portal', N'{"publicServicesEnabled":true,"newsEnabled":true}'),
+	(N'billing_rules', N'{"lateFeePercent":0.02,"graceDays":7}'),
+	(N'integration', N'{"smsProvider":"none","emailProvider":"smtp"}');
 
 INSERT INTO lab_results (id, patient_id, doctor_id, content, status)
 VALUES
-	(N'lab-1', N'pat-1', N'doc-1', N'{"test":"CBC","result":"Normal"}', N'reviewed');
+	(N'lab-1', N'pat-1', N'doc-1', N'{"test":"CBC","result":"Normal"}', N'reviewed'),
+	(N'lab-2', N'pat-2', N'doc-2', N'{"test":"ECG","result":"Minor arrhythmia"}', N'pending'),
+	(N'lab-3', N'pat-5', N'doc-5', N'{"test":"X-Ray","result":"No fracture"}', N'reviewed'),
+	(N'lab-4', N'pat-6', N'doc-6', N'{"test":"Allergy panel","result":"Mild reaction"}', N'reviewed'),
+	(N'lab-5', N'pat-7', N'doc-7', N'{"test":"Tumor markers","result":"Stable"}', N'pending'),
+	(N'lab-6', N'pat-8', N'doc-8', N'{"test":"HbA1c","result":"7.2"}', N'reviewed'),
+	(N'lab-7', N'pat-9', N'doc-9', N'{"test":"Liver panel","result":"Normal"}', N'reviewed'),
+	(N'lab-8', N'pat-10', N'doc-10', N'{"test":"Spirometry","result":"Mild obstruction"}', N'pending'),
+	(N'lab-9', N'pat-11', N'doc-11', N'{"test":"Vision acuity","result":"20/25"}', N'reviewed');
 
 INSERT INTO contact_leads (id, name, email, message)
 VALUES
-	(N'lead-1', N'Guest Visitor', N'guest@example.com', N'Need support for insurance plan.');
+	(N'lead-1', N'Guest Visitor', N'guest@example.com', N'Need support for insurance plan.'),
+	(N'lead-2', N'Nguyen Minh', N'minh@example.com', N'I want to schedule a pediatric consultation.'),
+	(N'lead-3', N'Pham Khoa', N'khoa@example.com', N'How to access lab results online?'),
+	(N'lead-4', N'Le Bao', N'lebao@example.com', N'Please advise dermatology services.'),
+	(N'lead-5', N'Tran Minh', N'tranminh@example.com', N'Need appointment for eye exam.'),
+	(N'lead-6', N'Vo Anh', N'voanh@example.com', N'What are the clinic working hours?'),
+	(N'lead-7', N'Do Thao', N'dothao@example.com', N'Interested in health check package.'),
+	(N'lead-8', N'Pham Linh', N'phamlinh@example.com', N'I need information about ENT services.'),
+	(N'lead-9', N'Ngoc Tran', N'ngoctran@example.com', N'How to reschedule an appointment?');
 
 INSERT INTO audit_logs (id, record_id, action, actor_id)
 VALUES
-	(N'audit-1', N'mr-1', N'seed_audit', N'admin-1');
+	(N'audit-1', N'mr-1', N'seed_audit', N'admin-1'),
+	(N'audit-2', N'apt-3', N'created_appointment', N'pat-3'),
+	(N'audit-3', N'inv-4', N'issued_invoice', N'admin-1'),
+	(N'audit-4', N'apt-6', N'created_appointment', N'pat-6'),
+	(N'audit-5', N'inv-6', N'issued_invoice', N'admin-2'),
+	(N'audit-6', N'mr-8', N'updated_record', N'doc-8'),
+	(N'audit-7', N'inv-10', N'issued_invoice', N'admin-3'),
+	(N'audit-8', N'apt-12', N'created_appointment', N'pat-12'),
+	(N'audit-9', N'lab-6', N'result_reviewed', N'doc-8');
 
 INSERT INTO refresh_tokens (token, user_id, expires_at)
 VALUES
-	(N'seed-refresh-admin', N'admin-1', DATEADD(DAY, 7, SYSUTCDATETIME()));
+	(N'seed-refresh-admin', N'admin-1', DATEADD(DAY, 7, SYSUTCDATETIME())),
+	(N'seed-refresh-doc-1', N'doc-1', DATEADD(DAY, 5, SYSUTCDATETIME())),
+	(N'seed-refresh-pat-1', N'pat-1', DATEADD(DAY, 3, SYSUTCDATETIME())),
+	(N'seed-refresh-admin-2', N'admin-2', DATEADD(DAY, 7, SYSUTCDATETIME())),
+	(N'seed-refresh-doc-6', N'doc-6', DATEADD(DAY, 5, SYSUTCDATETIME())),
+	(N'seed-refresh-doc-7', N'doc-7', DATEADD(DAY, 5, SYSUTCDATETIME())),
+	(N'seed-refresh-pat-6', N'pat-6', DATEADD(DAY, 3, SYSUTCDATETIME())),
+	(N'seed-refresh-pat-7', N'pat-7', DATEADD(DAY, 3, SYSUTCDATETIME())),
+	(N'seed-refresh-pat-8', N'pat-8', DATEADD(DAY, 3, SYSUTCDATETIME()));
 GO
