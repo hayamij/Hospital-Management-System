@@ -37,7 +37,7 @@ const bookingLink = computed(() => {
 
 const relatedServices = computed(() => {
   if (!service.value?.id) return [];
-  return allServices.value.filter((item) => item.id && item.id !== service.value.id).slice(0, 3);
+  return allServices.value.filter((item) => item.id && item.id !== service.value.id);
 });
 
 const loadRelatedServices = async () => {

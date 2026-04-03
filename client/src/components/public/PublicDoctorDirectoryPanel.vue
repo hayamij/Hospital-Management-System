@@ -48,43 +48,47 @@
       <p v-else-if="error" class="message err">{{ error }}</p>
       <p v-else-if="displayDoctors.length === 0" class="message">Không tìm thấy bác sĩ phù hợp.</p>
 
-      <div v-else class="cards">
-        <article v-for="doctor in displayDoctors" :key="doctor.id" class="doctor-card">
-          <div class="doctor-card-head">
-            <img
-              class="avatar"
-              :src="doctor.avatar"
-              :alt="`Ảnh đại diện ${doctor.name}`"
-              loading="lazy"
-            />
+      <SlidingPager v-else :items="displayDoctors" :items-per-page="2" :mobile-items-per-page="1">
+        <template #default="{ item: doctor }">
+          <article class="doctor-card">
+            <div class="doctor-card-head">
+              <img
+                class="avatar"
+                :src="doctor.avatar"
+                :alt="`Ảnh đại diện ${doctor.name}`"
+                loading="lazy"
+              />
 
-            <div class="info">
-              <p class="doctor-label">Bác sĩ chuyên khoa</p>
-              <h2>{{ doctor.name }}</h2>
-              <p class="specialty">{{ doctor.specialty || 'Chuyên khoa chung' }}</p>
+              <div class="info">
+                <p class="doctor-label">Bác sĩ chuyên khoa</p>
+                <h2>{{ doctor.name }}</h2>
+                <p class="specialty">{{ doctor.specialty || 'Chuyên khoa chung' }}</p>
+              </div>
             </div>
-          </div>
 
-          <div class="doctor-meta-row">
-            <span class="meta-pill">Khám ngoại trú</span>
-            <span class="meta-pill">Tư vấn trực tiếp</span>
-          </div>
+            <div class="doctor-meta-row">
+              <span class="meta-pill">Khám ngoại trú</span>
+              <span class="meta-pill">Tư vấn trực tiếp</span>
+            </div>
 
-          <div class="doctor-actions">
-            <RouterLink class="btn-link" :to="`/patient/booking?doctor=${encodeURIComponent(doctor.id)}`">
-              Đặt lịch ngay
-            </RouterLink>
-            <RouterLink class="btn-link ghost" :to="`/public-card/doctors/${encodeURIComponent(doctor.id)}`">
-              Xem hồ sơ
-            </RouterLink>
-          </div>
-        </article>
-      </div>
+            <div class="doctor-actions">
+              <RouterLink class="btn-link" :to="`/patient/booking?doctor=${encodeURIComponent(doctor.id)}`">
+                Đặt lịch ngay
+              </RouterLink>
+              <RouterLink class="btn-link ghost" :to="`/public-card/doctors/${encodeURIComponent(doctor.id)}`">
+                Xem hồ sơ
+              </RouterLink>
+            </div>
+          </article>
+        </template>
+      </SlidingPager>
     </section>
   </div>
 </template>
 
 <script setup>
+import SlidingPager from '../shared/SlidingPager.vue';
+
 defineProps({
   loading: { type: Boolean, default: false },
   error: { type: String, default: '' },
@@ -168,18 +172,13 @@ button.ghost {
   background: #f8fafc;
 }
 
-.cards {
-  display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-}
-
 .doctor-card {
   border: 1px solid #d8e2ee;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   padding: 16px;
   display: grid;
   gap: 14px;
+  min-height: 100%;
 }
 
 .doctor-card-head {

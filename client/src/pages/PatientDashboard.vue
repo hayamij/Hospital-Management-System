@@ -25,7 +25,10 @@
     <section class="panel">
       <header class="section-head">
         <h2>3 kết quả khám / hóa đơn gần nhất</h2>
-        <RouterLink to="/patient/records" class="view-all">Xem hồ sơ bệnh án</RouterLink>
+        <div class="view-all-actions">
+          <RouterLink to="/patient/records" class="view-all">Xem tất cả bệnh án</RouterLink>
+          <RouterLink to="/patient/invoices" class="view-all">Xem tất cả hóa đơn</RouterLink>
+        </div>
       </header>
 
       <p v-if="loading" class="message">Đang tải danh sách tóm tắt...</p>
@@ -198,6 +201,12 @@ onMounted(loadDashboard);
 .view-all {
   color: #1d4ed8;
   text-decoration: none;
+}
+
+.view-all-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .summary-list {

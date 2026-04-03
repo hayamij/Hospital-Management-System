@@ -4,13 +4,23 @@
 
     <section class="panel layout">
       <main>
-        <article v-for="post in visiblePosts" :key="post.id" class="post-card">
-          <img class="post-cover" :src="post.image" :alt="`Minh họa tin tức ${post.title}`" loading="lazy" />
-          <p class="meta">{{ post.date }} · {{ post.category }}</p>
-          <h2>{{ post.title }}</h2>
-          <p class="excerpt">{{ post.excerpt }}</p>
-          <RouterLink class="read-more" :to="`/home-feature/news/${post.id}`">Đọc tiếp</RouterLink>
-        </article>
+        <SlidingPager
+          v-if="!loading && visiblePosts.length > 0"
+          :items="visiblePosts"
+          :items-per-page="2"
+          :mobile-items-per-page="1"
+          empty-text="Chưa có bài viết phù hợp bộ lọc."
+        >
+          <template #default="{ item: post }">
+            <article class="post-card">
+              <img class="post-cover" :src="post.image" :alt="`Minh họa tin tức ${post.title}`" loading="lazy" />
+              <p class="meta">{{ post.date }} · {{ post.category }}</p>
+              <h2>{{ post.title }}</h2>
+              <p class="excerpt">{{ post.excerpt }}</p>
+              <RouterLink class="read-more" :to="`/home-feature/news/${post.id}`">Đọc tiếp</RouterLink>
+            </article>
+          </template>
+        </SlidingPager>
 
         <p v-if="!loading && visiblePosts.length === 0" class="empty">Chưa có bài viết phù hợp bộ lọc.</p>
       </main>
@@ -34,6 +44,7 @@ import { computed, onMounted, ref } from 'vue';
 import { guestApi } from '../services/api.js';
 import PublicNewsHeroSection from '../components/public/PublicNewsHeroSection.vue';
 import PublicNewsSidebarPanel from '../components/public/PublicNewsSidebarPanel.vue';
+import SlidingPager from '../components/shared/SlidingPager.vue';
 
 const loading = ref(false);
 const error = ref('');
@@ -141,23 +152,19 @@ onMounted(loadPosts);
 }
 
 .post-card {
-  border-bottom: 1px solid #e5e7eb;
-  padding: 0 0 18px;
-  margin: 0 0 18px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  min-height: 100%;
 }
 
 .post-cover {
   width: 100%;
   height: 190px;
   object-fit: cover;
-  margin-bottom: 10px;
   border: 1px solid #e2e8f0;
-}
-
-.post-card:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
 }
 
 .meta {
@@ -167,7 +174,7 @@ onMounted(loadPosts);
 }
 
 .post-card h2 {
-  margin: 8px 0;
+  margin: 0;
   font-size: 26px;
   line-height: 1.3;
 }
@@ -179,7 +186,7 @@ onMounted(loadPosts);
 }
 
 .read-more {
-  margin-top: 12px;
+  margin-top: auto;
   display: inline-flex;
   color: #1d4ed8;
   text-decoration: none;

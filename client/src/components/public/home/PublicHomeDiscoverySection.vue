@@ -11,21 +11,26 @@
       <button type="submit">Tìm kiếm</button>
     </form>
 
-    <div class="doctor-list">
-      <RouterLink
-        v-for="doctor in doctors"
-        :key="doctor.id || doctor.doctorId"
-        :to="doctor.id || doctor.doctorId
-          ? { path: `/public-card/doctors/${doctor.id || doctor.doctorId}` }
-          : { path: '/doctors', query: { query: doctor.fullName || doctor.name } }"
-        class="card-link"
-      >
-        <article class="doctor-card">
-          <h3>{{ doctor.fullName || doctor.name }}</h3>
-          <p>{{ doctor.specialization || doctor.specialty || 'Nội tổng quát' }}</p>
-        </article>
-      </RouterLink>
-    </div>
+    <SlidingPager
+      :items="doctors"
+      :items-per-page="3"
+      :mobile-items-per-page="1"
+      empty-text="Không tìm thấy bác sĩ phù hợp với bộ lọc hiện tại."
+    >
+      <template #default="{ item: doctor }">
+        <RouterLink
+          :to="doctor.id || doctor.doctorId
+            ? { path: `/public-card/doctors/${doctor.id || doctor.doctorId}` }
+            : { path: '/doctors', query: { query: doctor.fullName || doctor.name } }"
+          class="card-link"
+        >
+          <article class="doctor-card">
+            <h3>{{ doctor.fullName || doctor.name }}</h3>
+            <p>{{ doctor.specialization || doctor.specialty || 'Nội tổng quát' }}</p>
+          </article>
+        </RouterLink>
+      </template>
+    </SlidingPager>
   </section>
 
   <section class="section">
@@ -34,23 +39,30 @@
       <p>Danh sách tạm sẽ được thay bằng API khi backend hoàn thiện.</p>
     </header>
 
-    <div class="specialty-grid">
-      <RouterLink
-        v-for="item in specialties"
-        :key="item.id"
-        :to="specialtyLink(item)"
-        class="card-link specialty-link"
-      >
-        <article class="specialty-card">
-          <h3>{{ item.name }}</h3>
-          <p>{{ item.summary }}</p>
-        </article>
-      </RouterLink>
-    </div>
+    <SlidingPager
+      :items="specialties"
+      :items-per-page="3"
+      :mobile-items-per-page="1"
+      empty-text="Danh sách chuyên khoa đang được cập nhật."
+    >
+      <template #default="{ item }">
+        <RouterLink
+          :to="specialtyLink(item)"
+          class="card-link specialty-link"
+        >
+          <article class="specialty-card">
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.summary }}</p>
+          </article>
+        </RouterLink>
+      </template>
+    </SlidingPager>
   </section>
 </template>
 
 <script setup>
+import SlidingPager from '../../shared/SlidingPager.vue';
+
 defineProps({
   search: { type: Object, required: true },
   doctors: { type: Array, default: () => [] },
@@ -88,24 +100,10 @@ defineEmits(['search', 'update:query', 'update:specialty']);
   width: 100%;
 }
 
-.doctor-list {
-  margin-top: 18px;
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
 .doctor-card {
   border: 1px solid #e5e7eb;
   background: #f9fafb;
   padding: 18px;
-}
-
-.specialty-grid {
-  margin-top: 18px;
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .specialty-card {
@@ -136,6 +134,13 @@ defineEmits(['search', 'update:query', 'update:specialty']);
   display: block;
   text-decoration: none;
   color: inherit;
+  height: 100%;
+}
+
+.doctor-card,
+.specialty-card {
+  height: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 900px) {

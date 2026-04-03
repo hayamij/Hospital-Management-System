@@ -56,8 +56,11 @@
 
     <section class="panel spotlight" v-if="featuredServices.length > 0">
       <header class="spotlight-head">
-        <h2>Gói dịch vụ nổi bật</h2>
-        <p>Lựa chọn được bệnh nhân đặt lịch nhiều nhất trong hệ thống.</p>
+        <div>
+          <h2>Gói dịch vụ nổi bật</h2>
+          <p>Lựa chọn được bệnh nhân đặt lịch nhiều nhất trong hệ thống.</p>
+        </div>
+        <a href="#services-catalog" class="view-all-link">Xem tất cả dịch vụ</a>
       </header>
 
       <div class="spotlight-grid">
@@ -82,31 +85,37 @@
       </div>
     </section>
 
-    <section class="panel catalog">
+    <section id="services-catalog" class="panel catalog">
       <p v-if="loading" class="msg">Đang tải danh sách dịch vụ...</p>
       <p v-else-if="error" class="msg err">{{ error }}</p>
 
-      <div v-else class="service-grid">
-        <RouterLink
-          v-for="service in filteredServices"
-          :key="service.id"
-          :to="`/services/${service.id}`"
-          class="card-link"
-        >
-          <article class="service-card">
-            <div class="thumb-wrap">
-              <img class="service-thumb" :src="service.image" :alt="`Hình minh họa dịch vụ ${service.name}`" loading="lazy" />
-              <p class="category-chip">{{ service.category }}</p>
-            </div>
-            <h2>{{ service.name }}</h2>
-            <p class="desc">{{ service.description || 'Thông tin đang được cập nhật.' }}</p>
-            <p class="price" v-if="service.price !== null && service.price !== undefined">
-              Giá tham khảo: {{ formatPrice(service.price) }}
-            </p>
-            <span class="see-detail">Xem chi tiết</span>
-          </article>
-        </RouterLink>
-      </div>
+      <SlidingPager
+        v-else-if="filteredServices.length > 0"
+        :items="filteredServices"
+        :items-per-page="3"
+        :mobile-items-per-page="1"
+        empty-text="Chưa có dịch vụ để hiển thị."
+      >
+        <template #default="{ item: service }">
+          <RouterLink
+            :to="`/services/${service.id}`"
+            class="card-link"
+          >
+            <article class="service-card">
+              <div class="thumb-wrap">
+                <img class="service-thumb" :src="service.image" :alt="`Hình minh họa dịch vụ ${service.name}`" loading="lazy" />
+                <p class="category-chip">{{ service.category }}</p>
+              </div>
+              <h2>{{ service.name }}</h2>
+              <p class="desc">{{ service.description || 'Thông tin đang được cập nhật.' }}</p>
+              <p class="price" v-if="service.price !== null && service.price !== undefined">
+                Giá tham khảo: {{ formatPrice(service.price) }}
+              </p>
+              <span class="see-detail">Xem chi tiết</span>
+            </article>
+          </RouterLink>
+        </template>
+      </SlidingPager>
 
       <p v-if="!loading && !error && filteredServices.length === 0" class="msg">
         Chưa có dịch vụ để hiển thị.
@@ -116,6 +125,8 @@
 </template>
 
 <script setup>
+import SlidingPager from '../shared/SlidingPager.vue';
+
 defineProps({
   loading: { type: Boolean, required: true },
   error: { type: String, default: '' },
@@ -284,6 +295,20 @@ defineEmits(['update:searchText', 'update:categoryFilter']);
   color: #475569;
 }
 
+.spotlight-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.view-all-link {
+  text-decoration: none;
+  color: #1d4ed8;
+  border-bottom: 1px solid #93c5fd;
+}
+
 .spotlight-grid {
   margin-top: 14px;
   display: grid;
@@ -295,6 +320,8 @@ defineEmits(['update:searchText', 'update:categoryFilter']);
 .card-link {
   text-decoration: none;
   color: inherit;
+  display: block;
+  height: 100%;
 }
 
 .spotlight-card {
@@ -328,12 +355,6 @@ defineEmits(['update:searchText', 'update:categoryFilter']);
 
 .catalog {
   border: 1px solid #e2e8f0;
-}
-
-.service-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
 }
 
 .service-card {
