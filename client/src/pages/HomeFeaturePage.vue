@@ -11,7 +11,7 @@
           <p class="description">{{ view.description }}</p>
           <div class="hero-actions">
             <RouterLink class="btn primary" :to="primaryCta.to">{{ primaryCta.label }}</RouterLink>
-            <RouterLink class="btn" to="/public">Mở cổng thông tin công khai</RouterLink>
+            <RouterLink class="btn" to="/about">Liên hệ tư vấn</RouterLink>
           </div>
         </div>
         <img :src="heroImage" :alt="`Hình minh họa ${view.title}`" loading="lazy" />

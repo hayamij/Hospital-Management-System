@@ -25,7 +25,7 @@
 
           <div class="hero-actions">
             <RouterLink class="cta primary" :to="bookingLink">Đặt lịch khám</RouterLink>
-            <RouterLink class="cta secondary" to="/public">Trao đổi với tư vấn viên</RouterLink>
+            <RouterLink class="cta secondary" to="/about">Trao đổi với tư vấn viên</RouterLink>
           </div>
         </div>
 

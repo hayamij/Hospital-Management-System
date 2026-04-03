@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <header class="panel">
-      <h1>Cổng thông tin công khai</h1>
+      <h1>Trang thông tin khách</h1>
       <p>Tác vụ khách: xem thông tin công khai, tìm bác sĩ, xem khung giờ và gửi liên hệ.</p>
       <div class="row">
         <RouterLink to="/">Trang chủ</RouterLink>

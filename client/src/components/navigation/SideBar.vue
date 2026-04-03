@@ -5,7 +5,7 @@
 				<RouterLink
 					:to="item.path"
 					class="menu-item"
-					:class="{ active: route.path === item.path }"
+					:class="{ active: isActive(item) }"
 				>
 					<span class="icon">{{ item.icon }}</span>
 					<span>{{ item.label }}</span>
@@ -19,32 +19,19 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth.js';
+import { BACKOFFICE_SIDEBAR_ITEMS } from '../../constants/navigation.js';
 
 const auth = useAuthStore();
 const route = useRoute();
 
-const navByRole = {
-	doctor: [
-		{ label: 'Vận hành bác sĩ', path: '/doctor/dashboard', icon: 'DO' },
-		{ label: 'Khám bệnh', path: '/doctor/consultation', icon: 'CS' },
-		{ label: 'Lịch hẹn', path: '/doctor/appointments', icon: 'SC' },
-		{ label: 'Xét nghiệm', path: '/doctor/lab-results', icon: 'LB' },
-		{ label: 'Bệnh nhân', path: '/doctor/patients', icon: 'PT' },
-		{ label: 'Hồ sơ', path: '/doctor/records', icon: 'MR' },
-		{ label: 'Hồ sơ bác sĩ', path: '/doctor/profile', icon: 'PR' },
-		{ label: 'Tin nhắn', path: '/doctor/communications', icon: 'MS' },
-	],
-	admin: [
-		{ label: 'Bảng điều khiển', path: '/admin/dashboard', icon: 'DB' },
-		{ label: 'Quản lý nhân sự', path: '/admin/ops#staff', icon: 'HR' },
-		{ label: 'Quản lý bệnh nhân', path: '/admin/patients', icon: 'PT' },
-		{ label: 'Quản lý dịch vụ', path: '/admin/ops#services', icon: 'SV' },
-		{ label: 'Lịch trình', path: '/admin/appointments', icon: 'SC' },
-		{ label: 'Tài chính', path: '/admin/billing', icon: 'FN' },
-	],
-};
+const items = computed(() => BACKOFFICE_SIDEBAR_ITEMS[auth.role] || []);
 
-const items = computed(() => navByRole[auth.role] || []);
+const isActive = (item) => {
+	const [path, hash] = String(item.path || '').split('#');
+	if (route.path !== path) return false;
+	if (!hash) return true;
+	return route.hash === `#${hash}`;
+};
 </script>
 
 <style scoped>

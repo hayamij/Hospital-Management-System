@@ -311,24 +311,37 @@ onMounted(() => {
 .head-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: flex-end;
+  gap: 14px;
   flex-wrap: wrap;
 }
 
+.head-row p {
+  margin: 8px 0 0;
+  color: #475569;
+}
+
 .toolbar {
-  margin: 14px 0;
+  margin: 14px 0 16px;
   display: grid;
-  gap: 10px;
-  grid-template-columns: 1fr 180px 140px;
+  gap: 14px;
+  grid-template-columns: 1fr 200px 150px auto;
+}
+
+.toolbar button {
+  min-height: 44px;
 }
 
 .pagination {
-  margin-top: 12px;
+  margin-top: 14px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
+}
+
+.pagination button {
+  min-height: 40px;
 }
 
 .actions {
@@ -359,7 +372,7 @@ onMounted(() => {
 
 .modal-form {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   grid-template-columns: 1fr 1fr;
 }
 
@@ -379,7 +392,8 @@ onMounted(() => {
 
 .modal-actions {
   grid-column: 1 / -1;
-  margin-top: 4px;
+  margin-top: 6px;
+  gap: 10px;
 }
 
 @media (max-width: 900px) {
