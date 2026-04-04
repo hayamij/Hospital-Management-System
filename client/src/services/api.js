@@ -1,7 +1,11 @@
 import axios from 'axios';
+import {
+	clearStoredSession,
+	readStoredToken,
+	redirectToLogin,
+} from './sessionStorage.js';
 
 const API_BASE = '/api';
-const STORAGE_KEY = 'hms.session';
 
 const http = axios.create({
 	baseURL: API_BASE,
@@ -10,19 +14,8 @@ const http = axios.create({
 	},
 });
 
-const readToken = () => {
-	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
-		if (!raw) return null;
-		const parsed = JSON.parse(raw);
-		return parsed?.token ?? null;
-	} catch {
-		return null;
-	}
-};
-
 http.interceptors.request.use((config) => {
-	const token = readToken();
+	const token = readStoredToken();
 	if (token) {
 		config.headers = config.headers || {};
 		config.headers.Authorization = `Bearer ${token}`;
@@ -53,10 +46,8 @@ http.interceptors.response.use(
 		wrapped.details = payload;
 
 		if (status === 401 && typeof window !== 'undefined') {
-			localStorage.removeItem(STORAGE_KEY);
-			if (!window.location.pathname.includes('/login')) {
-				window.location.assign('/login');
-			}
+			clearStoredSession();
+			redirectToLogin();
 		}
 
 		return Promise.reject(wrapped);

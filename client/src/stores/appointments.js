@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia';
-import { patientApi, doctorApi, adminApi } from '../services/api.js';
+import { patientApi } from '../services/api.js';
 import { useAuthStore } from './auth.js';
+import { isRole } from '../constants/navigation.js';
+import {
+	fetchAppointmentsByRole,
+	updateAppointmentStatusByRole,
+} from './helpers/appointmentsRoleApi.js';
 
 export const useAppointmentsStore = defineStore('appointments', {
 	state: () => ({
@@ -17,29 +22,25 @@ export const useAppointmentsStore = defineStore('appointments', {
 			this.loading = true;
 			this.error = null;
 			try {
-				let response;
-				if (auth.role === 'patient') {
-					response = await patientApi.listAppointments(auth.token, {
-						...filters,
-						page: filters.page || this.page,
-						pageSize: filters.pageSize || this.pageSize,
-						patientId: auth.userId,
-					});
-					this.items = response.appointments || [];
-					this.total = response.total || 0;
-					this.page = response.page || 1;
-					this.pageSize = response.pageSize || this.pageSize;
-				} else if (auth.role === 'doctor') {
-					response = await doctorApi.getSchedule(auth.token, filters);
-					this.items = response.appointments || [];
-					this.total = response.total || 0;
-					this.page = response.page || 1;
-					this.pageSize = response.pageSize || this.pageSize;
-				} else if (auth.role === 'admin') {
-					// Admin has override endpoint but no dedicated list; keep current list untouched
-					this.items = this.items;
+				const result = await fetchAppointmentsByRole({
+					role: auth.role,
+					token: auth.token,
+					userId: auth.userId,
+					filters,
+					page: this.page,
+					pageSize: this.pageSize,
+				});
+
+				if (result) {
+					this.items = result.items;
+					this.total = result.total;
+					this.page = result.page;
+					this.pageSize = result.pageSize;
+					return result.response;
 				}
-				return response;
+
+				// Admin has override endpoint but no dedicated list; keep current list untouched
+				return null;
 			} catch (error) {
 				this.error = error.message;
 				throw error;
@@ -49,33 +50,32 @@ export const useAppointmentsStore = defineStore('appointments', {
 		},
 		async schedule(payload) {
 			const auth = useAuthStore();
-			if (auth.role !== 'patient') return;
+			if (!isRole(auth.role, 'patient')) return;
 			await patientApi.scheduleAppointment(auth.token, { ...payload, patientId: auth.userId });
 			await this.fetchAppointments();
 		},
 		async reschedule(appointmentId, payload) {
 			const auth = useAuthStore();
-			if (auth.role !== 'patient') return;
+			if (!isRole(auth.role, 'patient')) return;
 			await patientApi.rescheduleAppointment(auth.token, appointmentId, { ...payload, patientId: auth.userId });
 			await this.fetchAppointments();
 		},
 		async cancel(appointmentId) {
 			const auth = useAuthStore();
-			if (auth.role !== 'patient') return;
+			if (!isRole(auth.role, 'patient')) return;
 			await patientApi.cancelAppointment(auth.token, appointmentId);
 			await this.fetchAppointments();
 		},
 		async updateStatus(appointmentId, payload) {
 			const auth = useAuthStore();
-			if (auth.role === 'doctor') {
-				if (payload?.decision) {
-					await doctorApi.updateAppointmentDecision(auth.token, appointmentId, { ...payload, doctorId: auth.userId });
-				} else {
-					await doctorApi.updateAppointmentStatus(auth.token, appointmentId, { ...payload, doctorId: auth.userId });
-				}
-			} else if (auth.role === 'admin') {
-				await adminApi.overrideAppointment(auth.token, appointmentId, payload);
-			}
+			const updated = await updateAppointmentStatusByRole({
+				role: auth.role,
+				token: auth.token,
+				userId: auth.userId,
+				appointmentId,
+				payload,
+			});
+			if (!updated) return;
 			await this.fetchAppointments();
 		},
 	},

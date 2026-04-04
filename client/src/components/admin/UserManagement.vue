@@ -118,6 +118,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import DataTable from '../shared/DataTable.vue';
 import { useAdminUsersStore } from '../../stores/adminUsers.js';
+import { getUserTypeFromRole, getUserTypeFromSource } from '../../constants/navigation.js';
 
 const columns = [
   { key: 'id', label: 'ID', width: '140px' },
@@ -166,9 +167,7 @@ const rows = computed(() =>
 const totalPages = computed(() => Math.max(1, Math.ceil((store.total || 0) / pageSize.value)));
 
 const syncRoleFromType = (type) => {
-  if (type === 'doctor') return 'doctor';
-  if (type === 'admin') return 'admin';
-  return 'patient';
+  return getUserTypeFromRole(type, 'patient');
 };
 
 watch(
@@ -233,7 +232,7 @@ const openEditModal = (row) => {
   form.id = row.id;
   form.name = row.name;
   form.email = row.email;
-  form.type = row.type || (row.role === 'doctor' ? 'doctor' : row.role === 'admin' ? 'admin' : 'patient');
+  form.type = getUserTypeFromSource(row);
   form.role = row.role;
   form.status = row.status;
   form.password = '';

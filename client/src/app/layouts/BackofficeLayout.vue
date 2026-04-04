@@ -1,7 +1,7 @@
 <template>
   <div class="backoffice-shell">
     <PublicHeader />
-    <div class="shell-center" :class="{ 'admin-wide': auth.role === 'admin' }">
+    <div class="shell-center" :class="{ 'admin-wide': isAdmin }">
       <SideBar />
       <main class="shell-main">
         <RouterView />
@@ -14,8 +14,10 @@
 import { useAuthStore } from '../../stores/auth.js';
 import PublicHeader from '../../components/navigation/PublicHeader.vue';
 import SideBar from '../../components/navigation/SideBar.vue';
+import { useRoleVisibility } from '../../composables/useRoleVisibility.js';
 
 const auth = useAuthStore();
+const { isAdmin } = useRoleVisibility(auth);
 auth.fetchCurrentUser();
 </script>
 

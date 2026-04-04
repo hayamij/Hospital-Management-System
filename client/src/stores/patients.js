@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
-import { patientApi, doctorApi } from '../services/api.js';
+import { patientApi } from '../services/api.js';
 import { useAuthStore } from './auth.js';
+import { isRole } from '../constants/navigation.js';
+import { addVisitNoteByRole, fetchRecordsByRole } from './helpers/medicalRecordsRoleApi.js';
 
 export const usePatientsStore = defineStore('patients', {
 	state: () => ({
@@ -12,7 +14,7 @@ export const usePatientsStore = defineStore('patients', {
 	actions: {
 		async updateProfile(payload) {
 			const auth = useAuthStore();
-			if (auth.role !== 'patient') return;
+			if (!isRole(auth.role, 'patient')) return;
 			this.loading = true;
 			this.error = null;
 			try {
@@ -31,13 +33,13 @@ export const usePatientsStore = defineStore('patients', {
 			this.loading = true;
 			this.error = null;
 			try {
-				if (auth.role === 'patient') {
-					const response = await patientApi.listRecords(auth.token, { ...filters, patientId: auth.userId });
-					this.records = response.records || [];
-					return response;
-				}
-				if (auth.role === 'doctor' && filters.patientId) {
-					const response = await doctorApi.viewPatientRecords(auth.token, filters.patientId, filters);
+				const response = await fetchRecordsByRole({
+					role: auth.role,
+					token: auth.token,
+					userId: auth.userId,
+					filters,
+				});
+				if (response) {
 					this.records = response.records || [];
 					return response;
 				}
@@ -50,8 +52,14 @@ export const usePatientsStore = defineStore('patients', {
 		},
 		async addVisitNote(patientId, note) {
 			const auth = useAuthStore();
-			if (auth.role !== 'doctor') return;
-			await doctorApi.addVisitNote(auth.token, patientId, { note, doctorId: auth.userId });
+			const updated = await addVisitNoteByRole({
+				role: auth.role,
+				token: auth.token,
+				userId: auth.userId,
+				patientId,
+				note,
+			});
+			if (!updated) return;
 			await this.loadRecords({ patientId });
 		},
 	},

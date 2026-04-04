@@ -6,7 +6,7 @@
 			<button type="button" @click="refresh">Làm mới</button>
 		</header>
 
-		<div v-if="auth.role === 'patient'" class="panel">
+		<div v-if="isPatient" class="panel">
 			<h2>Hóa đơn</h2>
 			<div v-if="billing.invoices.length === 0">Chưa có hóa đơn.</div>
 			<div class="grid two-col">
@@ -19,7 +19,7 @@
 			</div>
 		</div>
 
-		<div v-if="auth.role === 'admin'" class="panel">
+		<div v-if="isAdmin" class="panel">
 			<h2>Tác vụ thanh toán (admin)</h2>
 			<form class="grid action-grid" @submit.prevent="handleAdminAction">
 				<input v-model="adminForm.invoiceId" required placeholder="Mã hóa đơn" />
@@ -41,17 +41,15 @@
 import { reactive, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
 import { useBillingStore } from '../stores/billing.js';
+import { useRoleVisibility } from '../composables/useRoleVisibility.js';
 
 const auth = useAuthStore();
 const billing = useBillingStore();
+const { isAdmin, isPatient } = useRoleVisibility(auth);
 
 const adminForm = reactive({ invoiceId: '', action: 'issue', dueDate: '' });
 
-const refresh = () => {
-	if (auth.role === 'patient') {
-		billing.fetchBilling();
-	}
-};
+const refresh = () => billing.fetchBilling();
 
 onMounted(refresh);
 

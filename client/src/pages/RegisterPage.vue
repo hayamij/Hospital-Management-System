@@ -32,7 +32,7 @@
 
       <p class="switch">
         Đã có tài khoản?
-        <RouterLink to="/login">Đăng nhập</RouterLink>
+        <RouterLink :to="AUTH_ROUTE.login">Đăng nhập</RouterLink>
       </p>
 
       <Alert v-if="auth.error" :message="auth.error" />
@@ -47,6 +47,7 @@ import { patientApi } from '../services/api.js';
 import { useAuthStore } from '../stores/auth.js';
 import FormField from '../components/shared/FormField.vue';
 import Alert from '../components/shared/Alert.vue';
+import { AUTH_ROUTE } from '../constants/navigation.js';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -96,7 +97,7 @@ const submit = async () => {
       phone: form.phone,
       password: form.password,
     });
-    router.push('/login');
+    router.push(AUTH_ROUTE.login);
   } catch (error) {
     auth.error = error.message;
   } finally {

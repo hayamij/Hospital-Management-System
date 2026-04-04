@@ -62,7 +62,7 @@
 			</SlidingPager>
 		</section>
 
-		<section v-if="auth.role === 'admin'" class="panel">
+		<section v-if="isAdmin" class="panel">
 			<h2>Quản lý danh mục dịch vụ (admin)</h2>
 			<form class="grid admin-grid" @submit.prevent="upsertService">
 				<input v-model="service.id" placeholder="Mã dịch vụ" />
@@ -86,11 +86,15 @@ import { reactive, onMounted, ref } from 'vue';
 import { useDoctorsStore } from '../stores/doctors.js';
 import { useAuthStore } from '../stores/auth.js';
 import SlidingPager from '../components/shared/SlidingPager.vue';
-import { guestApi, patientApi } from '../services/api.js';
-import { normalizeDoctor } from '../services/mappers.js';
+import { useRoleVisibility } from '../composables/useRoleVisibility.js';
+import {
+	mapDoctorsSearchResult,
+	searchDoctorsByAuth,
+} from '../stores/helpers/doctorsSearchApi.js';
 
 const doctors = useDoctorsStore();
 const auth = useAuthStore();
+const { isAdmin } = useRoleVisibility(auth);
 const filters = reactive({ query: '', specialty: '' });
 const service = reactive({ id: '', name: '', price: 0 });
 const removeServiceId = ref('');
@@ -109,14 +113,11 @@ const loadAllDoctors = async () => {
 	allDoctorsError.value = '';
 
 	try {
-		const query = { query: '', specialty: '' };
-		const response = auth.isAuthenticated
-			? await patientApi.searchDoctors(query)
-			: await guestApi.searchDoctors(query);
-
-		allDoctors.value = Array.isArray(response?.doctors)
-			? response.doctors.map(normalizeDoctor)
-			: [];
+		const response = await searchDoctorsByAuth({
+			isAuthenticated: auth.isAuthenticated,
+			filters: { query: '', specialty: '' },
+		});
+		allDoctors.value = mapDoctorsSearchResult(response).list;
 	} catch (error) {
 		allDoctorsError.value = error?.message || 'Không thể tải danh sách tất cả bác sĩ.';
 	} finally {

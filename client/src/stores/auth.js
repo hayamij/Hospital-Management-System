@@ -1,7 +1,11 @@
 import { defineStore } from 'pinia';
 import { authApi } from '../services/api.js';
-
-const STORAGE_KEY = 'hms.session';
+import { getRoleHomeRoute } from '../constants/navigation.js';
+import {
+	clearStoredSession,
+	readStoredSession,
+	writeStoredSession,
+} from '../services/sessionStorage.js';
 
 const parseJwtPayload = (token) => {
 	try {
@@ -33,41 +37,28 @@ export const useAuthStore = defineStore('auth', {
 		isAuthenticated: (state) => Boolean(state.token),
 		userId: (state) => state.userProfile?.id ?? null,
 		email: (state) => state.userProfile?.email ?? null,
-		defaultRoute: (state) => {
-			if (state.role === 'admin') return '/admin/dashboard';
-			if (state.role === 'doctor') return '/doctor/dashboard';
-			if (state.role === 'patient') return '/patient/dashboard';
-			return '/';
-		},
+		defaultRoute: (state) => getRoleHomeRoute(state.role, '/'),
 	},
 	actions: {
 		hydrate() {
 			if (this.initialized) return;
-			const raw = localStorage.getItem(STORAGE_KEY);
-			if (raw) {
-				try {
-					const parsed = JSON.parse(raw);
-					this.token = parsed.token ?? null;
-					this.userProfile = parsed.userProfile ?? null;
-					this.role = parsed.role ?? null;
-				} catch (e) {
-					console.error('Failed to parse session', e);
-				}
+			const session = readStoredSession();
+			if (session) {
+				this.token = session.token ?? null;
+				this.userProfile = session.userProfile ?? null;
+				this.role = session.role ?? null;
 			}
 			this.initialized = true;
 		},
 		persist() {
-			localStorage.setItem(
-				STORAGE_KEY,
-				JSON.stringify({ token: this.token, userProfile: this.userProfile, role: this.role })
-			);
+			writeStoredSession({ token: this.token, userProfile: this.userProfile, role: this.role });
 		},
 		clear() {
 			this.token = null;
 			this.userProfile = null;
 			this.role = null;
 			this.error = null;
-			localStorage.removeItem(STORAGE_KEY);
+			clearStoredSession();
 		},
 		async login(credentials) {
 			this.loading = true;

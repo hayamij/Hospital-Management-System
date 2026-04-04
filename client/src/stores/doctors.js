@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia';
-import { patientApi, guestApi, adminApi } from '../services/api.js';
+import { adminApi } from '../services/api.js';
 import { useAuthStore } from './auth.js';
-import { normalizeDoctor } from '../services/mappers.js';
+import { isRole } from '../constants/navigation.js';
+import { mapDoctorsSearchResult, searchDoctorsByAuth } from './helpers/doctorsSearchApi.js';
 
 export const useDoctorsStore = defineStore('doctors', {
 	state: () => ({
@@ -16,12 +17,13 @@ export const useDoctorsStore = defineStore('doctors', {
 			this.error = null;
 			try {
 				const auth = useAuthStore();
-				const query = { query: filters.query, specialty: filters.specialty, page: filters.page, pageSize: filters.pageSize };
-				const response = auth.isAuthenticated
-					? await patientApi.searchDoctors(query)
-					: await guestApi.searchDoctors(query);
-				this.list = Array.isArray(response?.doctors) ? response.doctors.map(normalizeDoctor) : [];
-				this.total = response.total || 0;
+				const response = await searchDoctorsByAuth({
+					isAuthenticated: auth.isAuthenticated,
+					filters,
+				});
+				const mapped = mapDoctorsSearchResult(response);
+				this.list = mapped.list;
+				this.total = mapped.total;
 				return response;
 			} catch (error) {
 				this.error = error.message;
@@ -32,12 +34,12 @@ export const useDoctorsStore = defineStore('doctors', {
 		},
 		async upsertService(service) {
 			const auth = useAuthStore();
-			if (auth.role !== 'admin') return;
+			if (!isRole(auth.role, 'admin')) return;
 			await adminApi.upsertService(auth.token, { action: 'upsert', service });
 		},
 		async removeService(serviceId) {
 			const auth = useAuthStore();
-			if (auth.role !== 'admin') return;
+			if (!isRole(auth.role, 'admin')) return;
 			await adminApi.removeService(auth.token, serviceId);
 		},
 	},

@@ -4,11 +4,53 @@ export const ROLE_HOME_ROUTE = {
   patient: '/patient/dashboard',
 };
 
+export const AUTH_ROUTE = {
+  login: '/login',
+  register: '/register',
+};
+
 export const ROLE_DISPLAY_LABEL = {
   admin: 'Admin',
   doctor: 'Bác sĩ',
   patient: 'Bệnh nhân',
 };
+
+const KNOWN_ROLES = new Set(Object.keys(ROLE_HOME_ROUTE));
+
+export const normalizeRole = (role, fallback = null) => {
+  if (typeof role !== 'string') return fallback;
+  const normalized = role.toLowerCase();
+  return KNOWN_ROLES.has(normalized) ? normalized : fallback;
+};
+
+export const getRoleHomeRoute = (role, fallback = '/') => {
+  const normalized = normalizeRole(role);
+  return normalized ? ROLE_HOME_ROUTE[normalized] : fallback;
+};
+
+export const getRoleRedirectPath = (role, roleMap, fallback = '/') => {
+  const normalized = normalizeRole(role);
+  if (normalized && roleMap && roleMap[normalized]) {
+    return roleMap[normalized];
+  }
+  return fallback;
+};
+
+export const getRoleDisplayLabel = (role, fallback = 'Tài khoản') => {
+  const normalized = normalizeRole(role);
+  return normalized ? ROLE_DISPLAY_LABEL[normalized] || fallback : fallback;
+};
+
+export const getUserTypeFromRole = (role, fallback = 'patient') => {
+  return normalizeRole(role, fallback) || fallback;
+};
+
+export const getUserTypeFromSource = (source, fallback = 'patient') => {
+  if (source?.type) return source.type;
+  return getUserTypeFromRole(source?.role, fallback);
+};
+
+export const isRole = (role, expectedRole) => normalizeRole(role) === normalizeRole(expectedRole);
 
 export const PUBLIC_HEADER_LINKS = [
   { label: 'Trang chủ', to: '/' },

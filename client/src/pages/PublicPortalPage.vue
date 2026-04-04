@@ -5,8 +5,8 @@
       <p>Tác vụ khách: xem thông tin công khai, tìm bác sĩ, xem khung giờ và gửi liên hệ.</p>
       <div class="row">
         <RouterLink to="/">Trang chủ</RouterLink>
-        <RouterLink to="/login">Đăng nhập</RouterLink>
-        <RouterLink to="/register">Đăng ký</RouterLink>
+        <RouterLink :to="AUTH_ROUTE.login">Đăng nhập</RouterLink>
+        <RouterLink :to="AUTH_ROUTE.register">Đăng ký</RouterLink>
       </div>
     </header>
 
@@ -78,6 +78,7 @@
 import { reactive, ref } from 'vue';
 import { guestApi } from '../services/api.js';
 import SlidingPager from '../components/shared/SlidingPager.vue';
+import { AUTH_ROUTE } from '../constants/navigation.js';
 
 const publicInfo = ref(null);
 const doctors = ref([]);

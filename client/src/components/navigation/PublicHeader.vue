@@ -23,13 +23,13 @@
 
         <div class="auth-zone">
           <template v-if="!auth.isAuthenticated">
-            <RouterLink to="/login" class="action" @click="closeMenu">Đăng nhập</RouterLink>
-            <RouterLink to="/register" class="action" @click="closeMenu">Đăng ký</RouterLink>
+            <RouterLink :to="AUTH_ROUTE.login" class="action" @click="closeMenu">Đăng nhập</RouterLink>
+            <RouterLink :to="AUTH_ROUTE.register" class="action" @click="closeMenu">Đăng ký</RouterLink>
           </template>
           <template v-else>
             <p class="identity" v-if="auth.email">{{ auth.email }}</p>
             <RouterLink :to="dashboardRoute" class="action primary" @click="closeMenu">{{ roleLabel }}</RouterLink>
-            <RouterLink v-if="auth.role === 'patient'" to="/patient/profile" class="action" @click="closeMenu">Hồ sơ</RouterLink>
+            <RouterLink v-if="isPatient" to="/patient/profile" class="action" @click="closeMenu">Hồ sơ</RouterLink>
             <button type="button" class="action" @click="handleLogout">Đăng xuất</button>
           </template>
         </div>
@@ -42,26 +42,29 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth.js';
+import { useRoleVisibility } from '../../composables/useRoleVisibility.js';
 import {
+  AUTH_ROUTE,
+  getRoleDisplayLabel,
+  getRoleHomeRoute,
   PUBLIC_HEADER_LINKS,
-  ROLE_DISPLAY_LABEL,
-  ROLE_HOME_ROUTE,
 } from '../../constants/navigation.js';
 
 const auth = useAuthStore();
 const router = useRouter();
 const isMenuOpen = ref(false);
+const { isPatient, role } = useRoleVisibility(auth);
 
 auth.fetchCurrentUser();
 
 const publicLinks = PUBLIC_HEADER_LINKS;
 
 const roleLabel = computed(() => {
-  return ROLE_DISPLAY_LABEL[auth.role] || 'Tài khoản';
+  return getRoleDisplayLabel(role.value, 'Tài khoản');
 });
 
 const dashboardRoute = computed(() => {
-  return ROLE_HOME_ROUTE[auth.role] || '/';
+  return getRoleHomeRoute(role.value, '/');
 });
 
 const closeMenu = () => {
@@ -71,7 +74,7 @@ const closeMenu = () => {
 const handleLogout = async () => {
   await auth.logout();
   closeMenu();
-  router.push('/login');
+  router.push(AUTH_ROUTE.login);
 };
 </script>
 

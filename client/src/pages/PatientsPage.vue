@@ -6,7 +6,7 @@
 			<button type="button" @click="loadRecords">Làm mới</button>
 		</header>
 
-		<section v-if="auth.role === 'patient'" class="panel">
+		<section v-if="isPatient" class="panel">
 			<h2>Cập nhật hồ sơ</h2>
 			<form class="grid two" @submit.prevent="updateProfile">
 				<input v-model="profile.name" placeholder="Họ và tên" />
@@ -18,7 +18,7 @@
 			</form>
 		</section>
 
-		<section v-if="auth.role === 'doctor'" class="panel">
+		<section v-if="isDoctor" class="panel">
 			<h2>Bệnh án bệnh nhân</h2>
 			<div class="row">
 				<input v-model="patientId" placeholder="Mã bệnh nhân" />
@@ -40,8 +40,10 @@
 import { reactive, ref } from 'vue';
 import { usePatientsStore } from '../stores/patients.js';
 import { useAuthStore } from '../stores/auth.js';
+import { useRoleVisibility } from '../composables/useRoleVisibility.js';
 
 const auth = useAuthStore();
+const { isDoctor, isPatient } = useRoleVisibility(auth);
 const patients = usePatientsStore();
 const patientId = ref('');
 const profile = reactive({ name: '', phone: '', address: '', dateOfBirth: '', emergencyContact: '' });
@@ -50,15 +52,7 @@ const updateProfile = async () => {
 	await patients.updateProfile(profile);
 };
 
-const loadRecords = () => {
-	if (auth.role === 'doctor' && patientId.value) {
-		return patients.loadRecords({ patientId: patientId.value });
-	}
-	if (auth.role === 'patient') {
-		return patients.loadRecords();
-	}
-	return Promise.resolve();
-};
+const loadRecords = () => patients.loadRecords(patientId.value ? { patientId: patientId.value } : {});
 </script>
 
 <style scoped>

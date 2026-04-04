@@ -19,12 +19,14 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth.js';
+import { useRoleVisibility } from '../../composables/useRoleVisibility.js';
 import { BACKOFFICE_SIDEBAR_ITEMS } from '../../constants/navigation.js';
 
 const auth = useAuthStore();
 const route = useRoute();
+const { role } = useRoleVisibility(auth);
 
-const items = computed(() => BACKOFFICE_SIDEBAR_ITEMS[auth.role] || []);
+const items = computed(() => BACKOFFICE_SIDEBAR_ITEMS[role.value] || []);
 
 const isActive = (item) => {
 	const [path, hash] = String(item.path || '').split('#');
