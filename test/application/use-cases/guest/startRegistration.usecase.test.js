@@ -14,6 +14,21 @@ class FakePatientRepository {
   }
 }
 
+class FakeMedicalRecordRepository {
+  constructor(records = {}) {
+    this.records = records;
+    this.saved = [];
+  }
+  async findByPatientId(patientId) {
+    return this.records[patientId] ?? null;
+  }
+  async save(record) {
+    this.saved.push(record);
+    this.records[record.patientId] = record;
+    return record;
+  }
+}
+
 async function expectThrows(fn, message) {
   let threw = false;
   try {
@@ -49,7 +64,11 @@ async function run() {
 
   // Success with default created object
   const repo = new FakePatientRepository();
-  const result = await new StartRegistrationUseCase({ patientRepository: repo }).execute({ fullName: ' Guest ', email: ' guest@example.com ', phone: ' 123456 ' });
+  const medicalRecordRepo = new FakeMedicalRecordRepository();
+  const result = await new StartRegistrationUseCase({
+    patientRepository: repo,
+    medicalRecordRepository: medicalRecordRepo,
+  }).execute({ fullName: ' Guest ', email: ' guest@example.com ', phone: ' 123456 ' });
   assert.strictEqual(result.status, 'pending');
   assert.ok(result.patientId);
   assert.strictEqual(repo.lastPayload.fullName, 'Guest');
@@ -57,11 +76,19 @@ async function run() {
   assert.strictEqual(repo.lastPayload.contactInfo.phone, '123456');
   assert.strictEqual(repo.lastPayload.status, 'pending');
   assert.ok(repo.lastPayload.createdAt instanceof Date);
+  assert.strictEqual(medicalRecordRepo.saved.length, 1);
+  assert.strictEqual(medicalRecordRepo.saved[0].patientId, result.patientId);
 
   // Success with repository returning primitive id
   const repoId = new FakePatientRepository('pat-42');
-  const resultId = await new StartRegistrationUseCase({ patientRepository: repoId }).execute({ fullName: 'B', email: 'b@c.com', phone: '999' });
+  const medicalRecordRepoId = new FakeMedicalRecordRepository();
+  const resultId = await new StartRegistrationUseCase({
+    patientRepository: repoId,
+    medicalRecordRepository: medicalRecordRepoId,
+  }).execute({ fullName: 'B', email: 'b@c.com', phone: '999' });
   assert.strictEqual(resultId.patientId, 'pat-42');
+  assert.strictEqual(medicalRecordRepoId.saved.length, 1);
+  assert.strictEqual(medicalRecordRepoId.saved[0].patientId, 'pat-42');
 }
 
 wrapLegacyRun(run, 'startRegistration.usecase');

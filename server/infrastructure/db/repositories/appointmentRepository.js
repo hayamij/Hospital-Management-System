@@ -122,9 +122,20 @@ export class SqlAppointmentRepository extends AppointmentRepositoryPort {
   async listAvailableSlots(doctorId, { from, to } = {}) {
     const normalizedFrom = normalizeToDate(from);
     const normalizedTo = normalizeToDate(to);
-    const { from: dayStart, to: dayEnd } = normalizedFrom
-      ? { from: normalizedFrom, to: normalizedTo || normalizedFrom }
-      : toDayBoundsUtc(normalizedTo || new Date());
+    const rangeStart = normalizedFrom || normalizedTo || new Date();
+    const rangeEnd = normalizedTo || normalizedFrom || rangeStart;
+
+    let dayStart = toDayBoundsUtc(rangeStart).from;
+    let dayEnd = toDayBoundsUtc(rangeEnd).to;
+    if (dayEnd < dayStart) {
+      const swapStart = dayStart;
+      dayStart = toDayBoundsUtc(rangeEnd).from;
+      dayEnd = toDayBoundsUtc(rangeStart).to;
+      if (dayEnd < dayStart) {
+        dayStart = swapStart;
+        dayEnd = toDayBoundsUtc(rangeStart).to;
+      }
+    }
 
     const appointments = await this.listByDoctor(doctorId, { from: dayStart, to: dayEnd });
     const busy = appointments

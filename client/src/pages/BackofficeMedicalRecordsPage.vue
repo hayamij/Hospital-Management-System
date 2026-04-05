@@ -1,33 +1,48 @@
 <template>
 	<div class="page">
-		<header class="panel">
-			<h1>Hồ sơ bệnh án</h1>
-			<p>Xem hồ sơ và thêm ghi chú cho bệnh án.</p>
+		<header class="panel workspace-header" :class="{ 'doctor-theme': isDoctor }">
+			<div class="header-copy">
+				<p v-if="isDoctor" class="eyebrow">MEDICAL RECORDS</p>
+				<h1>Hồ sơ bệnh án</h1>
+				<p>Xem hồ sơ và thêm ghi chú cho bệnh án theo quy trình vận hành backoffice.</p>
+			</div>
 			<div class="row">
 				<input v-if="isDoctor" v-model="patientId" placeholder="Mã bệnh nhân" />
+				<button v-if="isDoctor" type="button" @click="createMedicalRecord">Tạo hồ sơ bệnh án</button>
 				<button type="button" @click="refresh">Làm mới</button>
 			</div>
 		</header>
 
 		<section class="panel">
-			<h2>Ghi chú</h2>
+			<div class="section-head">
+				<h2>Ghi chú</h2>
+				<small>{{ records.list.length }} bản ghi hiện có</small>
+			</div>
+			<p v-if="isDoctor && !patientId.trim()" class="muted">
+				Nhập mã bệnh nhân để tải hồ sơ bệnh án tương ứng.
+			</p>
 			<div v-if="records.list.length === 0">Chưa có hồ sơ.</div>
 			<div class="list-grid">
-				<article v-for="entry in records.list" :key="entry.id || entry.recordId" class="item">
+				<article v-for="(entry, index) in records.list" :key="entry.id || entry.recordId || entry.createdAt || index" class="item record-item">
 					<p><strong>{{ entry.note || entry.description || 'Ghi chú hồ sơ' }}</strong></p>
-					<p>Bác sĩ: {{ entry.doctorId || 'N/A' }}</p>
-					<p>Thời gian: {{ entry.recordedAt || '-' }}</p>
+					<p>Bác sĩ: {{ entry.doctorId || entry.authorDoctorId || 'N/A' }}</p>
+					<p>Thời gian: {{ entry.recordedAt || entry.createdAt || '-' }}</p>
 				</article>
 			</div>
 		</section>
 
 		<section v-if="isDoctor" class="panel">
-			<h2>Thêm ghi chú khám</h2>
+			<div class="section-head">
+				<h2>Thêm ghi chú khám</h2>
+				<small>Bổ sung thông tin điều trị vào hồ sơ đang theo dõi</small>
+			</div>
 			<form class="grid two" @submit.prevent="addNote">
 				<textarea v-model="note" required rows="4" placeholder="Ghi chú khám"></textarea>
 				<button type="submit">Thêm ghi chú</button>
 			</form>
 		</section>
+
+		<p v-if="statusMessage" class="msg ok">{{ statusMessage }}</p>
 
 		<p v-if="records.error" class="msg err">{{ records.error }}</p>
 	</div>
@@ -44,22 +59,137 @@ const records = useRecordsStore();
 const { isDoctor } = useRoleVisibility(auth);
 const patientId = ref('');
 const note = ref('');
+const statusMessage = ref('');
 
-const refresh = () => {
-	const filters = isDoctor.value ? { patientId: patientId.value } : {};
-	return records.fetchRecords(filters);
+const refresh = async () => {
+	statusMessage.value = '';
+	const normalizedPatientId = String(patientId.value || '').trim();
+	if (isDoctor.value && !normalizedPatientId) {
+		records.list = [];
+		records.error = 'Vui lòng nhập mã bệnh nhân để tải hồ sơ.';
+		return null;
+	}
+
+	const filters = isDoctor.value ? { patientId: normalizedPatientId } : {};
+	try {
+		return await records.fetchRecords(filters);
+	} catch {
+		return null;
+	}
 };
 
 onMounted(refresh);
 
+const createMedicalRecord = async () => {
+	const normalizedPatientId = String(patientId.value || '').trim();
+	if (!normalizedPatientId) {
+		records.error = 'Vui lòng nhập mã bệnh nhân trước khi tạo hồ sơ.';
+		statusMessage.value = '';
+		return;
+	}
+
+	let result;
+	try {
+		result = await records.createRecord(normalizedPatientId);
+	} catch {
+		statusMessage.value = '';
+		return;
+	}
+
+	if (!result) {
+		statusMessage.value = '';
+		return;
+	}
+
+	statusMessage.value = result.created
+		? `Đã tạo hồ sơ bệnh án cho bệnh nhân ${normalizedPatientId}.`
+		: `Hồ sơ bệnh án của bệnh nhân ${normalizedPatientId} đã tồn tại.`;
+};
+
 const addNote = async () => {
-	if (!patientId.value) return;
-	await records.addEntry(patientId.value, note.value);
-	note.value = '';
+	const normalizedPatientId = String(patientId.value || '').trim();
+	if (!normalizedPatientId) {
+		records.error = 'Vui lòng nhập mã bệnh nhân trước khi thêm ghi chú.';
+		return;
+	}
+	statusMessage.value = '';
+	try {
+		await records.addEntry(normalizedPatientId, note.value);
+		note.value = '';
+	} catch {
+		// Error is already captured in records.error.
+	}
 };
 </script>
 
 <style scoped>
+.workspace-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-end;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.eyebrow {
+	margin: 0;
+	font-size: 12px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #1d4ed8;
+}
+
+.header-copy h1 {
+	margin: 8px 0 0;
+	font-size: 34px;
+}
+
+.header-copy p {
+	margin: 10px 0 0;
+	color: #334155;
+}
+
+.section-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin-bottom: 12px;
+}
+
+.section-head h2 {
+	margin: 0;
+}
+
+.section-head small {
+	color: #64748b;
+}
+
+.muted {
+	margin: 0 0 10px;
+	color: #64748b;
+}
+
 .two { grid-template-columns: 1fr auto; }
+
+.record-item {
+	border: 1px solid #dbe2ea;
+	border-radius: 12px;
+	background: #f8fafc;
+	padding: 14px;
+}
+
+.record-item p {
+	margin: 0 0 6px;
+	color: #334155;
+}
+
 @media (max-width: 800px) { .two { grid-template-columns: 1fr; } }
+
+@media (max-width: 1100px) {
+	.header-copy h1 {
+		font-size: 28px;
+	}
+}
 </style>

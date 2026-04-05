@@ -1,11 +1,13 @@
 import { DomainError } from '../../../domain/exceptions/domainError.js';
+import { MedicalRecord } from '../../../domain/entities/medicalRecord.js';
 import { RegisterPatientAccountInput } from '../../dto/patient/registerPatientAccountInput.js';
 import { RegisterPatientAccountOutput } from '../../dto/patient/registerPatientAccountOutput.js';
 
 export class RegisterPatientAccountUseCase {
-	constructor({ userRepository, patientRepository, authService }) {
+	constructor({ userRepository, patientRepository, medicalRecordRepository, authService }) {
 		this.userRepository = userRepository;
 		this.patientRepository = patientRepository;
+		this.medicalRecordRepository = medicalRecordRepository;
 		this.authService = authService;
 	}
 
@@ -47,6 +49,19 @@ export class RegisterPatientAccountUseCase {
 		};
 		const createdPatient = await this.patientRepository.create(patientPayload);
 		const patientId = createdPatient?.id ?? createdPatient?.patientId ?? createdPatient;
+
+		if (patientId && this.medicalRecordRepository) {
+			const existingRecord =
+				typeof this.medicalRecordRepository.findByPatientId === 'function'
+					? await this.medicalRecordRepository.findByPatientId(patientId)
+					: null;
+
+			if (!existingRecord && typeof this.medicalRecordRepository.save === 'function') {
+				await this.medicalRecordRepository.save(
+					new MedicalRecord({ patientId, entries: [] })
+				);
+			}
+		}
 
 		const user = {
 			id: patientId,

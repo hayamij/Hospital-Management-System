@@ -168,6 +168,9 @@ export const doctorApi = {
 	addVisitNote(token, patientId, payload) {
 		return request(`/doctors/patients/${patientId}/visit-notes`, { method: 'POST', token, data: payload });
 	},
+	createMedicalRecord(token, patientId, payload) {
+		return request(`/doctors/patients/${patientId}/records`, { method: 'POST', token, data: payload });
+	},
 	updateMedicalRecordEntry(token, recordId, payload) {
 		return request(`/doctors/records/${recordId}/entries`, { method: 'POST', token, data: payload });
 	},

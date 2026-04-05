@@ -61,6 +61,44 @@ async function run() {
   const repoSlot = new SqlAppointmentRepository(poolSlot);
   await repoSlot.listAvailableSlots('d1');
   assert.ok(poolSlot.calls[0].text.includes('doctor_id'));
+
+  // listAvailableSlots uses full-day boundaries for date filters
+  {
+    const repoRange = new SqlAppointmentRepository(new FakePool([]));
+    let captured = null;
+    repoRange.listByDoctor = async (doctorId, filters) => {
+      captured = { doctorId, filters };
+      return [];
+    };
+
+    await repoRange.listAvailableSlots('d1', {
+      from: new Date('2025-01-01T00:00:00Z'),
+      to: new Date('2025-01-01T00:00:00Z'),
+    });
+
+    assert.strictEqual(captured.doctorId, 'd1');
+    assert.strictEqual(captured.filters.from.toISOString(), '2025-01-01T00:00:00.000Z');
+    assert.strictEqual(captured.filters.to.toISOString(), '2025-01-01T23:59:59.999Z');
+  }
+
+  // Scheduled appointments block overlapping slots
+  {
+    const repoBusy = new SqlAppointmentRepository(new FakePool([]));
+    repoBusy.listByDoctor = async () => [
+      {
+        startAt: new Date('2025-01-01T08:00:00.000Z'),
+        endAt: new Date('2025-01-01T08:30:00.000Z'),
+        status: 'scheduled',
+      },
+    ];
+
+    const slots = await repoBusy.listAvailableSlots('d1', {
+      from: new Date('2025-01-01T00:00:00.000Z'),
+      to: new Date('2025-01-01T00:00:00.000Z'),
+    });
+
+    assert.ok(!slots.some((slot) => slot.start === '2025-01-01T08:00:00.000Z'));
+  }
 }
 
 wrapLegacyRun(run, 'appointmentRepository');

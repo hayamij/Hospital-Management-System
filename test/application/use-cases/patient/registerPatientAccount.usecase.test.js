@@ -38,6 +38,21 @@ class FakeAuthService {
   }
 }
 
+class FakeMedicalRecordRepository {
+  constructor(records = {}) {
+    this.records = records;
+    this.saved = [];
+  }
+  async findByPatientId(patientId) {
+    return this.records[patientId] ?? null;
+  }
+  async save(record) {
+    this.saved.push(record);
+    this.records[record.patientId] = record;
+    return record;
+  }
+}
+
 async function expectThrows(fn, message) {
   let threw = false;
   try {
@@ -88,13 +103,21 @@ async function run() {
   const auth = new FakeAuthService();
   const patientRepo = new FakePatientRepository({ patientId: 'pat-99' });
   const userRepo = new FakeUserRepository();
-  const result = await new RegisterPatientAccountUseCase({ userRepository: userRepo, patientRepository: patientRepo, authService: auth }).execute(baseInput);
+  const medicalRecordRepo = new FakeMedicalRecordRepository();
+  const result = await new RegisterPatientAccountUseCase({
+    userRepository: userRepo,
+    patientRepository: patientRepo,
+    medicalRecordRepository: medicalRecordRepo,
+    authService: auth,
+  }).execute(baseInput);
   assert.strictEqual(result.patientId, 'pat-99');
   assert.strictEqual(result.status, 'active');
   assert.ok(auth.hashed);
   assert.ok(patientRepo.lastPayload.createdAt instanceof Date);
   assert.strictEqual(patientRepo.lastPayload.contactInfo.email, 'guest@example.com');
   assert.strictEqual(patientRepo.lastPayload.contactInfo.phone, '123456');
+  assert.strictEqual(medicalRecordRepo.saved.length, 1);
+  assert.strictEqual(medicalRecordRepo.saved[0].patientId, 'pat-99');
   assert.ok(userRepo.savedUser);
   assert.strictEqual(userRepo.savedUser.role, 'patient');
 }

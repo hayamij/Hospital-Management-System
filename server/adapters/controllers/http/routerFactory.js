@@ -94,6 +94,7 @@ export function createHttpRouter(deps) {
 
   // Doctor records
   router.get('/doctors/patients/:patientId/chart', requireRole(['doctor']), doctorRecords.accessPatientChart);
+  router.post('/doctors/patients/:patientId/records', requireRole(['doctor']), doctorRecords.createMedicalRecord);
   router.post('/doctors/patients/:patientId/visit-notes', requireRole(['doctor']), doctorRecords.addVisitNote);
   router.post('/doctors/records/:recordId/entries', requireRole(['doctor']), doctorRecords.updateMedicalRecordEntry);
   router.post('/doctors/lab-results/:labResultId/review', requireRole(['doctor']), doctorRecords.reviewTestResults);

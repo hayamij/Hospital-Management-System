@@ -1,7 +1,17 @@
 import { createHandler } from '../createHandler.js';
-import { AddMedicalRecordEntryViewModel, ViewPatientRecordsForDoctorViewModel } from '../../../viewmodels/doctorViewModels.js';
+import {
+  AddMedicalRecordEntryViewModel,
+  CreateMedicalRecordViewModel,
+  ViewPatientRecordsForDoctorViewModel,
+} from '../../../viewmodels/doctorViewModels.js';
 
-export function buildDoctorRecordsControllers({ accessPatientChartUseCase, addVisitNoteUseCase, updateMedicalRecordEntryUseCase, reviewTestResultsUseCase }) {
+export function buildDoctorRecordsControllers({
+  accessPatientChartUseCase,
+  createMedicalRecordUseCase,
+  addVisitNoteUseCase,
+  updateMedicalRecordEntryUseCase,
+  reviewTestResultsUseCase,
+}) {
   return {
     accessPatientChart: createHandler({
       useCase: accessPatientChartUseCase,
@@ -10,6 +20,14 @@ export function buildDoctorRecordsControllers({ accessPatientChartUseCase, addVi
         patientId: req.params?.patientId ?? req.query?.patientId,
       }),
       mapOutput: (result) => new ViewPatientRecordsForDoctorViewModel(result),
+    }),
+    createMedicalRecord: createHandler({
+      useCase: createMedicalRecordUseCase,
+      mapInput: (req) => ({
+        doctorId: req.user?.id ?? req.body?.doctorId,
+        patientId: req.params?.patientId ?? req.body?.patientId,
+      }),
+      mapOutput: (result) => new CreateMedicalRecordViewModel(result),
     }),
     addVisitNote: createHandler({
       useCase: addVisitNoteUseCase,

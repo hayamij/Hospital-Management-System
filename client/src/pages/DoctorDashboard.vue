@@ -1,28 +1,50 @@
 <template>
   <div class="doctor-dashboard page">
-    <header class="panel">
-      <div class="head-row">
-        <div>
-            <h1>Lịch khám hôm nay</h1>
-            <p>Danh sách bệnh nhân chờ khám trong ngày của bác sĩ.</p>
-        </div>
-          <button type="button" @click="refresh" :disabled="appointments.loading">Làm mới</button>
+    <header class="panel doctor-header">
+      <div class="header-copy">
+        <p class="eyebrow">DOCTOR WORKSPACE</p>
+        <h1>Lịch khám hôm nay</h1>
+        <p>Theo dõi bệnh nhân theo dòng thời gian, cập nhật trạng thái và truy cập nhanh vào ca khám.</p>
       </div>
 
-      <div class="filters">
-        <label>
-          <span>Trang thai</span>
+      <div class="header-actions">
+        <label class="status-field">
+          <span>Trạng thái</span>
           <select v-model="statusFilter">
             <option value="all">Tất cả</option>
             <option value="waiting">Đang chờ</option>
             <option value="completed">Đã khám</option>
           </select>
         </label>
+        <button type="button" @click="refresh" :disabled="appointments.loading">Làm mới dữ liệu</button>
       </div>
     </header>
 
-    <section class="panel">
-      <h2>Lịch theo timeline hôm nay</h2>
+    <section class="kpi-grid">
+      <article class="panel kpi-card primary">
+        <p class="kpi-label">Tổng ca trong ngày</p>
+        <p class="kpi-value">{{ totalToday }}</p>
+        <p class="kpi-note">Lịch khám có thời gian bắt đầu trong hôm nay.</p>
+      </article>
+
+      <article class="panel kpi-card waiting">
+        <p class="kpi-label">Đang chờ khám</p>
+        <p class="kpi-value">{{ waitingCount }}</p>
+        <p class="kpi-note">Các lịch hẹn cần xử lý trong phiên làm việc hiện tại.</p>
+      </article>
+
+      <article class="panel kpi-card done">
+        <p class="kpi-label">Đã hoàn tất</p>
+        <p class="kpi-value">{{ completedCount }}</p>
+        <p class="kpi-note">Số ca đã hoàn tất trong hôm nay theo hệ thống.</p>
+      </article>
+    </section>
+
+    <section class="panel timeline-panel">
+      <div class="timeline-head">
+        <h2>Lịch theo timeline hôm nay</h2>
+        <small>{{ filteredTodayItems.length }} ca theo bộ lọc hiện tại</small>
+      </div>
 
       <p v-if="appointments.loading" class="muted">Đang tải lịch làm việc...</p>
       <p v-else-if="appointments.error" class="msg err">{{ appointments.error }}</p>
@@ -118,53 +140,136 @@ const filteredTodayItems = computed(() => {
   return todayItems.value.filter((item) => item.visualStatus === statusFilter.value);
 });
 
+const totalToday = computed(() => todayItems.value.length);
+const waitingCount = computed(() => todayItems.value.filter((item) => item.visualStatus === 'waiting').length);
+const completedCount = computed(() => todayItems.value.filter((item) => item.visualStatus === 'completed').length);
+
 const refresh = () => appointments.fetchAppointments({ doctorId: auth.userId });
 
 onMounted(refresh);
 </script>
 
 <style scoped>
-.head-row {
+.doctor-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 14px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
-.head-row h1 {
-  margin-bottom: 8px;
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1d4ed8;
 }
 
-.filters {
-  margin-top: 14px;
-  display: grid;
-  grid-template-columns: minmax(220px, 280px);
+.header-copy h1 {
+  margin: 8px 0 0;
+  font-size: 34px;
 }
 
-.filters label {
+.header-copy p {
+  margin: 10px 0 0;
+  color: #334155;
+}
+
+.header-actions {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.status-field {
   display: grid;
   gap: 8px;
+  min-width: 220px;
 }
 
-.filters span {
+.status-field span {
   color: #334155;
   font-weight: 600;
 }
 
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.kpi-card {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.kpi-card.primary {
+  background: linear-gradient(120deg, #eff6ff 0%, #eef2ff 100%);
+}
+
+.kpi-card.waiting {
+  background: linear-gradient(120deg, #fffbeb 0%, #fff7ed 100%);
+}
+
+.kpi-card.done {
+  background: linear-gradient(120deg, #ecfeff 0%, #f0fdf4 100%);
+}
+
+.kpi-label {
+  margin: 0;
+  color: #475569;
+}
+
+.kpi-value {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.kpi-note {
+  margin: 0;
+  color: #334155;
+}
+
+.timeline-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.timeline-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.timeline-head h2 {
+  margin: 0;
+}
+
+.timeline-head small {
+  color: #64748b;
+}
+
 .timeline {
-  margin-top: 12px;
-  border-left: 2px solid #cbd5e1;
-  padding-left: 16px;
+  border-left: 2px solid #dbe2ea;
+  padding-left: 18px;
   display: grid;
   gap: 12px;
 }
 
 .timeline-item {
   position: relative;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #dbe2ea;
   background: #f8fafc;
-  padding: 12px;
+  border-radius: 12px;
+  padding: 14px;
 }
 
 .timeline-item .dot {
@@ -190,7 +295,7 @@ onMounted(refresh);
 }
 
 .content p {
-  margin: 0 0 4px;
+  margin: 0 0 6px;
   color: #334155;
 }
 
@@ -206,15 +311,25 @@ onMounted(refresh);
 }
 
 .consult-link {
-  margin-top: 8px;
+  margin-top: 10px;
   display: inline-flex;
-  min-height: 36px;
+  min-height: 40px;
   align-items: center;
   justify-content: center;
-  padding: 0 10px;
+  padding: 0 12px;
   border: 1px solid #1d4ed8;
   background: #dbeafe;
   color: #1e3a8a;
   text-decoration: none;
+}
+
+@media (max-width: 1100px) {
+  .header-copy h1 {
+    font-size: 28px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

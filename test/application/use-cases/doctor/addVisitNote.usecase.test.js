@@ -97,11 +97,20 @@ async function run() {
     'Patient not found.',
   );
 
-  // Record missing
-  await expectThrows(
-    () => new AddVisitNoteUseCase({ doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }), patientRepository: new FakePatientRepository({ [patient.id]: patient }), medicalRecordRepository: new FakeMedicalRecordRepository({}) }).execute({ doctorId: doctor.id, patientId: patient.id, note: 'hello' }),
-    'Medical record not found for patient.',
-  );
+  // Record missing should be auto-created
+  {
+    const medRepo = new FakeMedicalRecordRepository({});
+    const createdResult = await new AddVisitNoteUseCase({
+      doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }),
+      patientRepository: new FakePatientRepository({ [patient.id]: patient }),
+      medicalRecordRepository: medRepo,
+    }).execute({ doctorId: doctor.id, patientId: patient.id, note: 'Initial consultation note' });
+
+    assert.strictEqual(createdResult.patientId, patient.id);
+    assert.strictEqual(createdResult.entryCount, 1);
+    assert.ok(medRepo.saved, 'Expected created medical record to be saved');
+    assert.strictEqual(medRepo.saved.patientId, patient.id);
+  }
 
   // Success
   const medRepo = new FakeMedicalRecordRepository({ [patient.id]: new FakeMedicalRecord(patient.id) });

@@ -1,10 +1,12 @@
 import { DomainError } from '../../../domain/exceptions/domainError.js';
+import { MedicalRecord } from '../../../domain/entities/medicalRecord.js';
 import { StartRegistrationInput } from '../../dto/guest/startRegistrationInput.js';
 import { StartRegistrationOutput } from '../../dto/guest/startRegistrationOutput.js';
 
 export class StartRegistrationUseCase {
-	constructor({ patientRepository }) {
+	constructor({ patientRepository, medicalRecordRepository }) {
 		this.patientRepository = patientRepository;
+		this.medicalRecordRepository = medicalRecordRepository;
 	}
 
 	async execute(inputDto) {
@@ -29,6 +31,19 @@ export class StartRegistrationUseCase {
 
 		const created = await this.patientRepository.create(patient);
 		const patientId = created?.id ?? created?.patientId ?? created;
+
+		if (patientId && this.medicalRecordRepository) {
+			const existingRecord =
+				typeof this.medicalRecordRepository.findByPatientId === 'function'
+					? await this.medicalRecordRepository.findByPatientId(patientId)
+					: null;
+
+			if (!existingRecord && typeof this.medicalRecordRepository.save === 'function') {
+				await this.medicalRecordRepository.save(
+					new MedicalRecord({ patientId, entries: [] })
+				);
+			}
+		}
 
 		return new StartRegistrationOutput({ patientId, status: 'pending' });
 	}
