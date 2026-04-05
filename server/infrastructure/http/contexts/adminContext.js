@@ -58,6 +58,7 @@ const mapUpdateDoctorInput = (input = {}) => {
 export const createAdminUseCases = ({
   userRepository,
   doctorRepository,
+  patientRepository,
   appointmentRepository,
   billingRepository,
   medicalRecordRepository,
@@ -113,7 +114,7 @@ export const createAdminUseCases = ({
           userRepository,
         })
       : null;
-  const listUsersClass = new ListUsersUseCase({ userRepository });
+  const listUsersClass = new ListUsersUseCase({ userRepository, doctorRepository, patientRepository });
   const createUserClass = new CreateUserUseCase({ userRepository, authService });
   const updateUserClass = new UpdateUserUseCase({ userRepository });
   const viewAppointmentsClass = new ViewAppointmentsUseCase({ userRepository, appointmentRepository });

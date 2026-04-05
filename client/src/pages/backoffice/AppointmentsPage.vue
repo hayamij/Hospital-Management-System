@@ -111,6 +111,9 @@
 					<template #cell-time="{ value }">
 						<span class="cell-clip" :title="value || '-'">{{ value || '-' }}</span>
 					</template>
+					<template #cell-doctorName="{ value }">
+						<span class="cell-clip" :title="value || '-'">{{ value || '-' }}</span>
+					</template>
 					<template #cell-status="{ value }">
 						<span class="status-pill" :class="statusBadgeClass(value)" :title="formatStatus(value)">{{ formatStatus(value) }}</span>
 					</template>
@@ -126,7 +129,7 @@
 						<p><strong>{{ item.reason || 'Lịch hẹn' }}</strong></p>
 						<p>{{ item.startAt }} -> {{ item.endAt }}</p>
 						<p>Trạng thái: {{ formatStatus(item.status) }}</p>
-						<p>Bác sĩ: {{ item.doctorId || item.doctor?.id || 'Chưa xác định' }}</p>
+						<p>Bác sĩ: {{ doctorDisplayName(item) }}</p>
 					</div>
 					<div class="row">
 						<template v-if="isPatient">
@@ -234,11 +237,21 @@ const doctorActionableCount = computed(() => {
 	return appointments.items.filter((item) => canRoleUpdateAppointmentStatus(item, role.value)).length;
 });
 
+const doctorDisplayName = (item) => {
+	return (
+		item?.doctorName ||
+		item?.doctorFullName ||
+		item?.doctor?.fullName ||
+		item?.doctor?.name ||
+		'Đang cập nhật'
+	);
+};
+
 const adminTableColumns = [
 	{ key: 'id', label: 'Mã lịch', width: '130px' },
 	{ key: 'reason', label: 'Lý do' },
 	{ key: 'time', label: 'Khung giờ', width: '280px' },
-	{ key: 'doctorId', label: 'Bác sĩ', width: '110px' },
+	{ key: 'doctorName', label: 'Bác sĩ', width: '180px' },
 	{ key: 'patientId', label: 'Bệnh nhân', width: '110px' },
 	{ key: 'status', label: 'Trạng thái', width: '130px', align: 'center' },
 ];
@@ -248,7 +261,7 @@ const adminTableRows = computed(() => {
 		id: item.id || item.appointmentId || '-',
 		reason: item.reason || 'Lịch hẹn',
 		time: `${item.startAt || '-'} -> ${item.endAt || '-'}`,
-		doctorId: item.doctorId || item.doctor?.id || '-',
+		doctorName: doctorDisplayName(item),
 		patientId: item.patientId || item.patient?.id || '-',
 		status: item.status || '',
 	}));

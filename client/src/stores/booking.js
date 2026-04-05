@@ -66,6 +66,7 @@ const aggregateSlotsByWindow = (doctorSlots = []) => {
 				timeLabel: `${startDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - ${endDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`,
 				doctors: [],
 				specialties: [],
+				specialtiesDisplay: '',
 				doctorNamesDisplay: '',
 			});
 		}
@@ -89,9 +90,13 @@ const aggregateSlotsByWindow = (doctorSlots = []) => {
 		const doctorNames = slot.doctors
 			.map((doctor) => doctor.name || doctor.id)
 			.filter(Boolean);
-		slot.doctorNamesDisplay = doctorNames.length > 3
-			? `${doctorNames.slice(0, 3).join(', ')}, ...`
+		slot.doctorNamesDisplay = doctorNames.length > 2
+			? `${doctorNames.slice(0, 2).join(', ')} +${doctorNames.length - 2}`
 			: doctorNames.join(', ');
+
+		slot.specialtiesDisplay = slot.specialties.length > 2
+			? `${slot.specialties.slice(0, 2).join(', ')} +${slot.specialties.length - 2}`
+			: slot.specialties.join(', ');
 	}
 
 	groupedSlots.sort(slotSort);

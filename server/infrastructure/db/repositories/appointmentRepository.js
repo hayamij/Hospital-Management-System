@@ -40,7 +40,7 @@ const slotOverlaps = (slotStart, slotEnd, apptStart, apptEnd) => slotStart < app
 
 const toEntity = (row) => {
   if (!row) return null;
-  return new Appointment({
+  const appointment = new Appointment({
     id: row.id,
     patientId: row.patient_id,
     doctorId: row.doctor_id,
@@ -51,6 +51,12 @@ const toEntity = (row) => {
     createdAt: toDate(row.created_at),
     updatedAt: toDate(row.updated_at),
   });
+
+  if (row.doctor_name) {
+    appointment.doctorName = row.doctor_name;
+  }
+
+  return appointment;
 };
 
 export class SqlAppointmentRepository extends AppointmentRepositoryPort {
@@ -97,23 +103,34 @@ export class SqlAppointmentRepository extends AppointmentRepositoryPort {
 
   async listByDoctor(doctorId, { from, to } = {}) {
     const values = [doctorId];
-    const conditions = ['doctor_id = $1'];
+    const conditions = ['a.doctor_id = $1'];
     if (from) {
       values.push(from);
-      conditions.push(`start_at >= $${values.length}`);
+      conditions.push(`a.start_at >= $${values.length}`);
     }
     if (to) {
       values.push(to);
-      conditions.push(`start_at <= $${values.length}`);
+      conditions.push(`a.start_at <= $${values.length}`);
     }
     const where = `WHERE ${conditions.join(' AND ')}`;
-    const { rows } = await this.pool.query(`SELECT * FROM appointments ${where} ORDER BY start_at ASC`, values);
+    const { rows } = await this.pool.query(
+      `SELECT a.*, d.full_name AS doctor_name
+       FROM appointments a
+       LEFT JOIN doctors d ON d.id = a.doctor_id
+       ${where}
+       ORDER BY a.start_at ASC`,
+      values,
+    );
     return rows.map(toEntity);
   }
 
   async listByPatient(patientId) {
     const { rows } = await this.pool.query(
-      'SELECT * FROM appointments WHERE patient_id = $1 ORDER BY start_at DESC',
+      `SELECT a.*, d.full_name AS doctor_name
+       FROM appointments a
+       LEFT JOIN doctors d ON d.id = a.doctor_id
+       WHERE a.patient_id = $1
+       ORDER BY a.start_at DESC`,
       [patientId],
     );
     return rows.map(toEntity);
@@ -129,22 +146,22 @@ export class SqlAppointmentRepository extends AppointmentRepositoryPort {
 
     if (status) {
       values.push(String(status).trim().toLowerCase());
-      filters.push(`LOWER(COALESCE(status, '')) = $${values.length}`);
+      filters.push(`LOWER(COALESCE(a.status, '')) = $${values.length}`);
     }
 
     if (doctorId) {
       values.push(doctorId);
-      filters.push(`doctor_id = $${values.length}`);
+      filters.push(`a.doctor_id = $${values.length}`);
     }
 
     if (patientId) {
       values.push(patientId);
-      filters.push(`patient_id = $${values.length}`);
+      filters.push(`a.patient_id = $${values.length}`);
     }
 
     const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
 
-    const countQuery = `SELECT COUNT(*) AS total FROM appointments ${whereClause}`;
+    const countQuery = `SELECT COUNT(*) AS total FROM appointments a ${whereClause}`;
     const countResult = await this.pool.query(countQuery, values);
     const total = Number(countResult.rows?.[0]?.total ?? 0);
 
@@ -153,10 +170,11 @@ export class SqlAppointmentRepository extends AppointmentRepositoryPort {
     const limitIdx = listValues.length;
 
     const listQuery = `
-      SELECT *
-      FROM appointments
+      SELECT a.*, d.full_name AS doctor_name
+      FROM appointments a
+      LEFT JOIN doctors d ON d.id = a.doctor_id
       ${whereClause}
-      ORDER BY start_at DESC
+      ORDER BY a.start_at DESC
       OFFSET $${offsetIdx} ROWS FETCH NEXT $${limitIdx} ROWS ONLY`;
 
     const listResult = await this.pool.query(listQuery, listValues);

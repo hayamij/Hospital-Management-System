@@ -20,6 +20,16 @@ class FakeUserRepository {
   }
 }
 
+class FakeProfileRepository {
+  constructor(itemsById = {}) {
+    this.itemsById = itemsById;
+  }
+
+  async findById(id) {
+    return this.itemsById[id] ?? null;
+  }
+}
+
 async function expectThrows(fn, message) {
   let threw = false;
   try {
@@ -46,16 +56,47 @@ async function run() {
   const repo = new FakeUserRepository({
     usersById: { admin1: { id: 'admin1', role: 'admin' } },
     listResult: {
-      total: 1,
-      items: [{ id: 'u1', fullName: 'User 1', email: 'u1@example.com', role: 'patient', status: 'active' }],
+      total: 2,
+      items: [
+        {
+          id: 'u1',
+          fullName: 'Old Doctor Name',
+          email: 'u1@example.com',
+          role: 'doctor',
+          status: 'active',
+          doctorId: 'doc-1',
+        },
+        {
+          id: 'u2',
+          fullName: 'Old Patient Name',
+          email: 'u2@example.com',
+          role: 'patient',
+          status: 'active',
+          patientId: 'pat-1',
+        },
+      ],
     },
   });
 
-  const useCase = new ListUsersUseCase({ userRepository: repo });
+  const doctorRepository = new FakeProfileRepository({
+    'doc-1': { id: 'doc-1', fullName: 'Dr. Updated Name' },
+  });
+
+  const patientRepository = new FakeProfileRepository({
+    'pat-1': { id: 'pat-1', fullName: 'Patient Updated Name' },
+  });
+
+  const useCase = new ListUsersUseCase({
+    userRepository: repo,
+    doctorRepository,
+    patientRepository,
+  });
 
   const result = await useCase.execute({ adminId: 'admin1', query: 'u1', role: 'patient', page: 2, pageSize: 5 });
-  assert.strictEqual(result.total, 1);
+  assert.strictEqual(result.total, 2);
   assert.strictEqual(result.users[0].id, 'u1');
+  assert.strictEqual(result.users[0].fullName, 'Dr. Updated Name');
+  assert.strictEqual(result.users[1].fullName, 'Patient Updated Name');
   assert.strictEqual(repo.lastListInput.role, 'patient');
 
   await useCase.execute({ adminId: 'admin1', type: 'doctor' });
