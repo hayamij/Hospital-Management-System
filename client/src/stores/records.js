@@ -9,6 +9,11 @@ import {
 export const useRecordsStore = defineStore('records', {
 	state: () => ({
 		list: [],
+		recordMeta: {
+			hasRecord: false,
+			recordId: null,
+			recordCreatedAt: null,
+		},
 		loading: false,
 		error: null,
 	}),
@@ -22,6 +27,11 @@ export const useRecordsStore = defineStore('records', {
 			const auth = useAuthStore();
 			this.loading = true;
 			this.error = null;
+			this.recordMeta = {
+				hasRecord: false,
+				recordId: null,
+				recordCreatedAt: null,
+			};
 			try {
 				const response = await fetchRecordsByRole({
 					role: auth.role,
@@ -29,7 +39,37 @@ export const useRecordsStore = defineStore('records', {
 					userId: auth.userId,
 					filters,
 				});
-				this.list = this.toRecordList(response);
+
+				const hasRecord = Boolean(response?.hasRecord || response?.recordId);
+				const recordMeta = {
+					hasRecord,
+					recordId: response?.recordId ?? null,
+					recordCreatedAt: response?.recordCreatedAt ?? null,
+				};
+				this.recordMeta = recordMeta;
+
+				const mappedList = this.toRecordList(response);
+				const shouldUsePlaceholder = auth.role === 'doctor' && hasRecord && mappedList.length === 0;
+				if (shouldUsePlaceholder) {
+					const baseRecordId = recordMeta.recordId || String(filters?.patientId || 'unknown-patient');
+					const baseCreatedAt = recordMeta.recordCreatedAt || null;
+					this.list = [
+						{
+							id: `record-placeholder-${baseRecordId}`,
+							recordId: baseRecordId,
+							note: 'Ho so benh an da duoc tao, chua co ghi chu kham.',
+							description: 'Ho so benh an da duoc tao, chua co ghi chu kham.',
+							doctorId: null,
+							authorDoctorId: null,
+							recordedAt: baseCreatedAt,
+							createdAt: baseCreatedAt,
+							isRecordPlaceholder: true,
+						},
+					];
+				} else {
+					this.list = mappedList;
+				}
+
 				return response;
 			} catch (error) {
 				this.error = error.message;

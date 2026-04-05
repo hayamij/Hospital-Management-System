@@ -51,6 +51,9 @@ export class ViewPatientRecordsForDoctorViewModel {
     this.page = output?.page ?? 1;
     this.pageSize = output?.pageSize ?? records.length;
     this.total = output?.total ?? records.length;
+    this.recordId = output?.recordId ?? null;
+    this.recordCreatedAt = output?.recordCreatedAt ?? null;
+    this.hasRecord = Boolean(output?.hasRecord || output?.recordId);
     this.records = records;
   }
 }

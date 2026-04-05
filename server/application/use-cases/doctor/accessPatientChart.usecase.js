@@ -31,7 +31,15 @@ export class AccessPatientChartUseCase {
 
 		const record = await this.medicalRecordRepository.findByPatientId(input.patientId);
 		const entries = record?.getEntries?.() ?? record?.entries ?? [];
+		const recordId = record?.id ?? record?.getId?.() ?? null;
+		const recordCreatedAt = record?.createdAt ?? record?.getCreatedAt?.() ?? null;
 
-		return new AccessPatientChartOutput({ patientId: input.patientId, entries });
+		return new AccessPatientChartOutput({
+			patientId: input.patientId,
+			entries,
+			recordId,
+			recordCreatedAt,
+			hasRecord: Boolean(record),
+		});
 	}
 }

@@ -84,12 +84,19 @@ export const createDoctorUseCases = ({
   const accessPatientChartUseCase = adaptUseCase(
     accessPatientChartClass,
     undefined,
-    (result) => ({
-      page: 1,
-      pageSize: result.entries?.length ?? 0,
-      total: result.entries?.length ?? 0,
-      records: result.entries ?? [],
-    })
+    (result) => {
+      const records = result?.entries ?? [];
+      return {
+        page: 1,
+        pageSize: records.length,
+        total: records.length,
+        records,
+        patientId: result?.patientId ?? null,
+        recordId: result?.recordId ?? null,
+        recordCreatedAt: result?.recordCreatedAt ?? null,
+        hasRecord: Boolean(result?.hasRecord || result?.recordId),
+      };
+    }
   );
   const addVisitNoteUseCase = adaptUseCase(
     addVisitNoteClass,

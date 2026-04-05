@@ -82,11 +82,20 @@ async function run() {
     const result = await usecase.execute({ doctorId: 'doc-1', patientId: 'pat-1' });
     assert.strictEqual(result.patientId, 'pat-1');
     assert.deepStrictEqual(result.entries, []);
+    assert.strictEqual(result.hasRecord, false);
+    assert.strictEqual(result.recordId, null);
+    assert.strictEqual(result.recordCreatedAt, null);
   }
 
   // Record with entries (entity with getEntries)
   {
-    const record = { patientId: 'pat-1', getEntries: () => [{ note: 'entry1' }, { note: 'entry2' }] };
+    const createdAt = new Date('2026-04-05T02:30:00Z');
+    const record = {
+      id: 'mr-1',
+      patientId: 'pat-1',
+      createdAt,
+      getEntries: () => [{ note: 'entry1' }, { note: 'entry2' }],
+    };
     const usecase = new AccessPatientChartUseCase({
       doctorRepository: new FakeDoctorRepository(baseDoctor),
       patientRepository: new FakePatientRepository(basePatient),
@@ -95,6 +104,9 @@ async function run() {
     const result = await usecase.execute({ doctorId: 'doc-1', patientId: 'pat-1' });
     assert.strictEqual(result.patientId, 'pat-1');
     assert.deepStrictEqual(result.entries, [{ note: 'entry1' }, { note: 'entry2' }]);
+    assert.strictEqual(result.hasRecord, true);
+    assert.strictEqual(result.recordId, 'mr-1');
+    assert.strictEqual(result.recordCreatedAt, createdAt);
   }
 
   // Record with plain entries array

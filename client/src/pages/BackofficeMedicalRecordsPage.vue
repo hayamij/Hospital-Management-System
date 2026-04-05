@@ -49,11 +49,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 import { useRecordsStore } from '../stores/records.js';
 import { useRoleVisibility } from '../composables/useRoleVisibility.js';
+import {
+	clearDoctorRecordsState,
+	readDoctorRecordsState,
+	writeDoctorRecordsState,
+} from '../services/sessionStorage.js';
 
+const route = useRoute();
+const router = useRouter();
 const auth = useAuthStore();
 const records = useRecordsStore();
 const { isDoctor } = useRoleVisibility(auth);
@@ -61,27 +69,112 @@ const patientId = ref('');
 const note = ref('');
 const statusMessage = ref('');
 
-const refresh = async () => {
+const syncPatientQuery = (normalizedPatientId) => {
+	const currentPatientId = String(route.query.patientId || '').trim();
+	if (currentPatientId === normalizedPatientId) return;
+
+	const nextQuery = { ...route.query };
+	if (normalizedPatientId) {
+		nextQuery.patientId = normalizedPatientId;
+	} else {
+		delete nextQuery.patientId;
+	}
+
+	router.replace({ query: nextQuery }).catch(() => {});
+};
+
+const persistPatientContext = (normalizedPatientId) => {
+	if (!isDoctor.value) return;
+
+	if (normalizedPatientId) {
+		writeDoctorRecordsState({ patientId: normalizedPatientId });
+	} else {
+		clearDoctorRecordsState();
+	}
+
+	syncPatientQuery(normalizedPatientId);
+};
+
+const getInitialPatientId = () => {
+	const queryPatientId = String(route.query.patientId || '').trim();
+	if (queryPatientId) return queryPatientId;
+
+	const cached = readDoctorRecordsState();
+	return String(cached?.patientId || '').trim();
+};
+
+const refresh = async ({ showEmptyError = true, ensureRecordIfMissing = false } = {}) => {
 	statusMessage.value = '';
 	const normalizedPatientId = String(patientId.value || '').trim();
+	persistPatientContext(normalizedPatientId);
+
 	if (isDoctor.value && !normalizedPatientId) {
 		records.list = [];
-		records.error = 'Vui lòng nhập mã bệnh nhân để tải hồ sơ.';
+		records.error = showEmptyError ? 'Vui lòng nhập mã bệnh nhân để tải hồ sơ.' : null;
 		return null;
 	}
 
 	const filters = isDoctor.value ? { patientId: normalizedPatientId } : {};
 	try {
-		return await records.fetchRecords(filters);
+		const response = await records.fetchRecords(filters);
+
+		if (
+			isDoctor.value &&
+			normalizedPatientId &&
+			ensureRecordIfMissing &&
+			response &&
+			response.hasRecord === false
+		) {
+			await records.createRecord(normalizedPatientId);
+			statusMessage.value = `Đã tự động tạo hồ sơ bệnh án cho bệnh nhân ${normalizedPatientId}.`;
+		}
+
+		return response;
 	} catch {
 		return null;
 	}
 };
 
-onMounted(refresh);
+watch(patientId, (value) => {
+	const normalizedPatientId = String(value || '').trim();
+	persistPatientContext(normalizedPatientId);
+	if (records.error && normalizedPatientId) {
+		records.error = null;
+	}
+});
+
+watch(
+	() => route.query.patientId,
+	(value) => {
+		if (!isDoctor.value) return;
+		const normalizedPatientId = String(value || '').trim();
+		if (normalizedPatientId === String(patientId.value || '').trim()) return;
+		patientId.value = normalizedPatientId;
+	}
+);
+
+onMounted(async () => {
+	auth.fetchCurrentUser();
+
+	if (!isDoctor.value) {
+		await refresh({ showEmptyError: false });
+		return;
+	}
+
+	const restoredPatientId = getInitialPatientId();
+	if (!restoredPatientId) {
+		records.error = null;
+		records.list = [];
+		return;
+	}
+
+	patientId.value = restoredPatientId;
+	await refresh({ showEmptyError: false, ensureRecordIfMissing: true });
+});
 
 const createMedicalRecord = async () => {
 	const normalizedPatientId = String(patientId.value || '').trim();
+	persistPatientContext(normalizedPatientId);
 	if (!normalizedPatientId) {
 		records.error = 'Vui lòng nhập mã bệnh nhân trước khi tạo hồ sơ.';
 		statusMessage.value = '';
@@ -108,6 +201,7 @@ const createMedicalRecord = async () => {
 
 const addNote = async () => {
 	const normalizedPatientId = String(patientId.value || '').trim();
+	persistPatientContext(normalizedPatientId);
 	if (!normalizedPatientId) {
 		records.error = 'Vui lòng nhập mã bệnh nhân trước khi thêm ghi chú.';
 		return;
