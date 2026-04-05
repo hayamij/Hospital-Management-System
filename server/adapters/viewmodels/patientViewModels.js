@@ -48,6 +48,21 @@ export class UpdatePatientProfileViewModel {
   }
 }
 
+export class ViewPatientProfileViewModel {
+  constructor(output) {
+    this.patientId = output.patientId;
+    this.fullName = output.fullName;
+    this.dateOfBirth = output.dateOfBirth;
+    this.email = output.email;
+    this.phone = output.phone;
+    this.address = output.address;
+    this.emergencyContact = output.emergencyContact;
+    this.status = output.status;
+    this.assignedDoctorId = output.assignedDoctorId;
+    this.updatedAt = output.updatedAt;
+  }
+}
+
 export class ViewAppointmentsViewModel {
   constructor(output) {
     this.page = output.page;

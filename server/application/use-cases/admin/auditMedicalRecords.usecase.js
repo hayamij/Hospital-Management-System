@@ -39,7 +39,7 @@ export class AuditMedicalRecordsUseCase {
 
 		await this.auditLogRepository.append({
 			recordId: input.recordId,
-			adminId: input.adminId,
+			actorId: input.adminId,
 			action: input.action,
 			reason: input.reason,
 			auditedAt,

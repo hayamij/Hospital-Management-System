@@ -46,8 +46,8 @@ export class UpdatePatientProfileUseCase {
 			contact.address = String(input.address).trim();
 			updated = true;
 		}
-		if (input.emergencyContact) {
-			contact.emergencyContact = input.emergencyContact;
+		if (Object.prototype.hasOwnProperty.call(input, 'emergencyContact')) {
+			contact.emergencyContact = input.emergencyContact ?? null;
 			updated = true;
 		}
 

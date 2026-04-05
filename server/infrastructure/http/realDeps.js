@@ -35,6 +35,43 @@ import { createAdminUseCases } from './contexts/adminContext.js';
 import { createGuestUseCases } from './contexts/guestContext.js';
 import { adaptUseCase, noopNotification } from './contexts/common.js';
 
+const toNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const createReportRepository = ({ pool }) => ({
+  async run(reportName, params = {}) {
+    const requested = String(reportName || 'system_overview').trim();
+    const normalized = requested.toLowerCase();
+    void normalized;
+
+    const [patientsResult, doctorsResult, appointmentsResult, pendingResult, dailyRevenueResult, totalRevenueResult] = await Promise.all([
+      pool.query('SELECT COUNT(*) AS total FROM patients'),
+      pool.query('SELECT COUNT(*) AS total FROM doctors'),
+      pool.query('SELECT COUNT(*) AS total FROM appointments'),
+      pool.query("SELECT COUNT(*) AS total FROM appointments WHERE LOWER(COALESCE(status, '')) = 'pending'"),
+      pool.query("SELECT COALESCE(SUM(amount), 0) AS total FROM payments WHERE CAST(created_at AS DATE) = CAST(SYSUTCDATETIME() AS DATE) AND LOWER(COALESCE(status, '')) IN ('completed', 'paid')"),
+      pool.query("SELECT COALESCE(SUM(amount), 0) AS total FROM payments WHERE LOWER(COALESCE(status, '')) IN ('completed', 'paid')"),
+    ]);
+
+    return {
+      reportName: requested,
+      counts: {
+        patients: toNumber(patientsResult.rows?.[0]?.total),
+        doctors: toNumber(doctorsResult.rows?.[0]?.total),
+        appointments: toNumber(appointmentsResult.rows?.[0]?.total),
+        pendingAppointments: toNumber(pendingResult.rows?.[0]?.total),
+      },
+      totals: {
+        revenueDay: toNumber(dailyRevenueResult.rows?.[0]?.total),
+        revenue: toNumber(totalRevenueResult.rows?.[0]?.total),
+      },
+      params,
+    };
+  },
+});
+
 export function createRealDeps() {
   const appointmentRepository = new SqlAppointmentRepository(pool);
   const billingRepository = new SqlBillingRepository(pool);
@@ -52,6 +89,7 @@ export function createRealDeps() {
   const auditLogRepository = new SqlAuditLogRepository(pool);
 
   const authService = createAuthService({ userRepository, pool });
+  const reportRepository = createReportRepository({ pool });
 
   const authUseCases = createAuthUseCases({
     userRepository,
@@ -90,16 +128,7 @@ export function createRealDeps() {
     medicalRecordRepository,
     serviceCatalogRepository,
     settingsRepository,
-    reportRepository: {
-      async run(reportName) {
-        const doctors = await doctorRepository.search();
-        const patients = [await patientRepository.findById('pat-1')].filter(Boolean);
-        return {
-          reportName,
-          counts: { patients: patients.length, doctors: doctors.length },
-        };
-      },
-    },
+    reportRepository,
     auditLogRepository,
     authService,
   });
@@ -192,16 +221,7 @@ export function createRealDeps() {
 
   const runReportUseCase = adaptUseCase(
     new RunReportsUseCase({
-      reportRepository: {
-        async run(reportName) {
-          const doctors = await doctorRepository.search();
-          const patients = [await patientRepository.findById('pat-1')].filter(Boolean);
-          return {
-            reportName,
-            counts: { patients: patients.length, doctors: doctors.length },
-          };
-        },
-      },
+      reportRepository,
       userRepository,
     }),
     undefined,

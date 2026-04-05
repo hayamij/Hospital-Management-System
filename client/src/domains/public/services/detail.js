@@ -44,9 +44,27 @@ export const mapRelatedServices = (services) =>
     image: DETAIL_IMAGES[index % DETAIL_IMAGES.length],
   }));
 
-export const buildBookingLink = (serviceId) => {
-  if (!serviceId) return '/register';
-  return `/patient/booking?service=${encodeURIComponent(serviceId)}`;
+export const buildBookingLink = (serviceOrId) => {
+  if (!serviceOrId) return '/patient/booking';
+
+  const serviceId =
+    typeof serviceOrId === 'object'
+      ? String(serviceOrId?.id || '').trim()
+      : String(serviceOrId || '').trim();
+
+  if (!serviceId) return '/patient/booking';
+
+  const params = new URLSearchParams();
+  params.set('service', serviceId);
+
+  if (typeof serviceOrId === 'object') {
+    const serviceName = String(serviceOrId?.name || '').trim();
+    if (serviceName) {
+      params.set('serviceName', serviceName);
+    }
+  }
+
+  return `/patient/booking?${params.toString()}`;
 };
 
 export const formatPrice = (value) => {

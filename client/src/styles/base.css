@@ -52,14 +52,20 @@ a {
 }
 
 .panel {
-	border: 1px solid #d1d5db;
+	border: 1px solid #cbd5e1;
+	border-radius: 14px;
 	background: #fff;
-	padding: 24px;
+	padding: 26px;
+	box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
 }
 
 .panel h1,
 .panel h2 {
-	margin: 0 0 14px;
+	margin: 0 0 16px;
+}
+
+.panel p {
+	margin: 0 0 12px;
 }
 
 .grid {
@@ -80,9 +86,10 @@ a {
 }
 
 .item {
-	border: 1px solid #e5e7eb;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
 	background: #f9fafb;
-	padding: 14px;
+	padding: 16px;
 }
 
 .msg {
@@ -105,7 +112,7 @@ select,
 textarea,
 button {
 	border: 1px solid #9ca3af;
-	padding: 11px 14px;
+	padding: 11px 16px;
 	font: inherit;
 	line-height: 1.45;
 	box-sizing: border-box;

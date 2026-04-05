@@ -76,7 +76,7 @@ const routes = [
 			{ path: '', redirect: '/patient/dashboard' },
 			{ path: 'dashboard', component: PatientDashboard },
 			{ path: 'profile', component: PatientProfile },
-			{ path: 'booking', component: BookingPage },
+			{ path: 'booking', component: BookingPage, meta: { public: true } },
 			{ path: 'appointments', component: AppointmentsPage },
 			{ path: 'billing', component: InvoicesPage },
 			{ path: 'invoices', component: InvoicesPage },

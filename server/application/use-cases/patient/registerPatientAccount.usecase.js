@@ -49,6 +49,7 @@ export class RegisterPatientAccountUseCase {
 		const patientId = createdPatient?.id ?? createdPatient?.patientId ?? createdPatient;
 
 		const user = {
+			id: patientId,
 			email,
 			passwordHash,
 			role: 'patient',

@@ -12,6 +12,7 @@ export const normalizeDoctor = (source, index = 0) => ({
   id: source?.id || source?.doctorId || `doctor-${index + 1}`,
   name: source?.fullName || source?.name || `Doctor ${index + 1}`,
   specialty: source?.specialization || source?.specialty || 'General',
+  department: source?.department || '',
   status: source?.status || 'active',
   email: source?.email || '',
 });

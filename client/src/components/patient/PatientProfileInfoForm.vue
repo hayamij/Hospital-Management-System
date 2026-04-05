@@ -96,7 +96,9 @@ defineEmits(['submit', 'touch-field']);
 }
 
 .actions {
+	margin-top: 6px;
   display: flex;
   justify-content: flex-start;
+	gap: 12px;
 }
 </style>

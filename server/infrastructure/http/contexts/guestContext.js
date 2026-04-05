@@ -29,6 +29,7 @@ export const createGuestUseCases = ({
     doctorRepository,
   });
   const viewPublicCardDetailClass = new ViewPublicCardDetailUseCase({
+    serviceCatalogRepository,
     doctorRepository,
   });
   const submitContactFormClass = new SubmitContactFormUseCase({

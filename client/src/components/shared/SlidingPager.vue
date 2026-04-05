@@ -17,7 +17,7 @@
         <div
           v-for="(item, itemIndex) in items"
           :key="itemKey(item, itemIndex, 0)"
-          class="item"
+          class="pager-item"
         >
           <slot :item="item" :index="itemIndex" />
         </div>
@@ -33,7 +33,7 @@
           <div
             v-for="(item, itemIndex) in page"
             :key="itemKey(item, itemIndex, pageIndex)"
-            class="item"
+            class="pager-item"
           >
             <slot :item="item" :index="pageIndex * activeItemsPerPage + itemIndex" />
           </div>
@@ -227,7 +227,7 @@ onBeforeUnmount(() => {
   grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
 }
 
-.item {
+.pager-item {
   min-width: 0;
 }
 

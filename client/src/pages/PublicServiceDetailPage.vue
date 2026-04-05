@@ -32,7 +32,7 @@ const hasFetched = ref(false);
 let currentRequestId = 0;
 
 const bookingLink = computed(() => {
-  return buildBookingLink(service.value?.id);
+  return buildBookingLink(service.value);
 });
 
 const relatedServices = computed(() => {

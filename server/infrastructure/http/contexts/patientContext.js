@@ -9,6 +9,7 @@ import { DownloadPrescriptionUseCase } from '../../../application/use-cases/pati
 import { SendPatientMessageUseCase } from '../../../application/use-cases/patient/sendPatientMessage.usecase.js';
 import { RegisterPatientAccountUseCase } from '../../../application/use-cases/patient/registerPatientAccount.usecase.js';
 import { UpdatePatientProfileUseCase } from '../../../application/use-cases/patient/updatePatientProfile.usecase.js';
+import { ViewPatientProfileUseCase } from '../../../application/use-cases/patient/viewPatientProfile.usecase.js';
 import { SearchDoctorsUseCase } from '../../../application/use-cases/patient/searchDoctors.usecase.js';
 import { adaptUseCase, noopNotification } from './common.js';
 
@@ -75,6 +76,9 @@ export const createPatientUseCases = ({
   const updatePatientProfileClass = new UpdatePatientProfileUseCase({
     patientRepository,
   });
+  const viewPatientProfileClass = new ViewPatientProfileUseCase({
+    patientRepository,
+  });
   const searchDoctorsClass = new SearchDoctorsUseCase({ doctorRepository });
 
   const searchDoctorsUseCase = adaptUseCase(
@@ -103,6 +107,7 @@ export const createPatientUseCases = ({
     sendPatientMessageUseCase: sendPatientMessageClass,
     registerPatientAccountUseCase: registerPatientAccountClass,
     updatePatientProfileUseCase: updatePatientProfileClass,
+    viewPatientProfileUseCase: viewPatientProfileClass,
     searchDoctorsUseCase,
   };
 };

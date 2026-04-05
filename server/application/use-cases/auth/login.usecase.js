@@ -37,6 +37,7 @@ export class LoginUseCase {
 
 		return new LoginOutput({
 			userId: user.id,
+			patientId: user.patientId ?? null,
 			role,
 			accessToken: tokens.accessToken,
 			refreshToken: tokens.refreshToken,

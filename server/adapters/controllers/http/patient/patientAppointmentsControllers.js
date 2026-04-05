@@ -7,7 +7,7 @@ import {
 } from '../../../viewmodels/patientViewModels.js';
 
 const resolvePatientId = (req, fallback) =>
-  req.user?.patientId ?? req.user?.id ?? fallback;
+  req.user?.patientId ?? fallback ?? req.user?.id;
 
 export function buildPatientAppointmentsControllers({ scheduleAppointmentUseCase, rescheduleAppointmentUseCase, cancelAppointmentUseCase, viewAppointmentsUseCase }) {
   return {
@@ -19,7 +19,11 @@ export function buildPatientAppointmentsControllers({ scheduleAppointmentUseCase
     }),
     rescheduleAppointment: createHandler({
       useCase: rescheduleAppointmentUseCase,
-      mapInput: (req) => ({ ...req.body, patientId: resolvePatientId(req, req.body?.patientId) }),
+      mapInput: (req) => ({
+        ...req.body,
+        appointmentId: req.params?.id ?? req.body?.appointmentId,
+        patientId: resolvePatientId(req, req.body?.patientId),
+      }),
       mapOutput: (result) => new RescheduleAppointmentViewModel(result),
     }),
     cancelAppointment: createHandler({

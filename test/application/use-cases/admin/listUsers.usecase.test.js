@@ -51,10 +51,15 @@ async function run() {
     },
   });
 
-  const result = await new ListUsersUseCase({ userRepository: repo }).execute({ adminId: 'admin1', query: 'u1', type: 'patient', page: 2, pageSize: 5 });
+  const useCase = new ListUsersUseCase({ userRepository: repo });
+
+  const result = await useCase.execute({ adminId: 'admin1', query: 'u1', role: 'patient', page: 2, pageSize: 5 });
   assert.strictEqual(result.total, 1);
   assert.strictEqual(result.users[0].id, 'u1');
   assert.strictEqual(repo.lastListInput.role, 'patient');
+
+  await useCase.execute({ adminId: 'admin1', type: 'doctor' });
+  assert.strictEqual(repo.lastListInput.role, 'doctor');
 }
 
 wrapLegacyRun(run, 'listUsers.usecase');

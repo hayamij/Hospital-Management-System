@@ -46,7 +46,7 @@ describe('public detail domain', () => {
   it('builds booking link using encoded service id', () => {
     expect(buildBookingLink('svc-1')).toBe('/patient/booking?service=svc-1');
     expect(buildBookingLink('svc/1')).toBe('/patient/booking?service=svc%2F1');
-    expect(buildBookingLink('')).toBe('/register');
+    expect(buildBookingLink('')).toBe('/patient/booking');
   });
 
   it('formats prices in VND', () => {

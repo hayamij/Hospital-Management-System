@@ -11,6 +11,7 @@ const toEntity = (row) => {
     recordId: row.record_id,
     action: row.action,
     actorId: row.actor_id,
+    reason: row.reason,
     createdAt: toDate(row.created_at),
   };
 };
@@ -23,10 +24,11 @@ export class SqlAuditLogRepository extends AuditLogRepositoryPort {
 
   async append(entry) {
     const id = ensureId(entry.id);
+    const actorId = entry.actorId ?? entry.adminId ?? null;
     await this.pool.query(
-      `INSERT INTO audit_logs (id, record_id, action, actor_id)
-       VALUES ($1,$2,$3,$4)`,
-      [id, entry.recordId ?? null, entry.action ?? null, entry.actorId ?? null],
+      `INSERT INTO audit_logs (id, record_id, action, actor_id, reason)
+       VALUES ($1,$2,$3,$4,$5)`,
+      [id, entry.recordId ?? null, entry.action ?? null, actorId, entry.reason ?? null],
     );
     return this.findById(id);
   }

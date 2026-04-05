@@ -66,9 +66,7 @@ export class UpdateServiceCatalogItemViewModel {
 
 export class GenerateReportViewModel {
   constructor(output) {
-    this.reportId = output.reportId;
-    this.url = output.url;
-    this.generatedAt = output.generatedAt;
+    Object.assign(this, output);
   }
 }
 

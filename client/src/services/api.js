@@ -85,8 +85,24 @@ export const authApi = {
 	login(credentials) {
 		return request('/auth/login', { method: 'POST', data: credentials });
 	},
-	logout(token) {
-		return request('/auth/logout', { method: 'POST', token, data: {} });
+	logout(sessionOrToken) {
+		const token =
+			typeof sessionOrToken === 'string'
+				? sessionOrToken
+				: sessionOrToken?.token ?? null;
+		const refreshToken =
+			typeof sessionOrToken === 'string'
+				? null
+				: sessionOrToken?.refreshToken ?? null;
+
+		return request('/auth/logout', {
+			method: 'POST',
+			token,
+			data: {
+				accessToken: token,
+				refreshToken,
+			},
+		});
 	},
 	resetPassword(data) {
 		return request('/auth/reset-password', { method: 'POST', data });
@@ -96,6 +112,9 @@ export const authApi = {
 export const patientApi = {
 	register(data) {
 		return request('/patients/register', { method: 'POST', data });
+	},
+	getProfile(token, params) {
+		return request('/patients/profile', { method: 'GET', token, params });
 	},
 	updateProfile(token, payload) {
 		return request('/patients/profile', { method: 'PUT', token, data: payload });

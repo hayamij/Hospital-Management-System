@@ -11,7 +11,7 @@
           </p>
 
           <div class="hero-actions">
-            <RouterLink to="/register" class="hero-link primary">Bắt đầu đặt lịch</RouterLink>
+            <RouterLink to="/patient/booking" class="hero-link primary">Bắt đầu đặt lịch</RouterLink>
             <RouterLink to="/doctors" class="hero-link secondary">Xem danh bạ bác sĩ</RouterLink>
           </div>
         </div>

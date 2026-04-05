@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { adminApi } from '../services/api.js';
 import { useAuthStore } from './auth.js';
-import { getUserTypeFromSource, isRole } from '../constants/navigation.js';
+import { isRole } from '../constants/navigation.js';
 
 const toUserModel = (source) => ({
   id: source?.id || source?.userId || '',
@@ -9,7 +9,6 @@ const toUserModel = (source) => ({
   email: source?.email || '',
   role: source?.role || 'patient',
   status: source?.status || 'active',
-  type: getUserTypeFromSource(source),
 });
 
 export const useAdminUsersStore = defineStore('adminUsers', {
@@ -32,7 +31,7 @@ export const useAdminUsersStore = defineStore('adminUsers', {
       try {
         const response = await adminApi.listUsers(auth.token, {
           q: filters.query,
-          type: filters.type,
+          role: filters.role ?? filters.type,
           page: filters.page || this.page,
           pageSize: filters.pageSize || this.pageSize,
         });

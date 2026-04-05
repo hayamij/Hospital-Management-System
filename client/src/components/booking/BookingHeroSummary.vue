@@ -2,9 +2,9 @@
   <header class="panel hero">
     <div class="hero-grid">
       <div>
-        <p class="eyebrow">Đặt lịch nhiều bước</p>
-        <h1>Đặt lịch khám theo 4 bước thông minh</h1>
-        <p>Chọn chuyên khoa, bác sĩ, khung giờ, triệu chứng và xác nhận lịch hẹn.</p>
+        <p class="eyebrow">Đặt lịch tự động</p>
+        <h1>Chọn giờ trước, hệ thống tự gợi ý bác sĩ trống</h1>
+        <p>Tự động điền từ dịch vụ đã chọn, tự hiển thị khung giờ trống và giảm tối đa thao tác thủ công.</p>
         <div class="context-chips" v-if="selectedDoctorFromQuery || selectedServiceName">
           <span v-if="selectedDoctorFromQuery" class="chip">Đã chọn bác sĩ: {{ selectedDoctorFromQuery }}</span>
           <span v-if="selectedServiceName" class="chip">Đã chọn dịch vụ: {{ selectedServiceName }}</span>
@@ -13,9 +13,11 @@
 
       <aside class="hero-side">
         <p class="hero-side-title">Tóm tắt đặt lịch</p>
+        <p><strong>Dịch vụ:</strong> {{ selectedServiceName || 'Chưa chọn' }}</p>
         <p><strong>Chuyên khoa:</strong> {{ form.specialty || 'Chưa chọn' }}</p>
         <p><strong>Bác sĩ:</strong> {{ selectedDoctor?.name || 'Chưa chọn' }}</p>
         <p><strong>Ngày:</strong> {{ form.appointmentDate || 'Chưa chọn' }}</p>
+        <p><strong>Giờ khám:</strong> {{ selectedSlotLabel || 'Chưa chọn' }}</p>
       </aside>
     </div>
   </header>
@@ -27,6 +29,7 @@ defineProps({
   selectedServiceName: { type: String, default: '' },
   form: { type: Object, required: true },
   selectedDoctor: { type: Object, default: null },
+  selectedSlotLabel: { type: String, default: '' },
 });
 </script>
 

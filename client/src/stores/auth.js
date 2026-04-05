@@ -27,6 +27,7 @@ const parseJwtPayload = (token) => {
 export const useAuthStore = defineStore('auth', {
 	state: () => ({
 		token: null,
+		refreshToken: null,
 		userProfile: null,
 		role: null,
 		initialized: false,
@@ -36,6 +37,7 @@ export const useAuthStore = defineStore('auth', {
 	getters: {
 		isAuthenticated: (state) => Boolean(state.token),
 		userId: (state) => state.userProfile?.id ?? null,
+		patientId: (state) => state.userProfile?.patientId ?? null,
 		email: (state) => state.userProfile?.email ?? null,
 		defaultRoute: (state) => getRoleHomeRoute(state.role, '/'),
 	},
@@ -45,16 +47,23 @@ export const useAuthStore = defineStore('auth', {
 			const session = readStoredSession();
 			if (session) {
 				this.token = session.token ?? null;
+				this.refreshToken = session.refreshToken ?? null;
 				this.userProfile = session.userProfile ?? null;
 				this.role = session.role ?? null;
 			}
 			this.initialized = true;
 		},
 		persist() {
-			writeStoredSession({ token: this.token, userProfile: this.userProfile, role: this.role });
+			writeStoredSession({
+				token: this.token,
+				refreshToken: this.refreshToken,
+				userProfile: this.userProfile,
+				role: this.role,
+			});
 		},
 		clear() {
 			this.token = null;
+			this.refreshToken = null;
 			this.userProfile = null;
 			this.role = null;
 			this.error = null;
@@ -73,9 +82,11 @@ export const useAuthStore = defineStore('auth', {
 				}
 
 				this.token = token;
+				this.refreshToken = data?.refreshToken ?? null;
 				this.role = data?.role ?? decoded?.role ?? null;
 				this.userProfile = {
 					id: data?.userId ?? decoded?.sub ?? null,
+					patientId: data?.patientId ?? this.userProfile?.patientId ?? null,
 					email: data?.email ?? decoded?.email ?? credentials?.identifier ?? null,
 					name: data?.fullName ?? null,
 				};
@@ -97,6 +108,7 @@ export const useAuthStore = defineStore('auth', {
 				this.role = this.role ?? payload.role ?? null;
 				this.userProfile = {
 					id: this.userProfile?.id ?? payload.sub ?? null,
+					patientId: this.userProfile?.patientId ?? null,
 					email: this.userProfile?.email ?? payload.email ?? null,
 					name: this.userProfile?.name ?? null,
 				};
@@ -111,7 +123,10 @@ export const useAuthStore = defineStore('auth', {
 				return;
 			}
 			try {
-				await authApi.logout(this.token);
+				await authApi.logout({
+					token: this.token,
+					refreshToken: this.refreshToken,
+				});
 			} catch (e) {
 				console.warn('Logout failed', e);
 			} finally {

@@ -169,9 +169,9 @@ watch(() => [category.value, itemId.value], load, { immediate: true });
 }
 
 .detail-card {
-  border: 1px solid #dbe2ea;
+  border: none;
   background: #ffffff;
-  padding: 16px;
+  padding: 8px 0;
 }
 
 .detail-card h2 {

@@ -51,13 +51,19 @@ export const useAppointmentsStore = defineStore('appointments', {
 		async schedule(payload) {
 			const auth = useAuthStore();
 			if (!isRole(auth.role, 'patient')) return;
-			await patientApi.scheduleAppointment(auth.token, { ...payload, patientId: auth.userId });
+			await patientApi.scheduleAppointment(auth.token, {
+				...payload,
+				patientId: auth.patientId || auth.userId,
+			});
 			await this.fetchAppointments();
 		},
 		async reschedule(appointmentId, payload) {
 			const auth = useAuthStore();
 			if (!isRole(auth.role, 'patient')) return;
-			await patientApi.rescheduleAppointment(auth.token, appointmentId, { ...payload, patientId: auth.userId });
+			await patientApi.rescheduleAppointment(auth.token, appointmentId, {
+				...payload,
+				patientId: auth.patientId || auth.userId,
+			});
 			await this.fetchAppointments();
 		},
 		async cancel(appointmentId) {
