@@ -11,6 +11,7 @@ export const createGuestUseCases = ({
   settingsRepository,
   doctorRepository,
   patientRepository,
+  medicalRecordRepository,
   contactLeadRepository,
 }) => {
   const browsePublicInfoClass = new BrowsePublicInfoUseCase({
@@ -37,6 +38,7 @@ export const createGuestUseCases = ({
   });
   const startRegistrationClass = new StartRegistrationUseCase({
     patientRepository,
+    medicalRecordRepository,
   });
 
   const browsePublicInfoUseCase = adaptUseCase(

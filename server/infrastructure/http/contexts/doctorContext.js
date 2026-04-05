@@ -3,6 +3,7 @@ import { ViewDoctorScheduleUseCase } from '../../../application/use-cases/doctor
 import { ManageAppointmentDecisionUseCase } from '../../../application/use-cases/doctor/manageAppointmentDecision.usecase.js';
 import { MarkAppointmentStatusUseCase } from '../../../application/use-cases/doctor/markAppointmentStatus.usecase.js';
 import { AccessPatientChartUseCase } from '../../../application/use-cases/doctor/accessPatientChart.usecase.js';
+import { CreateMedicalRecordUseCase } from '../../../application/use-cases/doctor/createMedicalRecord.usecase.js';
 import { AddVisitNoteUseCase } from '../../../application/use-cases/doctor/addVisitNote.usecase.js';
 import { UpdateMedicalRecordEntryUseCase } from '../../../application/use-cases/doctor/updateMedicalRecordEntry.usecase.js';
 import { ReviewTestResultsUseCase } from '../../../application/use-cases/doctor/reviewTestResults.usecase.js';
@@ -34,6 +35,11 @@ export const createDoctorUseCases = ({
     appointmentRepository,
   });
   const accessPatientChartClass = new AccessPatientChartUseCase({
+    doctorRepository,
+    patientRepository,
+    medicalRecordRepository,
+  });
+  const createMedicalRecordClass = new CreateMedicalRecordUseCase({
     doctorRepository,
     patientRepository,
     medicalRecordRepository,
@@ -78,12 +84,19 @@ export const createDoctorUseCases = ({
   const accessPatientChartUseCase = adaptUseCase(
     accessPatientChartClass,
     undefined,
-    (result) => ({
-      page: 1,
-      pageSize: result.entries?.length ?? 0,
-      total: result.entries?.length ?? 0,
-      records: result.entries ?? [],
-    })
+    (result) => {
+      const records = result?.entries ?? [];
+      return {
+        page: 1,
+        pageSize: records.length,
+        total: records.length,
+        records,
+        patientId: result?.patientId ?? null,
+        recordId: result?.recordId ?? null,
+        recordCreatedAt: result?.recordCreatedAt ?? null,
+        hasRecord: Boolean(result?.hasRecord || result?.recordId),
+      };
+    }
   );
   const addVisitNoteUseCase = adaptUseCase(
     addVisitNoteClass,
@@ -119,6 +132,7 @@ export const createDoctorUseCases = ({
     manageAppointmentDecisionUseCase: manageAppointmentDecisionClass,
     markAppointmentStatusUseCase: markAppointmentStatusClass,
     accessPatientChartUseCase,
+    createMedicalRecordUseCase: createMedicalRecordClass,
     addVisitNoteUseCase,
     updateMedicalRecordEntryUseCase,
     reviewTestResultsUseCase: reviewTestResultsClass,

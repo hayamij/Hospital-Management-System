@@ -71,6 +71,7 @@ export const createPatientUseCases = ({
   const registerPatientAccountClass = new RegisterPatientAccountUseCase({
     userRepository,
     patientRepository,
+    medicalRecordRepository,
     authService,
   });
   const updatePatientProfileClass = new UpdatePatientProfileUseCase({

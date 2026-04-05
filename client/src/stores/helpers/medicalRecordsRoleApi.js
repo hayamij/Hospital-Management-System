@@ -23,3 +23,12 @@ export const addVisitNoteByRole = async ({ role, token, userId, patientId, note 
 
   return true;
 };
+
+export const createMedicalRecordByRole = async ({ role, token, userId, patientId }) => {
+  if (!isRole(role, 'doctor')) return false;
+
+  return doctorApi.createMedicalRecord(token, patientId, {
+    doctorId: userId,
+    patientId,
+  });
+};

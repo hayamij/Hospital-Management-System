@@ -1,10 +1,14 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  clearDoctorRecordsState,
   clearStoredSession,
+  DOCTOR_RECORDS_STATE_STORAGE_KEY,
+  readDoctorRecordsState,
   readStoredSession,
   readStoredToken,
   redirectToLogin,
   SESSION_STORAGE_KEY,
+  writeDoctorRecordsState,
   writeStoredSession,
 } from '../../../client/src/services/sessionStorage.js';
 
@@ -109,5 +113,23 @@ describe('sessionStorage service', () => {
     delete globalThis.window;
 
     expect(() => redirectToLogin()).not.toThrow();
+  });
+
+  it('writes and reads doctor records state', () => {
+    const state = { patientId: 'pat-77' };
+
+    writeDoctorRecordsState(state);
+
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(DOCTOR_RECORDS_STATE_STORAGE_KEY, JSON.stringify(state));
+    expect(readDoctorRecordsState()).toEqual(state);
+  });
+
+  it('clears doctor records state safely', () => {
+    localStorageMock.setItem(DOCTOR_RECORDS_STATE_STORAGE_KEY, JSON.stringify({ patientId: 'pat-1' }));
+
+    clearDoctorRecordsState();
+
+    expect(localStorageMock.removeItem).toHaveBeenCalledWith(DOCTOR_RECORDS_STATE_STORAGE_KEY);
+    expect(readDoctorRecordsState()).toBeNull();
   });
 });

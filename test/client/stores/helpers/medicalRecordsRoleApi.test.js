@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { doctorApi, patientApi } from '../../../../client/src/services/api.js';
 import {
   addVisitNoteByRole,
+  createMedicalRecordByRole,
   fetchRecordsByRole,
 } from '../../../../client/src/stores/helpers/medicalRecordsRoleApi.js';
 
@@ -105,5 +106,37 @@ describe('medicalRecordsRoleApi helper', () => {
 
     expect(updated).toBe(false);
     expect(addVisitNoteSpy).not.toHaveBeenCalled();
+  });
+
+  it('creates medical record for doctor role', async () => {
+    const payload = { recordId: 'mr-1', patientId: 'pat-10', created: true };
+    const createRecordSpy = vi.spyOn(doctorApi, 'createMedicalRecord').mockResolvedValue(payload);
+
+    const result = await createMedicalRecordByRole({
+      role: 'doctor',
+      token: 'token-doctor',
+      userId: 'doc-10',
+      patientId: 'pat-10',
+    });
+
+    expect(createRecordSpy).toHaveBeenCalledWith('token-doctor', 'pat-10', {
+      doctorId: 'doc-10',
+      patientId: 'pat-10',
+    });
+    expect(result).toEqual(payload);
+  });
+
+  it('does not create medical record for non-doctor role', async () => {
+    const createRecordSpy = vi.spyOn(doctorApi, 'createMedicalRecord').mockResolvedValue({ ok: true });
+
+    const result = await createMedicalRecordByRole({
+      role: 'patient',
+      token: 'token-patient',
+      userId: 'pat-10',
+      patientId: 'pat-10',
+    });
+
+    expect(result).toBe(false);
+    expect(createRecordSpy).not.toHaveBeenCalled();
   });
 });

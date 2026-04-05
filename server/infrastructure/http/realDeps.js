@@ -138,6 +138,7 @@ export function createRealDeps() {
     settingsRepository,
     doctorRepository,
     patientRepository,
+    medicalRecordRepository,
     contactLeadRepository,
   });
 
@@ -259,7 +260,7 @@ export function createRealDeps() {
   );
 
   const startRegistrationUseCase = adaptUseCase(
-    new StartRegistrationUseCase({ patientRepository }),
+    new StartRegistrationUseCase({ patientRepository, medicalRecordRepository }),
     (input) => ({
       fullName: input?.fullName ?? input?.name,
       email: input?.email,

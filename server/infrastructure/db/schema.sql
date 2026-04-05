@@ -271,7 +271,7 @@ VALUES
 	(N'admin-2', N'admin2@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'admin', N'active', NULL, NULL, N'Admin Two'),
 	(N'admin-3', N'admin3@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'admin', N'inactive', NULL, NULL, N'Admin Three'),
 	(N'doc-1', N'doc@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-1', N'Dr. Demo'),
-	(N'doc-2', N'doc2@example.com', N'$2b$10$CwTycUXWue0Thq9StjUM0uJ8rj6u.ZYdij24apqYh6g82f58UaxrW', N'doctor', N'active', NULL, N'doc-2', N'Dr. Alice'),
+	(N'doc-2', N'doc2@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-2', N'Dr. Alice'),
 	(N'doc-3', N'doc3@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-3', N'Dr. Minh Tran'),
 	(N'doc-4', N'doc4@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-4', N'Dr. Maria Nguyen'),
 	(N'doc-5', N'doc5@example.com', N'$2b$10$bnNVIK/jG0EH.1WDA2eSuO0TJ.Rh.blNYAh7vbEr9yAMuBQQOYRwS', N'doctor', N'active', NULL, N'doc-5', N'Dr. David Pham'),

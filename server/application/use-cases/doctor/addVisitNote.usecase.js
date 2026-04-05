@@ -1,4 +1,5 @@
 import { DomainError } from '../../../domain/exceptions/domainError.js';
+import { MedicalRecord } from '../../../domain/entities/medicalRecord.js';
 import { AddVisitNoteInput } from '../../dto/doctor/addVisitNoteInput.js';
 import { AddVisitNoteOutput } from '../../dto/doctor/addVisitNoteOutput.js';
 
@@ -32,15 +33,20 @@ export class AddVisitNoteUseCase {
 			throw new DomainError('Patient not found.');
 		}
 
-		const record = await this.medicalRecordRepository.findByPatientId(input.patientId);
+		let record = await this.medicalRecordRepository.findByPatientId(input.patientId);
 		if (!record) {
-			throw new DomainError('Medical record not found for patient.');
+			record = new MedicalRecord({ patientId: input.patientId, entries: [] });
 		}
 
 		record.addEntry({ note: input.note, authorDoctorId: input.doctorId, createdAt: new Date() });
-		await this.medicalRecordRepository.save(record);
+		const savedRecord = await this.medicalRecordRepository.save(record);
 
-		const entryCount = record.getEntries?.().length ?? record.entries?.length ?? 0;
+		const entryCount =
+			savedRecord?.getEntries?.().length ??
+			savedRecord?.entries?.length ??
+			record.getEntries?.().length ??
+			record.entries?.length ??
+			0;
 		return new AddVisitNoteOutput({ patientId: input.patientId, entryCount });
 	}
 }

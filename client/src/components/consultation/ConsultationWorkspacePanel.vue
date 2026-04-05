@@ -1,10 +1,13 @@
 <template>
   <div class="consultation page">
-    <header class="panel">
-      <h1>Không gian khám bệnh</h1>
-      <p>Không gian nhập liệu ca khám với bố cục chia đôi.</p>
+    <header class="panel workspace-header">
+      <div class="header-copy">
+        <p class="eyebrow">DOCTOR CONSULTATION</p>
+        <h1>Không gian khám bệnh</h1>
+        <p>Tra cứu bệnh án cũ và nhập liệu ca khám hiện tại trong cùng một không gian làm việc.</p>
+      </div>
 
-      <div class="row controls">
+      <div class="header-actions">
         <input
           :value="patientIdInput"
           placeholder="Nhập mã bệnh nhân"
@@ -19,7 +22,13 @@
     <section class="split-view">
       <article class="panel left-pane">
         <div class="pane-head">
-          <h2>Hồ sơ bệnh án cũ</h2>
+          <div class="title-row">
+            <span class="card-icon" aria-hidden="true">MR</span>
+            <div>
+              <h2>Hồ sơ bệnh án cũ</h2>
+              <p>Dùng làm tham chiếu trước khi cập nhật chẩn đoán mới.</p>
+            </div>
+          </div>
           <small v-if="activePatientId">Bệnh nhân: {{ activePatientId }}</small>
         </div>
 
@@ -49,7 +58,15 @@
       </article>
 
       <article class="panel right-pane">
-        <h2>Nhập liệu ca khám hiện tại</h2>
+        <div class="pane-head">
+          <div class="title-row">
+            <span class="card-icon" aria-hidden="true">DX</span>
+            <div>
+              <h2>Nhập liệu ca khám hiện tại</h2>
+              <p>Ghi nhận triệu chứng, chẩn đoán, kê đơn và chỉ định xét nghiệm.</p>
+            </div>
+          </div>
+        </div>
 
         <form class="form-grid" @submit.prevent="$emit('submit')">
           <label class="field">
@@ -124,26 +141,81 @@ defineEmits(['update:patientIdInput', 'load-records', 'select-record', 'submit']
 </script>
 
 <style scoped>
-.controls {
-  margin-top: 12px;
+.workspace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+}
+
+.header-copy h1 {
+  margin: 8px 0 0;
+  font-size: 34px;
+}
+
+.header-copy p {
+  margin: 10px 0 0;
+  color: #334155;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .split-view {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   gap: 18px;
 }
 
 .pane-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
 }
 
-.pane-head h2 {
+.title-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.card-icon {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.08em;
+}
+
+.title-row h2 {
   margin: 0;
+}
+
+.title-row p {
+  margin: 6px 0 0;
+  color: #475569;
 }
 
 .left-pane,
@@ -153,9 +225,10 @@ defineEmits(['update:patientIdInput', 'load-records', 'select-record', 'submit']
 
 .record-detail {
   margin-top: 14px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #dbe2ea;
   background: #f8fafc;
-  padding: 12px;
+  border-radius: 12px;
+  padding: 14px;
 }
 
 .record-detail h3 {
@@ -187,13 +260,14 @@ defineEmits(['update:patientIdInput', 'load-records', 'select-record', 'submit']
 }
 
 .actions {
+  margin-top: 4px;
   display: flex;
   justify-content: flex-start;
 }
 
 .link-btn {
-  min-height: 34px;
-  height: 34px;
+  min-height: 36px;
+  height: 36px;
   padding: 4px 10px;
   border: 1px solid #9ca3af;
   background: #f8fafc;
@@ -205,6 +279,10 @@ defineEmits(['update:patientIdInput', 'load-records', 'select-record', 'submit']
 }
 
 @media (max-width: 1200px) {
+  .header-copy h1 {
+    font-size: 28px;
+  }
+
   .split-view {
     grid-template-columns: 1fr;
   }

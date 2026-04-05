@@ -9,6 +9,12 @@
 	color: #0f172a;
 }
 
+*,
+*::before,
+*::after {
+	border-radius: 0 !important;
+}
+
 body {
 	margin: 0;
 	min-height: 100vh;
@@ -27,19 +33,19 @@ a {
 }
 
 .card {
-	@apply bg-white shadow-card rounded-xl border border-slate-100 p-5;
+	@apply bg-white shadow-card rounded-none border border-slate-100 p-5;
 }
 
 .btn-primary {
-	@apply inline-flex items-center justify-center px-4 py-2 rounded-lg bg-primary-600 text-white font-medium shadow-sm hover:bg-primary-700 transition;
+	@apply inline-flex items-center justify-center px-4 py-2 rounded-none bg-primary-600 text-white font-medium shadow-sm hover:bg-primary-700 transition;
 }
 
 .btn-ghost {
-	@apply inline-flex items-center justify-center px-3 py-2 rounded-lg text-primary-700 hover:bg-primary-50 transition;
+	@apply inline-flex items-center justify-center px-3 py-2 rounded-none text-primary-700 hover:bg-primary-50 transition;
 }
 
 .input {
-	@apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition;
+	@apply w-full rounded-none border border-slate-200 bg-white px-3 py-2 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition;
 }
 
 .section-title {
@@ -53,7 +59,7 @@ a {
 
 .panel {
 	border: 1px solid #cbd5e1;
-	border-radius: 14px;
+	border-radius: 0;
 	background: #fff;
 	padding: 26px;
 	box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
@@ -87,7 +93,7 @@ a {
 
 .item {
 	border: 1px solid #e2e8f0;
-	border-radius: 12px;
+	border-radius: 0;
 	background: #f9fafb;
 	padding: 16px;
 }
