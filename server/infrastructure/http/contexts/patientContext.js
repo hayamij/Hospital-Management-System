@@ -58,6 +58,7 @@ export const createPatientUseCases = ({
   const viewMedicalRecordsClass = new ViewMedicalRecordsUseCase({
     patientRepository,
     medicalRecordRepository,
+    doctorRepository,
   });
   const downloadPrescriptionClass = new DownloadPrescriptionUseCase({
     patientRepository,

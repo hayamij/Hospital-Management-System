@@ -18,6 +18,8 @@ export const createDoctorUseCases = ({
   doctorRepository,
   patientRepository,
   appointmentRepository,
+  billingRepository,
+  serviceCatalogRepository,
   medicalRecordRepository,
   messageRepository,
   labResultRepository,
@@ -35,6 +37,8 @@ export const createDoctorUseCases = ({
   const markAppointmentStatusClass = new MarkAppointmentStatusUseCase({
     doctorRepository,
     appointmentRepository,
+    billingRepository,
+    serviceCatalogRepository,
   });
   const accessPatientChartClass = new AccessPatientChartUseCase({
     doctorRepository,

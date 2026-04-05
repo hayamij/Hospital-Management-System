@@ -9,9 +9,19 @@ const normalizeRoleFilter = ({ role, type }) => {
   throw new DomainError('Invalid user role filter.');
 };
 
-const mapUser = (user) => ({
+const extractFullName = (entity) => {
+  if (!entity) return '';
+  if (typeof entity.fullName === 'string' && entity.fullName.trim()) return entity.fullName;
+  if (typeof entity.getName === 'function') {
+    const name = entity.getName();
+    if (typeof name === 'string' && name.trim()) return name;
+  }
+  return '';
+};
+
+const mapUser = (user, resolvedFullName) => ({
   id: user.id,
-  fullName: user.fullName || '',
+  fullName: resolvedFullName || user.fullName || '',
   email: user.email,
   role: user.role,
   status: user.status,
@@ -21,8 +31,32 @@ const mapUser = (user) => ({
 });
 
 export class ListUsersUseCase {
-  constructor({ userRepository }) {
+  constructor({ userRepository, doctorRepository, patientRepository }) {
     this.userRepository = userRepository;
+    this.doctorRepository = doctorRepository;
+    this.patientRepository = patientRepository;
+  }
+
+  async resolveProfileFullName(user) {
+    if (typeof user?.resolvedFullName === 'string' && user.resolvedFullName.trim()) {
+      return user.resolvedFullName;
+    }
+
+    const role = String(user?.role || '').toLowerCase();
+
+    if (role === 'doctor' && user?.doctorId && this.doctorRepository?.findById) {
+      const doctor = await this.doctorRepository.findById(user.doctorId);
+      const doctorName = extractFullName(doctor);
+      if (doctorName) return doctorName;
+    }
+
+    if (role === 'patient' && user?.patientId && this.patientRepository?.findById) {
+      const patient = await this.patientRepository.findById(user.patientId);
+      const patientName = extractFullName(patient);
+      if (patientName) return patientName;
+    }
+
+    return user?.fullName || '';
   }
 
   async execute(inputDto) {
@@ -44,12 +78,18 @@ export class ListUsersUseCase {
 
     const listed = await this.userRepository.list({ page, pageSize, query, role });
     const items = Array.isArray(listed?.items) ? listed.items : [];
+    const users = await Promise.all(
+      items.map(async (user) => {
+        const fullName = await this.resolveProfileFullName(user);
+        return mapUser(user, fullName);
+      }),
+    );
 
     return new ListUsersOutput({
       page,
       pageSize,
       total: Number(listed?.total) || items.length,
-      users: items.map(mapUser),
+      users,
     });
   }
 }

@@ -4,9 +4,11 @@ import { DomainError } from '../../../../server/domain/exceptions/domainError.js
 import { wrapLegacyRun } from 'legacyTestHarness';
 
 class FakeAppointment {
-  constructor({ id, doctorId }) {
+  constructor({ id, doctorId, patientId = null, reason = '' }) {
     this.id = id;
     this.doctorId = doctorId;
+    this.patientId = patientId;
+    this.reason = reason;
     this.status = 'pending';
   }
   getDoctorId() {
@@ -17,6 +19,12 @@ class FakeAppointment {
   }
   getStatus() {
     return this.status;
+  }
+  getPatientId() {
+    return this.patientId;
+  }
+  getReason() {
+    return this.reason;
   }
   markCompleted() {
     this.status = 'completed';
@@ -49,6 +57,30 @@ class FakeAppointmentRepository {
   async save(appointment) {
     this.saved = appointment;
     this.items[appointment.id] = appointment;
+  }
+}
+
+class FakeBillingRepository {
+  constructor() {
+    this.byPatient = {};
+    this.saved = [];
+  }
+  async listByPatient(patientId) {
+    return this.byPatient[patientId] ?? [];
+  }
+  async save(billing) {
+    this.saved.push(billing);
+    const patientId = billing.getPatientId();
+    this.byPatient[patientId] = [...(this.byPatient[patientId] ?? []), billing];
+  }
+}
+
+class FakeServiceCatalogRepository {
+  constructor(services) {
+    this.services = services;
+  }
+  async listServices() {
+    return this.services;
   }
 }
 
@@ -123,6 +155,33 @@ async function run() {
   const cancelledResult = await new MarkAppointmentStatusUseCase({ doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }), appointmentRepository: repoCancelled }).execute({ doctorId: doctor.id, appointmentId: appointment.id, status: 'cancelled' });
   assert.strictEqual(cancelledResult.status, 'cancelled');
   assert.strictEqual(repoCancelled.saved.getStatus(), 'cancelled');
+
+  // Success completed generates service-based billing and prevents duplicates
+  const billingRepository = new FakeBillingRepository();
+  const serviceCatalogRepository = new FakeServiceCatalogRepository([
+    { id: 'svc-1', name: 'General Consultation', price: 50 },
+  ]);
+  const appointmentWithPatient = new FakeAppointment({
+    id: 'appt-2',
+    doctorId: doctor.id,
+    patientId: 'pat-1',
+    reason: 'General Consultation',
+  });
+  const repoWithBilling = new FakeAppointmentRepository({ [appointmentWithPatient.id]: appointmentWithPatient });
+  const useCaseWithBilling = new MarkAppointmentStatusUseCase({
+    doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }),
+    appointmentRepository: repoWithBilling,
+    billingRepository,
+    serviceCatalogRepository,
+  });
+
+  await useCaseWithBilling.execute({ doctorId: doctor.id, appointmentId: appointmentWithPatient.id, status: 'completed' });
+  assert.strictEqual(billingRepository.saved.length, 1);
+  assert.strictEqual(billingRepository.saved[0].getPatientId(), 'pat-1');
+  assert.strictEqual(billingRepository.saved[0].getCharges()[0].amount, 50);
+
+  await useCaseWithBilling.execute({ doctorId: doctor.id, appointmentId: appointmentWithPatient.id, status: 'completed' });
+  assert.strictEqual(billingRepository.saved.length, 1);
 }
 
 wrapLegacyRun(run, 'markAppointmentStatus.usecase');

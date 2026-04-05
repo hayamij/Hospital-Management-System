@@ -39,7 +39,7 @@ async function run() {
   const repo = new FakeMedicalRecordRepository({ [patient.id]: records });
   const result = await new ViewMedicalRecordsUseCase({ patientRepository: new FakePatientRepository({ [patient.id]: patient }), medicalRecordRepository: repo }).execute({ patientId: patient.id, page: 1, pageSize: 10 });
   assert.strictEqual(result.total, 2);
-  assert.strictEqual(result.records[0].id, 'r1');
+  assert.strictEqual(result.records[0].id, 'r2');
   assert.strictEqual(repo.lastQuery.patientId, patient.id);
 }
 

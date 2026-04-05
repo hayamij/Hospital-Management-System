@@ -12,16 +12,48 @@
       <p v-if="loading" class="message">Đang tải dữ liệu lịch khám...</p>
       <p v-else-if="upcomingError" class="message err">{{ upcomingError }}</p>
 
-      <div v-else-if="upcomingAppointment" class="appointment-card">
-        <h2>{{ upcomingAppointment.serviceName }}</h2>
-        <p><strong>Bác sĩ:</strong> {{ upcomingAppointment.doctorName }}</p>
-        <p><strong>Ngày khám:</strong> {{ formatDate(upcomingAppointment.date) }}</p>
-        <p><strong>Trạng thái:</strong> {{ upcomingAppointment.status }}</p>
-        <div v-if="canCancelUpcoming" class="appointment-actions">
-          <button type="button" class="danger" :disabled="canceling" @click="cancelUpcoming">
-            {{ canceling ? 'Đang hủy lịch...' : 'Hủy lịch hẹn' }}
-          </button>
+      <div v-else-if="upcomingAppointments.length > 0" class="appointment-list">
+        <article
+          v-for="appointment in upcomingAppointments"
+          :key="appointment.key"
+          class="appointment-card"
+        >
+          <h2>{{ appointment.serviceName }}</h2>
+          <p><strong>Bác sĩ:</strong> {{ appointment.doctorName }}</p>
+          <p><strong>Ngày khám:</strong> {{ formatDate(appointment.date) }}</p>
+          <p><strong>Trạng thái:</strong> {{ appointment.status }}</p>
+          <div v-if="canCancelAppointment(appointment)" class="appointment-actions">
+            <button
+              type="button"
+              class="danger"
+              :disabled="cancelingAppointmentId === appointment.key"
+              @click="cancelAppointment(appointment)"
+            >
+              {{ cancelingAppointmentId === appointment.key ? 'Đang hủy lịch...' : 'Hủy lịch hẹn' }}
+            </button>
+          </div>
+        </article>
+
+        <div v-if="upcomingAppointmentsTotal > UPCOMING_PAGE_SIZE" class="upcoming-pagination">
+          <span>Trang {{ upcomingPage }} / {{ upcomingTotalPages }}</span>
+          <div class="upcoming-pagination-actions">
+            <button
+              type="button"
+              :disabled="upcomingPage <= 1"
+              @click="goToPrevUpcomingPage"
+            >
+              Trang trước
+            </button>
+            <button
+              type="button"
+              :disabled="upcomingPage >= upcomingTotalPages"
+              @click="goToNextUpcomingPage"
+            >
+              Trang sau
+            </button>
+          </div>
         </div>
+
         <p v-if="cancelError" class="message err compact">{{ cancelError }}</p>
       </div>
 
@@ -45,7 +77,7 @@
           <p class="meta">{{ item.type }} · {{ formatDate(item.date) }}</p>
           <h3>{{ item.title }}</h3>
           <p>{{ item.description }}</p>
-          <p class="amount" v-if="item.amount !== null">So tien: {{ formatMoney(item.amount) }}</p>
+          <p v-if="item.amount !== null" class="amount">So tien: {{ formatMoney(item.amount) }}</p>
         </article>
       </div>
 
@@ -55,21 +87,30 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useAppointmentsStore } from '../../stores/appointments.js';
 import { useRecordsStore } from '../../stores/records.js';
 import { useBillingStore } from '../../stores/billing.js';
+import { usePatientsStore } from '../../stores/patients.js';
 import { normalizeAppointment, normalizeInvoice, normalizeRecord, toTimestamp } from '../../services/mappers.js';
 
 const appointmentsStore = useAppointmentsStore();
 const recordsStore = useRecordsStore();
 const billingStore = useBillingStore();
+const patientsStore = usePatientsStore();
+
+const UPCOMING_PAGE_SIZE = 5;
+const APPOINTMENTS_FETCH_LIMIT = 200;
+const DASHBOARD_REFRESH_INTERVAL_MS = 30_000;
+const NON_CANCELABLE_STATUSES = new Set(['cancelled', 'canceled', 'completed', 'no_show', 'done']);
 
 const loading = ref(false);
-const canceling = ref(false);
+const cancelingAppointmentId = ref('');
 const upcomingError = ref('');
 const summaryError = ref('');
 const cancelError = ref('');
+const upcomingPage = ref(1);
+let dashboardRefreshTimer = null;
 
 const formatDate = (value) => {
   const d = new Date(value || '');
@@ -88,21 +129,76 @@ const formatMoney = (value) => {
   return Number(value).toLocaleString('vi-VN') + ' VND';
 };
 
-const upcomingAppointment = computed(() => {
-  const now = Date.now();
+const getStartOfTodayTimestamp = () => {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  return startOfToday.getTime();
+};
+
+const getAppointmentTimestamp = (appointment) => {
+  const candidate = appointment?.startDate ?? appointment?.date;
+  if (candidate instanceof Date) {
+    const ts = candidate.getTime();
+    return Number.isNaN(ts) ? null : ts;
+  }
+
+  const ts = new Date(candidate || '').getTime();
+  return Number.isNaN(ts) ? null : ts;
+};
+
+const upcomingAppointmentsAll = computed(() => {
+  const startOfTodayTs = getStartOfTodayTimestamp();
   const normalized = appointmentsStore.items.map(normalizeAppointment);
-  const future = normalized
-    .filter((item) => toTimestamp(item.date) >= now)
-    .sort((a, b) => toTimestamp(a.date) - toTimestamp(b.date));
 
-  return future[0] || null;
+  return normalized
+    .filter((item) => {
+      const appointmentTs = getAppointmentTimestamp(item);
+      if (appointmentTs === null) return true;
+      return appointmentTs >= startOfTodayTs;
+    })
+    .filter((item) => !NON_CANCELABLE_STATUSES.has(String(item.status || '').toLowerCase()))
+    .sort((a, b) => {
+      const aTs = getAppointmentTimestamp(a) ?? Number.MAX_SAFE_INTEGER;
+      const bTs = getAppointmentTimestamp(b) ?? Number.MAX_SAFE_INTEGER;
+      return aTs - bTs;
+    });
 });
 
-const canCancelUpcoming = computed(() => {
-  if (!upcomingAppointment.value?.key) return false;
-  const status = String(upcomingAppointment.value.status || '').toLowerCase();
-  return !['cancelled', 'canceled', 'completed', 'no_show', 'done'].includes(status);
+const upcomingAppointmentsTotal = computed(() => upcomingAppointmentsAll.value.length);
+
+const upcomingTotalPages = computed(() => {
+  return Math.max(1, Math.ceil(upcomingAppointmentsTotal.value / UPCOMING_PAGE_SIZE));
 });
+
+const upcomingAppointments = computed(() => {
+  const start = (upcomingPage.value - 1) * UPCOMING_PAGE_SIZE;
+  return upcomingAppointmentsAll.value.slice(start, start + UPCOMING_PAGE_SIZE);
+});
+
+watch(upcomingTotalPages, (totalPages) => {
+  if (upcomingPage.value > totalPages) {
+    upcomingPage.value = totalPages;
+  }
+  if (upcomingPage.value < 1) {
+    upcomingPage.value = 1;
+  }
+});
+
+const goToPrevUpcomingPage = () => {
+  if (upcomingPage.value <= 1) return;
+  upcomingPage.value -= 1;
+};
+
+const goToNextUpcomingPage = () => {
+  if (upcomingPage.value >= upcomingTotalPages.value) return;
+  upcomingPage.value += 1;
+};
+
+const canCancelAppointment = (appointment) => {
+  if (!appointment?.key) return false;
+  const status = String(appointment.status || '').toLowerCase();
+  return !NON_CANCELABLE_STATUSES.has(status);
+};
 
 const latestSummary = computed(() => {
   const recordItems = recordsStore.list.map(normalizeRecord);
@@ -115,31 +211,34 @@ const latestSummary = computed(() => {
 });
 
 const loadDashboard = async () => {
+  if (loading.value) return;
+
   loading.value = true;
   upcomingError.value = '';
   summaryError.value = '';
   cancelError.value = '';
 
-  const [appointmentsResult, recordsResult, billingResult] = await Promise.allSettled([
-    appointmentsStore.fetchAppointments({ page: 1, pageSize: 20 }),
+  const [appointmentsResult, recordsResult, billingResult, profileResult] = await Promise.allSettled([
+    appointmentsStore.fetchAppointments({ page: 1, pageSize: APPOINTMENTS_FETCH_LIMIT }),
     recordsStore.fetchRecords({}),
     billingStore.fetchBilling({ page: 1, pageSize: 10 }),
+    patientsStore.loadProfile(),
   ]);
 
   if (appointmentsResult.status === 'rejected') {
     upcomingError.value = appointmentsResult.reason?.message || 'Không thể tải lịch khám sắp tới.';
   }
 
-  if (recordsResult.status === 'rejected' || billingResult.status === 'rejected') {
+  if (recordsResult.status === 'rejected' || billingResult.status === 'rejected' || profileResult.status === 'rejected') {
     summaryError.value = 'Không thể tải đầy đủ dữ liệu kết quả khám/hóa đơn. Vui lòng thử lại sau.';
   }
 
   loading.value = false;
 };
 
-const cancelUpcoming = async () => {
-  const appointmentId = upcomingAppointment.value?.key;
-  if (!appointmentId || !canCancelUpcoming.value) return;
+const cancelAppointment = async (appointment) => {
+  const appointmentId = appointment?.key;
+  if (!appointmentId || !canCancelAppointment(appointment)) return;
 
   cancelError.value = '';
   const shouldCancel = typeof window === 'undefined'
@@ -147,17 +246,30 @@ const cancelUpcoming = async () => {
     : window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?');
   if (!shouldCancel) return;
 
-  canceling.value = true;
+  cancelingAppointmentId.value = appointmentId;
   try {
     await appointmentsStore.cancel(appointmentId);
   } catch (error) {
     cancelError.value = error?.message || 'Không thể hủy lịch hẹn. Vui lòng thử lại.';
   } finally {
-    canceling.value = false;
+    cancelingAppointmentId.value = '';
   }
 };
 
 onMounted(loadDashboard);
+
+onMounted(() => {
+  dashboardRefreshTimer = setInterval(() => {
+    void loadDashboard();
+  }, DASHBOARD_REFRESH_INTERVAL_MS);
+});
+
+onUnmounted(() => {
+  if (dashboardRefreshTimer) {
+    clearInterval(dashboardRefreshTimer);
+    dashboardRefreshTimer = null;
+  }
+});
 </script>
 
 <style scoped>
@@ -204,8 +316,13 @@ onMounted(loadDashboard);
   text-decoration: none;
 }
 
-.appointment-card {
+.appointment-list {
   margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.appointment-card {
   border: 1px solid #cbd5e1;
   background: #ffffff;
   border-radius: 12px;
@@ -226,6 +343,20 @@ onMounted(loadDashboard);
   margin-top: 14px;
   display: flex;
   gap: 12px;
+}
+
+.upcoming-pagination {
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.upcoming-pagination-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .compact {

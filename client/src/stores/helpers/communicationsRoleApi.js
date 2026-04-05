@@ -1,10 +1,10 @@
 import { doctorApi, patientApi } from '../../services/api.js';
 import { isRole } from '../../constants/navigation.js';
 
-export const sendMessageByRole = async ({ role, token, userId, payload }) => {
+export const sendMessageByRole = async ({ role, token, userId, patientId, doctorId, payload }) => {
   if (isRole(role, 'patient')) {
     await patientApi.sendMessage(token, {
-      patientId: userId,
+      patientId: patientId || userId,
       doctorId: payload?.doctorId,
       subject: payload?.subject,
       message: payload?.message,
@@ -14,7 +14,7 @@ export const sendMessageByRole = async ({ role, token, userId, payload }) => {
 
   if (isRole(role, 'doctor')) {
     await doctorApi.sendMessage(token, {
-      doctorId: userId,
+      doctorId: doctorId || userId,
       patientId: payload?.patientId,
       content: payload?.message,
     });
@@ -24,18 +24,18 @@ export const sendMessageByRole = async ({ role, token, userId, payload }) => {
   return false;
 };
 
-export const fetchMessagesByRole = async ({ role, token, userId, filters = {} }) => {
+export const fetchMessagesByRole = async ({ role, token, userId, patientId, doctorId, filters = {} }) => {
   if (isRole(role, 'patient')) {
     return patientApi.listMessages(token, {
       ...filters,
-      patientId: userId,
+      patientId: patientId || userId,
     });
   }
 
   if (isRole(role, 'doctor')) {
     return doctorApi.listMessages(token, {
       ...filters,
-      doctorId: userId,
+      doctorId: doctorId || userId,
     });
   }
 

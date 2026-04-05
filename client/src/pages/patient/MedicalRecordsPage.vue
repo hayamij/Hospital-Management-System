@@ -17,7 +17,9 @@
 				<template #cell-actions="{ row }">
 					<div class="row actions">
 						<button type="button" @click="viewDetail(row)">Xem chi tiết</button>
-						<button type="button" @click="downloadPrescription(row)">Tải PDF</button>
+						<button type="button" :disabled="!row.prescriptionId" @click="downloadPrescription(row)">
+							{{ row.prescriptionId ? 'Tải PDF' : 'Chưa có PDF' }}
+						</button>
 					</div>
 				</template>
 			</DataTable>
@@ -27,7 +29,7 @@
 			<h2>Chi tiết kết quả khám</h2>
 			<p><strong>Ngày khám:</strong> {{ formatDate(selectedRecord.visitDate) }}</p>
 			<p><strong>Chẩn đoán:</strong> {{ selectedRecord.diagnosis || 'Đang cập nhật' }}</p>
-			<p><strong>Bác sĩ:</strong> {{ selectedRecord.doctorName || selectedRecord.doctorId || 'Đang cập nhật' }}</p>
+			<p><strong>Bác sĩ:</strong> {{ selectedRecord.doctorName || selectedRecord.authorDoctorName || selectedRecord.doctorId || selectedRecord.authorDoctorId || 'Đang cập nhật' }}</p>
 			<p><strong>Ghi chú:</strong> {{ selectedRecord.note || selectedRecord.description || 'Không có' }}</p>
 		</section>
 
@@ -36,7 +38,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRecordsStore } from '../../stores/records.js';
 import { useAuthStore } from '../../stores/auth.js';
 import { patientApi } from '../../services/api.js';
@@ -45,6 +47,8 @@ import DataTable from '../../components/shared/DataTable.vue';
 const records = useRecordsStore();
 const auth = useAuthStore();
 const selectedRecord = ref(null);
+const RECORDS_REFRESH_INTERVAL_MS = 30_000;
+let recordsRefreshTimer = null;
 
 const columns = [
 	{ key: 'visitDate', label: 'Ngày khám', width: '160px' },
@@ -57,19 +61,37 @@ const rows = computed(() => records.list.map((item, index) => ({
 	id: item.id || item.recordId || `record-${index + 1}`,
 	visitDate: item.visitDate || item.recordedAt || item.createdAt || null,
 	diagnosis: item.diagnosis || item.title || item.note || 'Ket qua kham',
-	doctor: item.doctorName || item.doctorId || 'Đang cập nhật',
+	doctor: item.doctorName || item.authorDoctorName || item.doctorId || item.authorDoctorId || 'Đang cập nhật',
 	doctorName: item.doctorName,
+	authorDoctorName: item.authorDoctorName,
 	doctorId: item.doctorId,
+	authorDoctorId: item.authorDoctorId,
+	prescriptionId: item.prescriptionId || null,
 	note: item.note,
 	description: item.description,
 }))); 
 
-const refresh = () => {
-	selectedRecord.value = null;
-	return records.fetchRecords({});
+const refresh = async ({ resetSelection = true } = {}) => {
+	if (records.loading) return;
+	if (resetSelection) {
+		selectedRecord.value = null;
+	}
+	await records.fetchRecords({});
 };
 
-onMounted(refresh);
+onMounted(() => {
+	void refresh();
+	recordsRefreshTimer = setInterval(() => {
+		void refresh({ resetSelection: false });
+	}, RECORDS_REFRESH_INTERVAL_MS);
+});
+
+onUnmounted(() => {
+	if (recordsRefreshTimer) {
+		clearInterval(recordsRefreshTimer);
+		recordsRefreshTimer = null;
+	}
+});
 
 const formatDate = (value) => {
 	const d = new Date(value || '');
@@ -86,8 +108,13 @@ const viewDetail = (row) => {
 };
 
 const downloadPrescription = async (row) => {
-	const id = row.id;
-	if (!id) return;
+	const id = row.prescriptionId;
+	if (!id) {
+		records.error = 'Bản ghi này chưa có đơn thuốc để tải.';
+		return;
+	}
+
+	records.error = null;
 	try {
 		const response = await patientApi.downloadPrescription(auth.token, id);
 		const content = typeof response?.file === 'string' ? response.file : JSON.stringify(response?.file ?? {}, null, 2);

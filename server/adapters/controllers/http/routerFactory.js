@@ -30,7 +30,10 @@ export function createHttpRouter(deps) {
   const { authenticate, requireRole } = buildAuthMiddleware(deps._repos ? { userRepository: deps._repos.userRepository } : {});
   router.use(authenticate);
 
-  const patientAppointments = buildPatientAppointmentsControllers(deps);
+  const patientAppointments = buildPatientAppointmentsControllers({
+    ...deps,
+    viewAppointmentsUseCase: deps.patientViewAppointmentsUseCase ?? deps.viewAppointmentsUseCase,
+  });
   const patientBilling = buildPatientBillingControllers(deps);
   const patientRecords = buildPatientRecordsControllers(deps);
   const patientMessages = buildPatientMessagesControllers(deps);
@@ -47,7 +50,10 @@ export function createHttpRouter(deps) {
   // Admin controllers by bounded concern
   const adminAccess = buildAdminAccessControllers(deps);
   const adminUsers = buildAdminUsersControllers(deps);
-  const adminScheduling = buildAdminSchedulingControllers(deps);
+  const adminScheduling = buildAdminSchedulingControllers({
+    ...deps,
+    viewAppointmentsUseCase: deps.adminViewAppointmentsUseCase ?? deps.viewAppointmentsUseCase,
+  });
   const adminBilling = buildAdminBillingControllers(deps);
   const adminServices = buildAdminServicesControllers(deps);
   const adminSystem = buildAdminSystemControllers(deps);

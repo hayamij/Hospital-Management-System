@@ -5,6 +5,9 @@ import {
   ViewPatientRecordsForDoctorViewModel,
 } from '../../../viewmodels/doctorViewModels.js';
 
+const resolveDoctorId = (req, fallback) =>
+  req.user?.doctorId ?? req.user?.id ?? fallback;
+
 export function buildDoctorRecordsControllers({
   accessPatientChartUseCase,
   createMedicalRecordUseCase,
@@ -16,7 +19,7 @@ export function buildDoctorRecordsControllers({
     accessPatientChart: createHandler({
       useCase: accessPatientChartUseCase,
       mapInput: (req) => ({
-        doctorId: req.user?.id ?? req.query?.doctorId,
+        doctorId: resolveDoctorId(req, req.query?.doctorId),
         patientId: req.params?.patientId ?? req.query?.patientId,
       }),
       mapOutput: (result) => new ViewPatientRecordsForDoctorViewModel(result),
@@ -24,7 +27,7 @@ export function buildDoctorRecordsControllers({
     createMedicalRecord: createHandler({
       useCase: createMedicalRecordUseCase,
       mapInput: (req) => ({
-        doctorId: req.user?.id ?? req.body?.doctorId,
+        doctorId: resolveDoctorId(req, req.body?.doctorId),
         patientId: req.params?.patientId ?? req.body?.patientId,
       }),
       mapOutput: (result) => new CreateMedicalRecordViewModel(result),
@@ -32,7 +35,7 @@ export function buildDoctorRecordsControllers({
     addVisitNote: createHandler({
       useCase: addVisitNoteUseCase,
       mapInput: (req) => ({
-        doctorId: req.user?.id ?? req.body?.doctorId,
+        doctorId: resolveDoctorId(req, req.body?.doctorId),
         patientId: req.params?.patientId ?? req.body?.patientId,
         note: req.body?.note,
       }),
@@ -42,7 +45,7 @@ export function buildDoctorRecordsControllers({
     updateMedicalRecordEntry: createHandler({
       useCase: updateMedicalRecordEntryUseCase,
       mapInput: (req) => ({
-        doctorId: req.user?.id ?? req.body?.doctorId,
+        doctorId: resolveDoctorId(req, req.body?.doctorId),
         recordId: req.params?.recordId,
         note: req.body?.note,
       }),
@@ -51,7 +54,7 @@ export function buildDoctorRecordsControllers({
     reviewTestResults: createHandler({
       useCase: reviewTestResultsUseCase,
       mapInput: (req) => ({
-        doctorId: req.user?.id ?? req.body?.doctorId,
+        doctorId: resolveDoctorId(req, req.body?.doctorId),
         labResultId: req.params?.labResultId ?? req.body?.labResultId,
         notes: req.body?.notes,
       }),

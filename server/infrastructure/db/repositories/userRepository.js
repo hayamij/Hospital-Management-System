@@ -20,10 +20,21 @@ const toEntity = (row) => {
     patientId: row.patient_id,
     doctorId: row.doctor_id,
     fullName: row.full_name,
+    resolvedFullName: row.resolved_full_name ?? row.full_name,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 };
+
+const resolvedNameExpression = `COALESCE(
+  CASE
+    WHEN LOWER(u.role) = 'doctor' THEN d.full_name
+    WHEN LOWER(u.role) = 'patient' THEN p.full_name
+    ELSE u.full_name
+  END,
+  u.full_name,
+  ''
+)`;
 
 export class SqlUserRepository extends UserRepositoryPort {
   constructor(pool) {
@@ -64,17 +75,26 @@ export class SqlUserRepository extends UserRepositoryPort {
     if (query) {
       params.push(`%${query}%`);
       const idx = params.length;
-      filters.push(`(LOWER(email) LIKE LOWER($${idx}) OR LOWER(COALESCE(full_name, '')) LIKE LOWER($${idx}) OR LOWER(id) LIKE LOWER($${idx}))`);
+      filters.push(`(
+        LOWER(u.email) LIKE LOWER($${idx})
+        OR LOWER(${resolvedNameExpression}) LIKE LOWER($${idx})
+        OR LOWER(u.id) LIKE LOWER($${idx})
+      )`);
     }
 
     if (role) {
       params.push(role);
-      filters.push(`role = $${params.length}`);
+      filters.push(`u.role = $${params.length}`);
     }
 
     const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
 
-    const countQuery = `SELECT COUNT(*) AS total FROM users ${whereClause}`;
+    const fromClause = `
+      FROM users u
+      LEFT JOIN doctors d ON d.id = u.doctor_id
+      LEFT JOIN patients p ON p.id = u.patient_id`;
+
+    const countQuery = `SELECT COUNT(*) AS total ${fromClause} ${whereClause}`;
     const countResult = await this.pool.query(countQuery, params);
     const total = Number(countResult.rows?.[0]?.total ?? 0);
 
@@ -83,10 +103,12 @@ export class SqlUserRepository extends UserRepositoryPort {
     const offsetIdx = params.length;
 
     const listQuery = `
-      SELECT *
-      FROM users
+      SELECT
+        u.*,
+        ${resolvedNameExpression} AS resolved_full_name
+      ${fromClause}
       ${whereClause}
-      ORDER BY created_at DESC
+      ORDER BY u.created_at DESC
       OFFSET $${offsetIdx} ROWS FETCH NEXT $${limitIdx} ROWS ONLY`;
 
     const { rows } = await this.pool.query(listQuery, params);

@@ -114,6 +114,8 @@ export function createRealDeps() {
     doctorRepository,
     patientRepository,
     appointmentRepository,
+    billingRepository,
+    serviceCatalogRepository,
     medicalRecordRepository,
     messageRepository,
     labResultRepository,
@@ -123,6 +125,7 @@ export function createRealDeps() {
   const adminUseCases = createAdminUseCases({
     userRepository,
     doctorRepository,
+    patientRepository,
     appointmentRepository,
     billingRepository,
     medicalRecordRepository,
@@ -283,6 +286,10 @@ export function createRealDeps() {
     ...doctorUseCases,
     ...adminUseCases,
     ...guestUseCases,
+
+    // Preserve explicit aliases for overlapping keys between bounded contexts.
+    patientViewAppointmentsUseCase: patientUseCases.viewAppointmentsUseCase,
+    adminViewAppointmentsUseCase: adminUseCases.viewAppointmentsUseCase,
 
     // Legacy-compatible exports still used by existing controllers.
     assignRolesUseCase,

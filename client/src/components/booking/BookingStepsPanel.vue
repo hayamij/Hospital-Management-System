@@ -51,8 +51,8 @@
           @click="$emit('select-slot', slot)"
         >
           <strong>{{ slot.timeLabel || slot.label }}</strong>
-          <small>{{ slot.doctorNamesDisplay || 'Không có bác sĩ khả dụng' }}</small>
-          <small v-if="slot.specialties?.length">{{ slot.specialties.join(', ') }}</small>
+          <small class="slot-meta">{{ slot.doctorNamesDisplay || 'Không có bác sĩ khả dụng' }}</small>
+          <small v-if="slot.specialties?.length" class="slot-meta">{{ slot.specialtiesDisplay || slot.specialties.join(', ') }}</small>
         </button>
       </div>
 
@@ -328,7 +328,7 @@ defineEmits([
 .slot-grid {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   align-items: stretch;
 }
 
@@ -352,35 +352,37 @@ defineEmits([
 }
 
 .slot-btn {
-  min-height: 102px;
+  min-height: 96px;
+  max-height: 96px;
   border: 1px solid #cbd5e1;
   background: #f8fafc;
   display: grid;
-  grid-template-rows: 24px minmax(24px, auto) minmax(22px, auto);
-  gap: 6px;
+  grid-template-rows: 22px 18px 18px;
+  gap: 4px;
   text-align: left;
   align-items: start;
-  padding: 10px 12px;
+  padding: 8px 10px;
+  overflow: hidden;
 }
 
 .slot-btn strong {
-  font-size: 14px;
+  font-size: 13px;
   width: 100%;
   white-space: nowrap;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  line-height: 24px;
+  line-height: 22px;
 }
 
-.slot-btn small {
+.slot-meta {
   display: block;
   width: 100%;
   color: #334155;
+  font-size: 12px;
   line-height: 1.35;
-  min-height: calc(1.35em * 1);
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .slot-btn.selected {

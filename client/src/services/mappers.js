@@ -8,6 +8,20 @@ export const toTimestamp = (value) => {
   return Number.isNaN(t) ? Number.MAX_SAFE_INTEGER : t;
 };
 
+const resolveDoctorDisplayName = (source) => {
+  if (typeof source?.doctor === 'string' && source.doctor.trim()) {
+    return source.doctor;
+  }
+
+  return (
+    source?.doctorName ||
+    source?.doctorFullName ||
+    source?.doctor?.fullName ||
+    source?.doctor?.name ||
+    'Dang cap nhat'
+  );
+};
+
 export const normalizeDoctor = (source, index = 0) => ({
   id: source?.id || source?.doctorId || `doctor-${index + 1}`,
   name: source?.fullName || source?.name || `Doctor ${index + 1}`,
@@ -22,7 +36,7 @@ export const normalizeAppointment = (source, index = 0) => ({
   date: source?.appointmentDate || source?.date || source?.scheduledAt || source?.startAt || '',
   startDate: toDate(source?.startAt || source?.appointmentDate || source?.date || source?.scheduledAt || ''),
   serviceName: source?.serviceName || source?.reason || source?.service || 'Kham tong quat',
-  doctorName: source?.doctorName || source?.doctorFullName || source?.doctor || 'Dang cap nhat',
+  doctorName: resolveDoctorDisplayName(source),
   status: source?.status || 'pending',
 });
 
