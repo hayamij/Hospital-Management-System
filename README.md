@@ -2,7 +2,7 @@
 
 Full-stack web application for hospital operations: patient onboarding, appointment lifecycle, doctor workflows, medical records, messaging, billing, and admin governance.
 
-## 1) De tai va pham vi
+## 1) About project
 
 - Roles: guest, patient, doctor, admin.
 - Core domains: appointment scheduling, medical records, invoicing/payments, profile management, communications.
