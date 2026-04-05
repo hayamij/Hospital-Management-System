@@ -8,7 +8,9 @@ import { AddVisitNoteUseCase } from '../../../application/use-cases/doctor/addVi
 import { UpdateMedicalRecordEntryUseCase } from '../../../application/use-cases/doctor/updateMedicalRecordEntry.usecase.js';
 import { ReviewTestResultsUseCase } from '../../../application/use-cases/doctor/reviewTestResults.usecase.js';
 import { UpdateDoctorProfileAndAvailabilityUseCase } from '../../../application/use-cases/doctor/updateDoctorProfileAndAvailability.usecase.js';
+import { ViewDoctorProfileUseCase } from '../../../application/use-cases/doctor/viewDoctorProfile.usecase.js';
 import { SendDoctorMessageUseCase } from '../../../application/use-cases/doctor/sendDoctorMessage.usecase.js';
+import { ViewDoctorMessagesUseCase } from '../../../application/use-cases/doctor/viewDoctorMessages.usecase.js';
 import { adaptUseCase, noopNotification } from './common.js';
 
 export const createDoctorUseCases = ({
@@ -59,11 +61,17 @@ export const createDoctorUseCases = ({
   });
   const updateDoctorProfileAndAvailabilityClass =
     new UpdateDoctorProfileAndAvailabilityUseCase({ doctorRepository });
+  const viewDoctorProfileClass = new ViewDoctorProfileUseCase({ doctorRepository });
   const sendDoctorMessageClass = new SendDoctorMessageUseCase({
     doctorRepository,
     patientRepository,
     messageRepository,
     notificationService: noopNotification,
+  });
+  const viewDoctorMessagesClass = new ViewDoctorMessagesUseCase({
+    doctorRepository,
+    patientRepository,
+    messageRepository,
   });
 
   const doctorLoginUseCase = adaptUseCase(
@@ -75,9 +83,9 @@ export const createDoctorUseCases = ({
     viewDoctorScheduleClass,
     undefined,
     (result) => ({
-      page: 1,
-      pageSize: result.appointments?.length ?? 0,
-      total: result.appointments?.length ?? 0,
+      page: result?.page ?? 1,
+      pageSize: result?.pageSize ?? (result?.appointments?.length ?? 0),
+      total: result?.total ?? (result?.appointments?.length ?? 0),
       appointments: result.appointments ?? [],
     })
   );
@@ -136,8 +144,10 @@ export const createDoctorUseCases = ({
     addVisitNoteUseCase,
     updateMedicalRecordEntryUseCase,
     reviewTestResultsUseCase: reviewTestResultsClass,
+    viewDoctorProfileUseCase: viewDoctorProfileClass,
     updateDoctorProfileUseCase: updateDoctorProfileAndAvailabilityClass,
     updateDoctorProfileAndAvailabilityUseCase: updateDoctorProfileAndAvailabilityClass,
     sendDoctorMessageUseCase,
+    viewDoctorMessagesUseCase: viewDoctorMessagesClass,
   };
 };

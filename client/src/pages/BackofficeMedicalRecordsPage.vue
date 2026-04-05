@@ -6,10 +6,10 @@
 				<h1>Hồ sơ bệnh án</h1>
 				<p>Xem hồ sơ và thêm ghi chú cho bệnh án theo quy trình vận hành backoffice.</p>
 			</div>
-			<div class="row">
+			<div class="header-actions">
 				<input v-if="isDoctor" v-model="patientId" placeholder="Mã bệnh nhân" />
-				<button v-if="isDoctor" type="button" @click="createMedicalRecord">Tạo hồ sơ bệnh án</button>
-				<button type="button" @click="refresh">Làm mới</button>
+				<button v-if="isDoctor" type="button" @click="createMedicalRecord" :disabled="records.loading">Tạo hồ sơ bệnh án</button>
+				<button type="button" @click="refresh" :disabled="records.loading">Làm mới</button>
 			</div>
 		</header>
 
@@ -25,7 +25,7 @@
 			<div class="list-grid">
 				<article v-for="(entry, index) in records.list" :key="entry.id || entry.recordId || entry.createdAt || index" class="item record-item">
 					<p><strong>{{ entry.note || entry.description || 'Ghi chú hồ sơ' }}</strong></p>
-					<p>Bác sĩ: {{ entry.doctorId || entry.authorDoctorId || 'N/A' }}</p>
+					<p>Bác sĩ: {{ entry.doctorName || entry.authorDoctorName || entry.doctorId || entry.authorDoctorId || 'N/A' }}</p>
 					<p>Thời gian: {{ entry.recordedAt || entry.createdAt || '-' }}</p>
 				</article>
 			</div>
@@ -103,9 +103,23 @@ const getInitialPatientId = () => {
 	return String(cached?.patientId || '').trim();
 };
 
+const ensureAuthContext = async () => {
+	if (!auth.role && auth.token) {
+		await auth.fetchCurrentUser();
+	}
+};
+
 const refresh = async ({ showEmptyError = true, ensureRecordIfMissing = false } = {}) => {
+	await ensureAuthContext();
 	statusMessage.value = '';
-	const normalizedPatientId = String(patientId.value || '').trim();
+	let normalizedPatientId = String(patientId.value || '').trim();
+	if (isDoctor.value && !normalizedPatientId) {
+		const fallbackPatientId = getInitialPatientId();
+		if (fallbackPatientId) {
+			normalizedPatientId = fallbackPatientId;
+			patientId.value = fallbackPatientId;
+		}
+	}
 	persistPatientContext(normalizedPatientId);
 
 	if (isDoctor.value && !normalizedPatientId) {
@@ -154,7 +168,7 @@ watch(
 );
 
 onMounted(async () => {
-	auth.fetchCurrentUser();
+	await ensureAuthContext();
 
 	if (!isDoctor.value) {
 		await refresh({ showEmptyError: false });

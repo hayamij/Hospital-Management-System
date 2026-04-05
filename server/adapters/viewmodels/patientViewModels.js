@@ -115,3 +115,11 @@ export class SendPatientMessageViewModel {
     this.sentAt = output.sentAt;
   }
 }
+
+export class ViewPatientMessagesViewModel {
+  constructor(output) {
+    this.limit = output?.limit ?? 20;
+    this.total = output?.total ?? 0;
+    this.messages = output?.messages ?? [];
+  }
+}

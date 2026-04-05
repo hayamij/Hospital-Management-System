@@ -3,6 +3,11 @@ import { MessageRepositoryPort } from '../../../application/ports/repositories/m
 
 const ensureId = (id) => id || crypto.randomUUID();
 const toDate = (value) => (value ? new Date(value) : null);
+const toPositiveInt = (value, fallback = 20, max = 200) => {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return Math.min(Math.floor(n), max);
+};
 
 const toEntity = (row) => {
   if (!row) return null;
@@ -45,5 +50,55 @@ export class SqlMessageRepository extends MessageRepositoryPort {
   async findById(id) {
     const { rows } = await this.pool.query('SELECT * FROM messages WHERE id = $1 LIMIT 1', [id]);
     return toEntity(rows[0]);
+  }
+
+  async listForDoctor(doctorId, { patientId, limit } = {}) {
+    const safeLimit = toPositiveInt(limit);
+    const values = [doctorId];
+    const conditions = ['(to_doctor_id = $1 OR from_doctor_id = $1)'];
+
+    if (patientId) {
+      values.push(patientId);
+      conditions.push(`(from_patient_id = $${values.length} OR to_patient_id = $${values.length})`);
+    }
+
+    values.push(safeLimit);
+    const limitParamIdx = values.length;
+    const where = conditions.join(' AND ');
+    const { rows } = await this.pool.query(
+      `SELECT *
+         FROM messages
+        WHERE ${where}
+        ORDER BY created_at DESC
+        OFFSET 0 ROWS FETCH NEXT $${limitParamIdx} ROWS ONLY`,
+      values,
+    );
+
+    return rows.map(toEntity);
+  }
+
+  async listForPatient(patientId, { doctorId, limit } = {}) {
+    const safeLimit = toPositiveInt(limit);
+    const values = [patientId];
+    const conditions = ['(from_patient_id = $1 OR to_patient_id = $1)'];
+
+    if (doctorId) {
+      values.push(doctorId);
+      conditions.push(`(to_doctor_id = $${values.length} OR from_doctor_id = $${values.length})`);
+    }
+
+    values.push(safeLimit);
+    const limitParamIdx = values.length;
+    const where = conditions.join(' AND ');
+    const { rows } = await this.pool.query(
+      `SELECT *
+         FROM messages
+        WHERE ${where}
+        ORDER BY created_at DESC
+        OFFSET 0 ROWS FETCH NEXT $${limitParamIdx} ROWS ONLY`,
+      values,
+    );
+
+    return rows.map(toEntity);
   }
 }

@@ -23,3 +23,21 @@ export const sendMessageByRole = async ({ role, token, userId, payload }) => {
 
   return false;
 };
+
+export const fetchMessagesByRole = async ({ role, token, userId, filters = {} }) => {
+  if (isRole(role, 'patient')) {
+    return patientApi.listMessages(token, {
+      ...filters,
+      patientId: userId,
+    });
+  }
+
+  if (isRole(role, 'doctor')) {
+    return doctorApi.listMessages(token, {
+      ...filters,
+      doctorId: userId,
+    });
+  }
+
+  return null;
+};

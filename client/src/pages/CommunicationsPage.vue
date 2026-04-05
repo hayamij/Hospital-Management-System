@@ -72,15 +72,19 @@
       </article>
     </section>
 
-    <section class="panel" v-if="recentSent.length > 0">
+    <section class="panel">
       <div class="section-head">
-        <h2>Lần gửi gần đây</h2>
-        <small>{{ recentSent.length }} bản ghi trong phiên hiện tại</small>
+        <h2>Lịch sử trao đổi</h2>
+        <small>{{ historyRows.length }} bản ghi gần nhất</small>
       </div>
 
-      <div class="list-grid">
-        <article v-for="item in recentSent" :key="item.key" class="item history-item">
+      <p v-if="historyLoading" class="muted">Đang tải lịch sử trao đổi...</p>
+      <p v-else-if="historyRows.length === 0" class="muted">Chưa có lịch sử trao đổi phù hợp bộ lọc hiện tại.</p>
+
+      <div v-else class="list-grid">
+        <article v-for="item in historyRows" :key="item.key" class="item history-item">
           <p><strong>{{ item.targetLabel }}</strong></p>
+          <p>{{ item.directionLabel }}</p>
           <p>{{ item.when }}</p>
           <p>{{ item.preview }}</p>
         </article>
@@ -93,18 +97,99 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
 import { useRoleVisibility } from '../composables/useRoleVisibility.js';
-import { sendMessageByRole } from '../stores/helpers/communicationsRoleApi.js';
+import { fetchMessagesByRole, sendMessageByRole } from '../stores/helpers/communicationsRoleApi.js';
 
 const auth = useAuthStore();
 const { isDoctor, isPatient, role } = useRoleVisibility(auth);
 const status = ref('');
 const error = ref('');
-const recentSent = ref([]);
+const historyLoading = ref(false);
+const messageHistory = ref([]);
+
+const HISTORY_LIMIT = 30;
 
 const payload = reactive({ doctorId: '', patientId: '', subject: '', message: '' });
+
+const activeConversationId = computed(() => {
+  if (isDoctor.value) return String(payload.patientId || '').trim();
+  if (isPatient.value) return String(payload.doctorId || '').trim();
+  return '';
+});
+
+const historyRows = computed(() => {
+  const currentRole = role.value;
+  const filterPartnerId = activeConversationId.value;
+
+  const sorted = [...messageHistory.value].sort((a, b) => {
+    const ta = new Date(a?.createdAt || a?.sentAt || 0).getTime();
+    const tb = new Date(b?.createdAt || b?.sentAt || 0).getTime();
+    return tb - ta;
+  });
+
+  return sorted
+    .filter((item) => {
+      if (!filterPartnerId) return true;
+      const partnerId = isDoctor.value
+        ? item?.toPatientId || item?.fromPatientId || ''
+        : item?.toDoctorId || item?.fromDoctorId || '';
+      return String(partnerId || '').trim() === filterPartnerId;
+    })
+    .map((item, index) => {
+      const createdAtRaw = item?.createdAt || item?.sentAt || null;
+      const createdAt = new Date(createdAtRaw || '');
+      const when = Number.isNaN(createdAt.getTime())
+        ? '-'
+        : createdAt.toLocaleString('vi-VN');
+
+      const targetId = isDoctor.value
+        ? item?.toPatientId || item?.fromPatientId || ''
+        : item?.toDoctorId || item?.fromDoctorId || '';
+
+      const targetLabel = isDoctor.value
+        ? `Benh nhan: ${targetId || 'Chua ro'}`
+        : `Bac si: ${targetId || 'Chua ro'}`;
+
+      const directionLabel = currentRole === 'doctor'
+        ? item?.fromDoctorId
+          ? 'Ban -> Benh nhan'
+          : 'Benh nhan -> Ban'
+        : item?.fromPatientId
+          ? 'Ban -> Bac si'
+          : 'Bac si -> Ban';
+
+      return {
+        key: item?.id || `${createdAtRaw || 'unknown'}-${index}`,
+        targetLabel,
+        directionLabel,
+        when,
+        preview: String(item?.content || item?.message || '').slice(0, 200) || '(khong co noi dung)',
+      };
+    })
+    .slice(0, HISTORY_LIMIT);
+});
+
+const loadMessageHistory = async () => {
+  historyLoading.value = true;
+  try {
+    const response = await fetchMessagesByRole({
+      role: role.value,
+      token: auth.token,
+      userId: auth.userId,
+      filters: {
+        limit: HISTORY_LIMIT,
+      },
+    });
+    messageHistory.value = Array.isArray(response?.messages) ? response.messages : [];
+  } catch (e) {
+    messageHistory.value = [];
+    error.value = e?.message || 'Không thể tải lịch sử trao đổi.';
+  } finally {
+    historyLoading.value = false;
+  }
+};
 
 const sendMessage = async () => {
   error.value = '';
@@ -124,26 +209,17 @@ const sendMessage = async () => {
 
   status.value = 'Gửi tin nhắn thành công.';
 
-  const now = new Date().toLocaleString('vi-VN');
-  const targetLabel = isDoctor.value
-    ? `Benh nhan: ${payload.patientId || 'Chua ro'}`
-    : `Bac si: ${payload.doctorId || 'Chua ro'}`;
-
-  recentSent.value = [
-    {
-      key: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      when: now,
-      targetLabel,
-      preview: String(payload.message || '').slice(0, 160) || '(khong co noi dung)',
-    },
-    ...recentSent.value,
-  ].slice(0, 6);
+  await loadMessageHistory();
 
   payload.message = '';
   if (isPatient.value) {
     payload.subject = '';
   }
 };
+
+onMounted(() => {
+  loadMessageHistory();
+});
 </script>
 
 <style scoped>

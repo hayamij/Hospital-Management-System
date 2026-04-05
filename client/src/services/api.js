@@ -140,6 +140,9 @@ export const patientApi = {
 	listRecords(token, filters) {
 		return request('/patients/medical-records', { method: 'GET', token, params: filters });
 	},
+	listMessages(token, filters) {
+		return request('/patients/messages', { method: 'GET', token, params: filters });
+	},
 	downloadPrescription(token, prescriptionId) {
 		return request(`/patients/prescriptions/${prescriptionId}/download`, { method: 'GET', token });
 	},
@@ -155,6 +158,9 @@ export const patientApi = {
 export const doctorApi = {
 	login(credentials) {
 		return authApi.login(credentials);
+	},
+	getProfile(token, params) {
+		return request('/doctors/profile', { method: 'GET', token, params });
 	},
 	getSchedule(token, params) {
 		return request('/doctors/schedule', { method: 'GET', token, params });
@@ -176,6 +182,9 @@ export const doctorApi = {
 	},
 	viewPatientRecords(token, patientId, params) {
 		return request(`/doctors/patients/${patientId}/chart`, { method: 'GET', token, params });
+	},
+	listMessages(token, params) {
+		return request('/doctors/messages', { method: 'GET', token, params });
 	},
 	sendMessage(token, payload) {
 		return request('/doctors/messages', { method: 'POST', token, data: payload });

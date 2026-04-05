@@ -86,6 +86,21 @@ a {
 	flex-wrap: wrap;
 }
 
+.workspace-header .header-actions,
+.doctor-header .header-actions,
+.profile-header .header-actions {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+	align-items: flex-end;
+}
+
+.workspace-header .header-actions > *,
+.doctor-header .header-actions > *,
+.profile-header .header-actions > * {
+	align-self: flex-end;
+}
+
 .list-grid {
 	display: grid;
 	gap: 14px;
@@ -150,6 +165,14 @@ select {
 	min-height: 44px;
 	max-height: 44px;
 	align-self: start;
+}
+
+select {
+	line-height: 1.25;
+	padding-top: 9px;
+	padding-bottom: 9px;
+	padding-right: 36px;
+	background-position: right 10px center;
 }
 
 textarea {

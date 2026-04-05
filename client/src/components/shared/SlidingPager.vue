@@ -212,6 +212,8 @@ onBeforeUnmount(() => {
   width: 100%;
   overflow: hidden;
   border-radius: 2px;
+  padding-top: 3px;
+  margin-top: -3px;
 }
 
 .track {

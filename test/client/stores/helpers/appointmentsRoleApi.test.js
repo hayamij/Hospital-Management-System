@@ -57,10 +57,15 @@ describe('appointmentsRoleApi helper', () => {
       token: 'token-doctor',
       userId: 'doc-1',
       filters: { status: 'scheduled' },
+      page: 1,
       pageSize: 10,
     });
 
-    expect(getScheduleSpy).toHaveBeenCalledWith('token-doctor', { status: 'scheduled' });
+    expect(getScheduleSpy).toHaveBeenCalledWith('token-doctor', {
+      status: 'scheduled',
+      page: 1,
+      pageSize: 10,
+    });
     expect(result).toEqual({
       response: payload,
       items: payload.appointments,

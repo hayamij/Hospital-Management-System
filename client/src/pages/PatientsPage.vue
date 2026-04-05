@@ -12,7 +12,9 @@
 					}}
 				</p>
 			</div>
-			<button type="button" @click="loadRecords">Làm mới</button>
+			<div class="header-actions">
+				<button type="button" @click="loadRecords">Làm mới</button>
+			</div>
 		</header>
 
 		<section v-if="isDoctor" class="doctor-kpi-grid">
@@ -56,7 +58,7 @@
 			<div class="list-grid">
 				<article v-for="rec in patients.records" :key="rec.id || rec.recordId" class="item doctor-item">
 					<p><strong>{{ rec.note || 'Ghi chú' }}</strong></p>
-					<p>{{ rec.recordedAt }} | Bác sĩ {{ rec.doctorId || '-' }}</p>
+					<p>{{ rec.recordedAt }} | Bác sĩ {{ rec.doctorName || rec.authorDoctorName || rec.doctorId || rec.authorDoctorId || '-' }}</p>
 				</article>
 			</div>
 		</section>

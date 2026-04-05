@@ -27,7 +27,11 @@ export const fetchAppointmentsByRole = async ({
   }
 
   if (isRole(role, 'doctor')) {
-    const response = await doctorApi.getSchedule(token, filters);
+    const response = await doctorApi.getSchedule(token, {
+      ...filters,
+      page: filters.page || page,
+      pageSize: filters.pageSize || pageSize,
+    });
     return { response, ...toPagedResult(response, pageSize) };
   }
 

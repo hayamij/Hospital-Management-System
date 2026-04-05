@@ -16,7 +16,7 @@
 			<div class="header-actions">
 				<label class="status-filter">
 					<span>Trạng thái</span>
-					<select v-model="filters.status" @change="refresh">
+					<select v-model="filters.status" @change="onStatusFilterChange">
 						<option value="">Tất cả trạng thái</option>
 						<option value="pending">Chờ bác sĩ duyệt</option>
 						<option value="scheduled">Đã lên lịch</option>
@@ -26,6 +26,9 @@
 						<option value="no_show">Vắng mặt</option>
 					</select>
 				</label>
+				<span v-if="isDoctor" class="header-page-indicator">
+					Trang {{ appointments.page }} / {{ totalPages }}
+				</span>
 				<button type="button" @click="refresh">Làm mới</button>
 			</div>
 		</header>
@@ -39,7 +42,7 @@
 
 			<article class="panel kpi-card primary">
 				<p class="kpi-label">Tổng lịch hiển thị</p>
-				<p class="kpi-value">{{ appointments.items.length }}</p>
+				<p class="kpi-value">{{ appointments.total }}</p>
 				<p class="kpi-note">Số lịch hẹn theo bộ lọc đang áp dụng.</p>
 			</article>
 
@@ -86,7 +89,7 @@
 		<div class="panel">
 			<div class="section-head">
 				<h2>Danh sách lịch hẹn</h2>
-				<small>{{ appointments.items.length }} bản ghi</small>
+				<small>{{ appointments.items.length }} / {{ appointments.total }} bản ghi</small>
 			</div>
 			<div v-if="appointments.items.length === 0">Chưa có lịch hẹn.</div>
 			<div class="list-grid">
@@ -118,6 +121,45 @@
 					</div>
 				</div>
 			</div>
+
+			<div v-if="showDoctorPagination" class="pagination-bar">
+				<div class="pagination-meta">
+					Trang {{ appointments.page }} / {{ totalPages }} · {{ appointments.total }} lịch hẹn
+				</div>
+
+				<div class="pagination-controls">
+					<label class="page-size-control">
+						<span>Mỗi trang</span>
+						<select
+							v-model.number="appointments.pageSize"
+							:disabled="appointments.loading"
+							@change="onPageSizeChange"
+						>
+							<option v-for="size in pageSizeOptions" :key="size" :value="size">{{ size }}</option>
+						</select>
+					</label>
+
+					<label class="page-jump-control">
+						<span>Đến trang</span>
+						<input
+							v-model.number="quickPageInput"
+							type="number"
+							min="1"
+							:max="totalPages"
+							:disabled="appointments.loading"
+							@keyup.enter="jumpToPage"
+						/>
+					</label>
+					<button type="button" :disabled="appointments.loading" @click="jumpToPage">Đi</button>
+
+					<button type="button" :disabled="appointments.loading || !canGoPrev" @click="goToPrevPage">
+						Trang trước
+					</button>
+					<button type="button" :disabled="appointments.loading || !canGoNext" @click="goToNextPage">
+						Trang sau
+					</button>
+				</div>
+			</div>
 		</div>
 
 		<div v-if="showReschedule" class="panel">
@@ -140,7 +182,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
 import { useAppointmentsStore } from '../stores/appointments.js';
 import { useRoleVisibility } from '../composables/useRoleVisibility.js';
@@ -153,6 +195,8 @@ const auth = useAuthStore();
 const appointments = useAppointmentsStore();
 const { isPatient, isDoctor, role } = useRoleVisibility(auth);
 const filters = reactive({ status: '' });
+const pageSizeOptions = [5, 10, 20, 50];
+const quickPageInput = ref(1);
 
 const createForm = reactive({ doctorId: '', startAt: '', endAt: '', reason: '' });
 const rescheduleForm = reactive({ startAt: '', endAt: '' });
@@ -164,6 +208,37 @@ const doctorPendingAppointments = computed(() => {
 
 const doctorActionableCount = computed(() => {
 	return appointments.items.filter((item) => canRoleUpdateAppointmentStatus(item, role.value)).length;
+});
+
+const totalPages = computed(() => {
+	const pageSize = Number(appointments.pageSize) || 10;
+	const total = Number(appointments.total) || 0;
+	return Math.max(1, Math.ceil(total / pageSize));
+});
+
+const showDoctorPagination = computed(() => {
+	return isDoctor.value && appointments.total > 0;
+});
+
+const canGoPrev = computed(() => appointments.page > 1);
+const canGoNext = computed(() => appointments.page < totalPages.value);
+
+watch(
+	() => appointments.page,
+	(page) => {
+		quickPageInput.value = Math.max(1, Number(page) || 1);
+	},
+	{ immediate: true }
+);
+
+watch(totalPages, (pages) => {
+	const normalizedPages = Math.max(1, Number(pages) || 1);
+	if (quickPageInput.value > normalizedPages) {
+		quickPageInput.value = normalizedPages;
+	}
+	if (quickPageInput.value < 1) {
+		quickPageInput.value = 1;
+	}
 });
 
 const canUpdateStatus = (item) => canRoleUpdateAppointmentStatus(item, role.value);
@@ -180,10 +255,52 @@ const statusLabelMap = {
 
 const formatStatus = (status) => statusLabelMap[String(status || '').toLowerCase()] || status || 'Chưa rõ';
 
-const refresh = () => appointments.fetchAppointments({ status: filters.status });
+const refresh = async ({ resetPage = false } = {}) => {
+	if (resetPage) {
+		appointments.page = 1;
+	}
 
-onMounted(() => {
-	refresh();
+	await appointments.fetchAppointments({ status: filters.status });
+
+	if (isDoctor.value && appointments.total > 0 && appointments.page > totalPages.value) {
+		appointments.page = totalPages.value;
+		await appointments.fetchAppointments({ status: filters.status });
+	}
+};
+
+const onStatusFilterChange = async () => {
+	await refresh({ resetPage: true });
+};
+
+const onPageSizeChange = async () => {
+	appointments.page = 1;
+	await refresh();
+};
+
+const jumpToPage = async () => {
+	const requestedPage = Math.floor(Number(quickPageInput.value) || 1);
+	const nextPage = Math.min(Math.max(requestedPage, 1), totalPages.value);
+	quickPageInput.value = nextPage;
+	if (nextPage === appointments.page) return;
+	appointments.page = nextPage;
+	await refresh();
+};
+
+const goToPrevPage = async () => {
+	if (!canGoPrev.value) return;
+	appointments.page -= 1;
+	await refresh();
+};
+
+const goToNextPage = async () => {
+	if (!canGoNext.value) return;
+	appointments.page += 1;
+	await refresh();
+};
+
+onMounted(async () => {
+	await auth.fetchCurrentUser();
+	await refresh({ resetPage: true });
 });
 
 const handleSchedule = async () => {
@@ -264,6 +381,63 @@ const decide = async (item, decision) => {
 .status-filter span {
 	color: #334155;
 	font-weight: 600;
+}
+
+.header-page-indicator {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: 0 12px;
+	border: 1px solid #cbd5e1;
+	background: #f8fafc;
+	color: #334155;
+	font-weight: 600;
+}
+
+.pagination-bar {
+	margin-top: 14px;
+	padding-top: 14px;
+	border-top: 1px solid #dbe2ea;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.pagination-meta {
+	color: #334155;
+	font-weight: 600;
+}
+
+.pagination-controls {
+	display: flex;
+	align-items: flex-end;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.page-size-control {
+	display: grid;
+	gap: 6px;
+}
+
+.page-jump-control {
+	display: grid;
+	gap: 6px;
+	min-width: 108px;
+}
+
+.page-size-control span {
+	font-size: 12px;
+	font-weight: 600;
+	color: #475569;
+}
+
+.page-jump-control span {
+	font-size: 12px;
+	font-weight: 600;
+	color: #475569;
 }
 
 .doctor-kpi-grid {

@@ -1,13 +1,23 @@
 export const icd10Regex = /^[A-TV-Z][0-9][0-9AB](\.[0-9A-TV-Z]{1,4})?$/i;
 
 export const mapRecordRows = (records) =>
-  (records || []).map((item, idx) => ({
-    id: item.id || item.recordId || `record-${idx + 1}`,
-    recordedAt: item.recordedAt || item.visitDate || item.createdAt || null,
-    doctorId: item.doctorId || '-',
-    note: item.note || item.description || item.diagnosis || '-',
-    description: item.description || '',
-  }));
+  (records || []).map((item, idx) => {
+    const doctorLabel =
+      item.doctorName ||
+      item.authorDoctorName ||
+      item.doctorId ||
+      item.authorDoctorId ||
+      '-';
+
+    return {
+      id: item.id || item.recordId || `record-${idx + 1}`,
+      recordedAt: item.recordedAt || item.visitDate || item.createdAt || null,
+      doctorId: doctorLabel,
+      doctorName: doctorLabel,
+      note: item.note || item.description || item.diagnosis || '-',
+      description: item.description || '',
+    };
+  });
 
 export const buildConsultationErrors = ({ activePatientId, form }) => {
   const errors = {};

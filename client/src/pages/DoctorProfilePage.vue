@@ -8,7 +8,7 @@
       </div>
 
       <div class="header-actions">
-        <button type="button" @click="restoreDefaults" :disabled="doctorProfile.submitting">Khôi phục mặc định</button>
+        <button type="button" @click="reloadProfile" :disabled="doctorProfile.submitting || doctorProfile.loading">Làm mới từ DB</button>
       </div>
     </header>
 
@@ -52,8 +52,8 @@
           </div>
 
           <div class="row profile-actions">
-            <button type="submit" :disabled="doctorProfile.submitting">Lưu hồ sơ</button>
-            <button type="button" @click="restoreDefaults" :disabled="doctorProfile.submitting">Khôi phục</button>
+            <button type="submit" :disabled="doctorProfile.submitting || doctorProfile.loading">Lưu hồ sơ</button>
+            <button type="button" @click="restoreDefaults" :disabled="doctorProfile.submitting || doctorProfile.loading">Khôi phục</button>
           </div>
         </form>
 
@@ -101,34 +101,24 @@
 import { onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
 import { useDoctorProfileStore } from '../stores/doctorProfile.js';
+import {
+  createDoctorProfilePageActions,
+  formatDoctorStatus,
+} from './controllers/doctorProfileController.js';
 
 const auth = useAuthStore();
 const doctorProfile = useDoctorProfileStore();
+const {
+  restoreDefaults,
+  reloadProfile,
+  submitProfile,
+  initializePage,
+} = createDoctorProfilePageActions({ auth, doctorProfile });
 
-const formatStatus = (status) => {
-  const map = {
-    active: 'Đang hoạt động',
-    on_leave: 'Đang nghỉ phép',
-    inactive: 'Ngưng hoạt động',
-  };
-  return map[status] || status || '-';
-};
+const formatStatus = formatDoctorStatus;
 
-const restoreDefaults = () => {
-  doctorProfile.restoreDefaults();
-};
-
-const submitProfile = async () => {
-  try {
-    await doctorProfile.updateProfile();
-  } catch {
-    // error message is managed in store
-  }
-};
-
-onMounted(() => {
-  auth.fetchCurrentUser();
-  restoreDefaults();
+onMounted(async () => {
+  await initializePage();
 });
 </script>
 
