@@ -12,6 +12,7 @@ export const fetchAppointmentsByRole = async ({
   role,
   token,
   userId,
+  patientId,
   filters = {},
   page = 1,
   pageSize = 10,
@@ -21,7 +22,7 @@ export const fetchAppointmentsByRole = async ({
       ...filters,
       page: filters.page || page,
       pageSize: filters.pageSize || pageSize,
-      patientId: userId,
+      patientId: patientId || userId,
     });
     return { response, ...toPagedResult(response, pageSize) };
   }

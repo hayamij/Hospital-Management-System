@@ -1,9 +1,9 @@
 import { doctorApi, patientApi } from '../../services/api.js';
 import { isRole } from '../../constants/navigation.js';
 
-export const fetchRecordsByRole = async ({ role, token, userId, filters = {} }) => {
+export const fetchRecordsByRole = async ({ role, token, userId, patientId, filters = {} }) => {
   if (isRole(role, 'patient')) {
-    return patientApi.listRecords(token, { ...filters, patientId: userId });
+    return patientApi.listRecords(token, { ...filters, patientId: patientId || userId });
   }
 
   if (isRole(role, 'doctor') && filters.patientId) {

@@ -24,6 +24,22 @@ class FakeUserRepository {
   }
 }
 
+class FakeDoctorRepository {
+  constructor() {
+    this.saved = [];
+  }
+
+  async findById() {
+    return null;
+  }
+
+  async save(doctor) {
+    const saved = { ...doctor, id: doctor.id || 'doc-generated' };
+    this.saved.push(saved);
+    return saved;
+  }
+}
+
 const fakeAuthService = {
   async hashPassword(plain) {
     return `hashed:${plain}`;
@@ -74,6 +90,25 @@ async function run() {
 
   assert.strictEqual(result.userId, 'u-new');
   assert.strictEqual(repo.saved.passwordHash, 'hashed:secret123');
+
+  const repoWithDoctorLink = new FakeUserRepository({ byId: { admin1: { id: 'admin1', role: 'admin' } } });
+  const doctorRepository = new FakeDoctorRepository();
+  await new CreateUserUseCase({
+    userRepository: repoWithDoctorLink,
+    authService: fakeAuthService,
+    doctorRepository,
+  }).execute({
+    adminId: 'admin1',
+    fullName: 'Linked Doctor',
+    email: 'linked-doctor@example.com',
+    role: 'doctor',
+    status: 'active',
+    password: 'secret123',
+    specialization: 'Internal Medicine',
+  });
+
+  assert.strictEqual(doctorRepository.saved.length, 1);
+  assert.strictEqual(repoWithDoctorLink.saved.doctorId, 'u-new');
 }
 
 wrapLegacyRun(run, 'createUser.usecase');

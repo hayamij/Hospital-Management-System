@@ -96,6 +96,9 @@ export class ViewMedicalRecordsViewModel {
     this.page = output.page;
     this.pageSize = output.pageSize;
     this.total = output.total;
+    this.hasRecord = Boolean(output?.hasRecord || output?.recordId);
+    this.recordId = output?.recordId ?? null;
+    this.recordCreatedAt = output?.recordCreatedAt ?? null;
     this.records = output.records;
   }
 }

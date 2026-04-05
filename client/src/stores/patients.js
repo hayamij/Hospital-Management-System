@@ -50,6 +50,16 @@ export const usePatientsStore = defineStore('patients', {
 					patientId: auth.patientId || undefined,
 				});
 				this.profile = normalizeProfile(response || {});
+
+				const resolvedPatientId = this.profile.patientId || auth.patientId || null;
+				if (resolvedPatientId && auth.userProfile?.patientId !== resolvedPatientId) {
+					auth.userProfile = {
+						...(auth.userProfile || {}),
+						patientId: resolvedPatientId,
+					};
+					auth.persist();
+				}
+
 				return this.profile;
 			} catch (error) {
 				this.error = error.message;
@@ -89,6 +99,7 @@ export const usePatientsStore = defineStore('patients', {
 					role: auth.role,
 					token: auth.token,
 					userId: auth.userId,
+					patientId: auth.patientId,
 					filters,
 				});
 				if (response) {

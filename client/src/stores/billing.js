@@ -30,7 +30,7 @@ export const useBillingStore = defineStore('billing', {
 					? await adminApi.listBilling(auth.token, params)
 					: await patientApi.listBilling(auth.token, {
 						...params,
-						patientId: auth.userId,
+						patientId: auth.patientId || auth.userId,
 					});
 				this.invoices = response.billings || [];
 				this.payments = response.payments || [];

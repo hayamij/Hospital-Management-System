@@ -47,6 +47,33 @@ async function run() {
   const repoUpdate = new SqlUserRepository(poolUpdate);
   await repoUpdate.save({ id: 'u1', email: 'b@example.com', passwordHash: 'hash', role: 'patient', status: 'active' });
   assert.ok(poolUpdate.calls.some((c) => c.text.startsWith('UPDATE users')));
+
+  // list joins doctor/patient profile names and maps resolvedFullName
+  const poolList = new FakePool([]);
+  poolList.query = async (text, params) => {
+    poolList.calls.push({ text, params });
+    if (text.includes('COUNT(*) AS total')) {
+      return { rows: [{ total: 1 }] };
+    }
+
+    return {
+      rows: [
+        {
+          ...sampleRow(),
+          role: 'doctor',
+          doctor_id: 'doc-1',
+          resolved_full_name: 'Dr. Updated Name',
+        },
+      ],
+    };
+  };
+
+  const repoList = new SqlUserRepository(poolList);
+  const listed = await repoList.list({ page: 1, pageSize: 10, query: 'Updated', role: 'doctor' });
+  assert.strictEqual(listed.total, 1);
+  assert.strictEqual(listed.items[0].resolvedFullName, 'Dr. Updated Name');
+  assert.ok(poolList.calls.some((c) => c.text.includes('LEFT JOIN doctors')));
+  assert.ok(poolList.calls.some((c) => c.text.includes('LEFT JOIN patients')));
 }
 
 wrapLegacyRun(run, 'userRepository');

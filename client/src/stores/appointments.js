@@ -1,11 +1,25 @@
 import { defineStore } from 'pinia';
 import { patientApi } from '../services/api.js';
 import { useAuthStore } from './auth.js';
+import { usePatientsStore } from './patients.js';
 import { isRole } from '../constants/navigation.js';
 import {
 	fetchAppointmentsByRole,
 	updateAppointmentStatusByRole,
 } from './helpers/appointmentsRoleApi.js';
+
+const resolvePatientId = async (auth) => {
+	if (!isRole(auth.role, 'patient')) return null;
+	if (auth.patientId) return auth.patientId;
+
+	const patientsStore = usePatientsStore();
+	try {
+		const profile = await patientsStore.loadProfile();
+		return profile?.patientId || auth.patientId || null;
+	} catch {
+		return auth.patientId || null;
+	}
+};
 
 export const useAppointmentsStore = defineStore('appointments', {
 	state: () => ({
@@ -20,6 +34,7 @@ export const useAppointmentsStore = defineStore('appointments', {
 	actions: {
 		async fetchAppointments(filters = {}) {
 			const auth = useAuthStore();
+				const patientId = await resolvePatientId(auth);
 			this.loading = true;
 			this.error = null;
 			this.activeFilters = { ...filters };
@@ -28,6 +43,7 @@ export const useAppointmentsStore = defineStore('appointments', {
 					role: auth.role,
 					token: auth.token,
 					userId: auth.userId,
+						patientId,
 					filters,
 					page: this.page,
 					pageSize: this.pageSize,
@@ -52,18 +68,20 @@ export const useAppointmentsStore = defineStore('appointments', {
 		async schedule(payload) {
 			const auth = useAuthStore();
 			if (!isRole(auth.role, 'patient')) return;
+			const patientId = await resolvePatientId(auth);
 			await patientApi.scheduleAppointment(auth.token, {
 				...payload,
-				patientId: auth.patientId || auth.userId,
+				patientId: patientId || auth.userId,
 			});
 			await this.fetchAppointments(this.activeFilters);
 		},
 		async reschedule(appointmentId, payload) {
 			const auth = useAuthStore();
 			if (!isRole(auth.role, 'patient')) return;
+			const patientId = await resolvePatientId(auth);
 			await patientApi.rescheduleAppointment(auth.token, appointmentId, {
 				...payload,
-				patientId: auth.patientId || auth.userId,
+				patientId: patientId || auth.userId,
 			});
 			await this.fetchAppointments(this.activeFilters);
 		},

@@ -178,6 +178,7 @@ const loadMessageHistory = async () => {
       role: role.value,
       token: auth.token,
       userId: auth.userId,
+      patientId: auth.patientId,
       filters: {
         limit: HISTORY_LIMIT,
       },
@@ -199,6 +200,7 @@ const sendMessage = async () => {
     role: role.value,
     token: auth.token,
     userId: auth.userId,
+    patientId: auth.patientId,
     payload,
   });
 

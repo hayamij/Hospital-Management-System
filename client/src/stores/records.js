@@ -37,6 +37,7 @@ export const useRecordsStore = defineStore('records', {
 					role: auth.role,
 					token: auth.token,
 					userId: auth.userId,
+					patientId: auth.patientId,
 					filters,
 				});
 

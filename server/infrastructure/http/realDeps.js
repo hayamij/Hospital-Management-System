@@ -114,6 +114,8 @@ export function createRealDeps() {
     doctorRepository,
     patientRepository,
     appointmentRepository,
+    billingRepository,
+    serviceCatalogRepository,
     medicalRecordRepository,
     messageRepository,
     labResultRepository,

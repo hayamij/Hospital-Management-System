@@ -38,6 +38,10 @@ export class ListUsersUseCase {
   }
 
   async resolveProfileFullName(user) {
+    if (typeof user?.resolvedFullName === 'string' && user.resolvedFullName.trim()) {
+      return user.resolvedFullName;
+    }
+
     const role = String(user?.role || '').toLowerCase();
 
     if (role === 'doctor' && user?.doctorId && this.doctorRepository?.findById) {

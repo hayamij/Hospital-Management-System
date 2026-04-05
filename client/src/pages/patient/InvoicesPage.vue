@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useBillingStore } from '../../stores/billing.js';
 import { useAuthStore } from '../../stores/auth.js';
 import { patientApi } from '../../services/api.js';
@@ -46,6 +46,8 @@ import DataTable from '../../components/shared/DataTable.vue';
 const billing = useBillingStore();
 const auth = useAuthStore();
 const selectedInvoice = ref(null);
+const BILLING_REFRESH_INTERVAL_MS = 30_000;
+let billingRefreshTimer = null;
 
 const columns = [
 	{ key: 'invoiceNumber', label: 'Mã hóa đơn', width: '170px' },
@@ -63,12 +65,27 @@ const rows = computed(() => billing.invoices.map((item, index) => ({
 	dueDate: item.dueDate || item.issuedAt || item.createdAt || null,
 }))); 
 
-const refresh = async () => {
-	selectedInvoice.value = null;
+const refresh = async ({ resetSelection = true } = {}) => {
+	if (billing.loading) return;
+	if (resetSelection) {
+		selectedInvoice.value = null;
+	}
 	await billing.fetchBilling({});
 };
 
-onMounted(refresh);
+onMounted(() => {
+	void refresh();
+	billingRefreshTimer = setInterval(() => {
+		void refresh({ resetSelection: false });
+	}, BILLING_REFRESH_INTERVAL_MS);
+});
+
+onUnmounted(() => {
+	if (billingRefreshTimer) {
+		clearInterval(billingRefreshTimer);
+		billingRefreshTimer = null;
+	}
+});
 
 const viewDetail = (row) => {
 	selectedInvoice.value = row;

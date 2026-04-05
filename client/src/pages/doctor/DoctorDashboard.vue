@@ -13,7 +13,10 @@
           <select v-model="statusFilter">
             <option value="all">Tất cả</option>
             <option value="waiting">Đang chờ</option>
+            <option value="in-progress">Đang khám</option>
             <option value="completed">Đã khám</option>
+            <option value="cancelled">Đã hủy</option>
+            <option value="no-show">Vắng mặt</option>
           </select>
         </label>
         <button type="button" @click="refresh" :disabled="appointments.loading">Làm mới dữ liệu</button>
@@ -73,15 +76,37 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useAppointmentsStore } from '../../stores/appointments.js';
-import { useAuthStore } from '../../stores/auth.js';
 
 const appointments = useAppointmentsStore();
-const auth = useAuthStore();
 const statusFilter = ref('all');
+const DASHBOARD_REFRESH_INTERVAL_MS = 30_000;
+let dashboardRefreshTimer = null;
 
-const waitingStatuses = new Set(['pending', 'scheduled', 'rescheduled', 'in_progress']);
+const waitingStatuses = new Set(['pending', 'scheduled', 'rescheduled', 'requested', 'confirmed']);
+const inProgressStatuses = new Set(['in_progress']);
+const completedStatuses = new Set(['completed', 'done']);
+const cancelledStatuses = new Set(['cancelled', 'canceled', 'rejected']);
+const noShowStatuses = new Set(['no_show']);
+
+const resolveVisualStatus = (status) => {
+  if (waitingStatuses.has(status)) return 'waiting';
+  if (inProgressStatuses.has(status)) return 'in-progress';
+  if (completedStatuses.has(status)) return 'completed';
+  if (cancelledStatuses.has(status)) return 'cancelled';
+  if (noShowStatuses.has(status)) return 'no-show';
+  return 'other';
+};
+
+const resolveStatusLabel = (status) => {
+  if (waitingStatuses.has(status)) return 'Đang chờ';
+  if (inProgressStatuses.has(status)) return 'Đang khám';
+  if (completedStatuses.has(status)) return 'Đã khám';
+  if (cancelledStatuses.has(status)) return 'Đã hủy';
+  if (noShowStatuses.has(status)) return 'Vắng mặt';
+  return 'Khác';
+};
 
 const toDate = (value) => {
   const d = new Date(value || '');
@@ -107,8 +132,8 @@ const normalizedItems = computed(() => {
       const status = String(raw.status || 'pending').toLowerCase();
       const patientName = raw.patientName || raw.patientFullName || raw.patientId || `Patient ${index + 1}`;
 
-      const visualStatus = waitingStatuses.has(status) ? 'waiting' : status === 'completed' ? 'completed' : 'waiting';
-      const statusLabel = visualStatus === 'completed' ? 'Đã khám' : 'Đang chờ';
+      const visualStatus = resolveVisualStatus(status);
+      const statusLabel = resolveStatusLabel(status);
 
       return {
         id: raw.id || raw.appointmentId || `appointment-${index + 1}`,
@@ -141,12 +166,27 @@ const filteredTodayItems = computed(() => {
 });
 
 const totalToday = computed(() => todayItems.value.length);
-const waitingCount = computed(() => todayItems.value.filter((item) => item.visualStatus === 'waiting').length);
+const waitingCount = computed(() => todayItems.value.filter((item) => item.visualStatus === 'waiting' || item.visualStatus === 'in-progress').length);
 const completedCount = computed(() => todayItems.value.filter((item) => item.visualStatus === 'completed').length);
 
-const refresh = () => appointments.fetchAppointments({ doctorId: auth.userId });
+const refresh = async () => {
+  if (appointments.loading) return;
+  await appointments.fetchAppointments();
+};
 
-onMounted(refresh);
+onMounted(() => {
+  void refresh();
+  dashboardRefreshTimer = setInterval(() => {
+    void refresh();
+  }, DASHBOARD_REFRESH_INTERVAL_MS);
+});
+
+onUnmounted(() => {
+  if (dashboardRefreshTimer) {
+    clearInterval(dashboardRefreshTimer);
+    dashboardRefreshTimer = null;
+  }
+});
 </script>
 
 <style scoped>
@@ -286,8 +326,20 @@ onMounted(refresh);
   background: #f59e0b;
 }
 
+.timeline-item.in-progress .dot {
+  background: #0ea5e9;
+}
+
 .timeline-item.completed .dot {
   background: #16a34a;
+}
+
+.timeline-item.cancelled .dot {
+  background: #dc2626;
+}
+
+.timeline-item.no-show .dot {
+  background: #7c3aed;
 }
 
 .content h3 {

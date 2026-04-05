@@ -87,18 +87,21 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useAppointmentsStore } from '../../stores/appointments.js';
 import { useRecordsStore } from '../../stores/records.js';
 import { useBillingStore } from '../../stores/billing.js';
+import { usePatientsStore } from '../../stores/patients.js';
 import { normalizeAppointment, normalizeInvoice, normalizeRecord, toTimestamp } from '../../services/mappers.js';
 
 const appointmentsStore = useAppointmentsStore();
 const recordsStore = useRecordsStore();
 const billingStore = useBillingStore();
+const patientsStore = usePatientsStore();
 
 const UPCOMING_PAGE_SIZE = 5;
 const APPOINTMENTS_FETCH_LIMIT = 200;
+const DASHBOARD_REFRESH_INTERVAL_MS = 30_000;
 const NON_CANCELABLE_STATUSES = new Set(['cancelled', 'canceled', 'completed', 'no_show', 'done']);
 
 const loading = ref(false);
@@ -107,6 +110,7 @@ const upcomingError = ref('');
 const summaryError = ref('');
 const cancelError = ref('');
 const upcomingPage = ref(1);
+let dashboardRefreshTimer = null;
 
 const formatDate = (value) => {
   const d = new Date(value || '');
@@ -125,14 +129,39 @@ const formatMoney = (value) => {
   return Number(value).toLocaleString('vi-VN') + ' VND';
 };
 
+const getStartOfTodayTimestamp = () => {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  return startOfToday.getTime();
+};
+
+const getAppointmentTimestamp = (appointment) => {
+  const candidate = appointment?.startDate ?? appointment?.date;
+  if (candidate instanceof Date) {
+    const ts = candidate.getTime();
+    return Number.isNaN(ts) ? null : ts;
+  }
+
+  const ts = new Date(candidate || '').getTime();
+  return Number.isNaN(ts) ? null : ts;
+};
+
 const upcomingAppointmentsAll = computed(() => {
-  const now = Date.now();
+  const startOfTodayTs = getStartOfTodayTimestamp();
   const normalized = appointmentsStore.items.map(normalizeAppointment);
 
   return normalized
-    .filter((item) => toTimestamp(item.date) >= now)
+    .filter((item) => {
+      const appointmentTs = getAppointmentTimestamp(item);
+      if (appointmentTs === null) return true;
+      return appointmentTs >= startOfTodayTs;
+    })
     .filter((item) => !NON_CANCELABLE_STATUSES.has(String(item.status || '').toLowerCase()))
-    .sort((a, b) => toTimestamp(a.date) - toTimestamp(b.date));
+    .sort((a, b) => {
+      const aTs = getAppointmentTimestamp(a) ?? Number.MAX_SAFE_INTEGER;
+      const bTs = getAppointmentTimestamp(b) ?? Number.MAX_SAFE_INTEGER;
+      return aTs - bTs;
+    });
 });
 
 const upcomingAppointmentsTotal = computed(() => upcomingAppointmentsAll.value.length);
@@ -182,22 +211,25 @@ const latestSummary = computed(() => {
 });
 
 const loadDashboard = async () => {
+  if (loading.value) return;
+
   loading.value = true;
   upcomingError.value = '';
   summaryError.value = '';
   cancelError.value = '';
 
-  const [appointmentsResult, recordsResult, billingResult] = await Promise.allSettled([
+  const [appointmentsResult, recordsResult, billingResult, profileResult] = await Promise.allSettled([
     appointmentsStore.fetchAppointments({ page: 1, pageSize: APPOINTMENTS_FETCH_LIMIT }),
     recordsStore.fetchRecords({}),
     billingStore.fetchBilling({ page: 1, pageSize: 10 }),
+    patientsStore.loadProfile(),
   ]);
 
   if (appointmentsResult.status === 'rejected') {
     upcomingError.value = appointmentsResult.reason?.message || 'Không thể tải lịch khám sắp tới.';
   }
 
-  if (recordsResult.status === 'rejected' || billingResult.status === 'rejected') {
+  if (recordsResult.status === 'rejected' || billingResult.status === 'rejected' || profileResult.status === 'rejected') {
     summaryError.value = 'Không thể tải đầy đủ dữ liệu kết quả khám/hóa đơn. Vui lòng thử lại sau.';
   }
 
@@ -225,6 +257,19 @@ const cancelAppointment = async (appointment) => {
 };
 
 onMounted(loadDashboard);
+
+onMounted(() => {
+  dashboardRefreshTimer = setInterval(() => {
+    void loadDashboard();
+  }, DASHBOARD_REFRESH_INTERVAL_MS);
+});
+
+onUnmounted(() => {
+  if (dashboardRefreshTimer) {
+    clearInterval(dashboardRefreshTimer);
+    dashboardRefreshTimer = null;
+  }
+});
 </script>
 
 <style scoped>

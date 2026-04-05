@@ -7,7 +7,7 @@ import {
 } from '../../../viewmodels/patientViewModels.js';
 
 const resolvePatientId = (req, fallback) =>
-  req.user?.patientId ?? fallback ?? req.user?.id;
+  req.user?.patientId ?? req.user?.id ?? fallback;
 
 export function buildPatientAppointmentsControllers({ scheduleAppointmentUseCase, rescheduleAppointmentUseCase, cancelAppointmentUseCase, viewAppointmentsUseCase }) {
   return {

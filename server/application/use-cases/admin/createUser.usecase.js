@@ -8,9 +8,94 @@ const ALLOWED_STATUS = new Set(['active', 'inactive', 'disabled', 'verified', 'p
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 
 export class CreateUserUseCase {
-  constructor({ userRepository, authService }) {
+  constructor({ userRepository, authService, doctorRepository, patientRepository }) {
     this.userRepository = userRepository;
     this.authService = authService;
+    this.doctorRepository = doctorRepository;
+    this.patientRepository = patientRepository;
+  }
+
+  async ensureDoctorProfileLink(user, { fullName, email, status, specialization, department, slotsPerDay }) {
+    if (!this.doctorRepository?.save) {
+      return user;
+    }
+
+    const preferredDoctorId = user?.doctorId || user?.id || null;
+    let doctorProfile = null;
+
+    if (preferredDoctorId && this.doctorRepository?.findById) {
+      doctorProfile = await this.doctorRepository.findById(preferredDoctorId);
+    }
+
+    if (!doctorProfile) {
+      doctorProfile = await this.doctorRepository.save({
+        id: preferredDoctorId,
+        fullName,
+        specialization: String(specialization || 'General').trim() || 'General',
+        department: String(department || '').trim(),
+        availableSlotsPerDay: Math.max(0, Number(slotsPerDay) || 0),
+        contactInfo: {
+          email,
+          phone: null,
+        },
+        status,
+      });
+    }
+
+    const doctorId = doctorProfile?.id ?? doctorProfile?.getId?.() ?? null;
+    if (!doctorId || user?.doctorId === doctorId) {
+      return user;
+    }
+
+    return this.userRepository.save({
+      ...user,
+      doctorId,
+      patientId: null,
+    });
+  }
+
+  async ensurePatientProfileLink(user, { fullName, email, status, dateOfBirth, phone, address, emergencyContact, assignedDoctorId }) {
+    if (!this.patientRepository?.create && !this.patientRepository?.save) {
+      return user;
+    }
+
+    const preferredPatientId = user?.patientId || user?.id || null;
+    let patientProfile = null;
+
+    if (preferredPatientId && this.patientRepository?.findById) {
+      patientProfile = await this.patientRepository.findById(preferredPatientId);
+    }
+
+    if (!patientProfile) {
+      const payload = {
+        id: preferredPatientId,
+        fullName,
+        dateOfBirth: dateOfBirth || null,
+        contactInfo: {
+          email,
+          phone: phone || null,
+          address: address || null,
+          emergencyContact: emergencyContact || null,
+        },
+        status,
+        assignedDoctorId: assignedDoctorId || null,
+      };
+
+      patientProfile = this.patientRepository.create
+        ? await this.patientRepository.create(payload)
+        : await this.patientRepository.save(payload);
+    }
+
+    const patientId = patientProfile?.id ?? patientProfile?.getId?.() ?? null;
+    if (!patientId || user?.patientId === patientId) {
+      return user;
+    }
+
+    return this.userRepository.save({
+      ...user,
+      patientId,
+      doctorId: null,
+    });
   }
 
   async execute(inputDto) {
@@ -46,15 +131,40 @@ export class CreateUserUseCase {
         : plainPassword;
     }
 
-    const saved = await this.userRepository.save({
+    const baseUser = await this.userRepository.save({
       email,
       fullName,
       role,
       status,
       passwordHash,
-      doctorId: role === 'doctor' ? undefined : null,
-      patientId: role === 'patient' ? undefined : null,
+      doctorId: role === 'doctor' ? input.doctorId ?? null : null,
+      patientId: role === 'patient' ? input.patientId ?? null : null,
     });
+
+    let saved = baseUser;
+    if (role === 'doctor') {
+      saved = await this.ensureDoctorProfileLink(saved, {
+        fullName,
+        email,
+        status,
+        specialization: input.specialization,
+        department: input.department,
+        slotsPerDay: input.slotsPerDay,
+      });
+    }
+
+    if (role === 'patient') {
+      saved = await this.ensurePatientProfileLink(saved, {
+        fullName,
+        email,
+        status,
+        dateOfBirth: input.dateOfBirth,
+        phone: input.phone,
+        address: input.address,
+        emergencyContact: input.emergencyContact,
+        assignedDoctorId: input.assignedDoctorId,
+      });
+    }
 
     return new CreateUserOutput({
       userId: saved.id,

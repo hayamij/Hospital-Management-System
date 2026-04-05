@@ -115,7 +115,12 @@ export const createAdminUseCases = ({
         })
       : null;
   const listUsersClass = new ListUsersUseCase({ userRepository, doctorRepository, patientRepository });
-  const createUserClass = new CreateUserUseCase({ userRepository, authService });
+  const createUserClass = new CreateUserUseCase({
+    userRepository,
+    authService,
+    doctorRepository,
+    patientRepository,
+  });
   const updateUserClass = new UpdateUserUseCase({ userRepository });
   const viewAppointmentsClass = new ViewAppointmentsUseCase({ userRepository, appointmentRepository });
   const viewBillingClass = new ViewBillingUseCase({ userRepository, billingRepository });
