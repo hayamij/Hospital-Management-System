@@ -1,6 +1,7 @@
 export class LoginViewModel {
   constructor(output) {
     this.userId = output.userId;
+    this.patientId = output.patientId;
     this.token = output.token ?? output.accessToken;
     this.role = output.role;
     this.refreshToken = output.refreshToken;

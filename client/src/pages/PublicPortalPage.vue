@@ -1,12 +1,12 @@
 <template>
   <div class="page">
     <header class="panel">
-      <h1>Cổng thông tin công khai</h1>
+      <h1>Trang thông tin khách</h1>
       <p>Tác vụ khách: xem thông tin công khai, tìm bác sĩ, xem khung giờ và gửi liên hệ.</p>
       <div class="row">
         <RouterLink to="/">Trang chủ</RouterLink>
-        <RouterLink to="/login">Đăng nhập</RouterLink>
-        <RouterLink to="/register">Đăng ký</RouterLink>
+        <RouterLink :to="AUTH_ROUTE.login">Đăng nhập</RouterLink>
+        <RouterLink :to="AUTH_ROUTE.register">Đăng ký</RouterLink>
       </div>
     </header>
 
@@ -24,12 +24,14 @@
           <input v-model="search.specialty" placeholder="Chuyên khoa" />
           <button type="submit">Tìm kiếm</button>
         </form>
-        <ul class="list">
-          <li v-for="d in doctors" :key="d.id || d.doctorId" class="item">
-            <p><strong>{{ d.fullName || d.name }}</strong></p>
-            <p>{{ d.specialization || d.specialty }}</p>
-          </li>
-        </ul>
+        <SlidingPager :items="doctors" :items-per-page="3" :mobile-items-per-page="1" empty-text="Chưa có bác sĩ phù hợp.">
+          <template #default="{ item: d }">
+            <article class="item">
+              <p><strong>{{ d.fullName || d.name }}</strong></p>
+              <p>{{ d.specialization || d.specialty }}</p>
+            </article>
+          </template>
+        </SlidingPager>
       </article>
     </section>
 
@@ -75,6 +77,8 @@
 <script setup>
 import { reactive, ref } from 'vue';
 import { guestApi } from '../services/api.js';
+import SlidingPager from '../components/shared/SlidingPager.vue';
+import { AUTH_ROUTE } from '../constants/navigation.js';
 
 const publicInfo = ref(null);
 const doctors = ref([]);
@@ -124,7 +128,13 @@ const sendContact = async () => {
 .row a { text-decoration: none; color: #111827; }
 .two-col { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
 .three { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
-.list { margin: 14px 0 0; padding-left: 22px; }
-.item { margin: 10px 0; }
+.item {
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  padding: 12px;
+  min-height: 100%;
+}
+.item p { margin: 0 0 8px; }
+.item p:last-child { margin-bottom: 0; }
 .pre { border: 1px solid #e5e7eb; background: #f9fafb; padding: 12px; max-height: 300px; overflow: auto; }
 </style>

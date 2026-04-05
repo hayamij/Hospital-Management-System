@@ -1,6 +1,6 @@
 <template>
   <div class="card-detail-page">
-    <p class="back-link-wrap"><RouterLink class="back-link" to="/public">← Quay về cổng thông tin công khai</RouterLink></p>
+    <p class="back-link-wrap"><RouterLink class="back-link" :to="backLink">← {{ backLabel }}</RouterLink></p>
 
     <header class="panel hero">
       <p class="eyebrow">CHI TIẾT CÔNG KHAI</p>
@@ -85,6 +85,18 @@ const titleMap = {
 const pageTitle = computed(() => titleMap[category.value] || 'Chi tiết');
 const pageSubtitle = computed(() => `Danh mục: ${category.value || '-'} | Mã: ${itemId.value || '-'}`);
 
+const backLink = computed(() => {
+  if (category.value === 'doctors') return '/doctors';
+  if (category.value === 'services') return '/services';
+  return '/';
+});
+
+const backLabel = computed(() => {
+  if (category.value === 'doctors') return 'Quay về danh bạ bác sĩ';
+  if (category.value === 'services') return 'Quay về danh mục dịch vụ';
+  return 'Quay về trang chủ';
+});
+
 const load = async () => {
   loading.value = true;
   error.value = '';
@@ -157,9 +169,9 @@ watch(() => [category.value, itemId.value], load, { immediate: true });
 }
 
 .detail-card {
-  border: 1px solid #dbe2ea;
+  border: none;
   background: #ffffff;
-  padding: 16px;
+  padding: 8px 0;
 }
 
 .detail-card h2 {

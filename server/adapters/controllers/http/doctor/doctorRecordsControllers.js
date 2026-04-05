@@ -15,7 +15,7 @@ export function buildDoctorRecordsControllers({ accessPatientChartUseCase, addVi
       useCase: addVisitNoteUseCase,
       mapInput: (req) => ({
         doctorId: req.user?.id ?? req.body?.doctorId,
-        patientId: req.body?.patientId,
+        patientId: req.params?.patientId ?? req.body?.patientId,
         note: req.body?.note,
       }),
       mapOutput: (result) => new AddMedicalRecordEntryViewModel(result),

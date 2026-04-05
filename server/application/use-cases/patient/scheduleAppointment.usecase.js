@@ -3,6 +3,8 @@ import { Appointment } from '../../../domain/entities/appointment.js';
 import { ScheduleAppointmentInput } from '../../dto/patient/scheduleAppointmentInput.js';
 import { ScheduleAppointmentOutput } from '../../dto/patient/scheduleAppointmentOutput.js';
 
+const isBlank = (value) => !value || !String(value).trim();
+
 export class ScheduleAppointmentUseCase {
 	constructor({ patientRepository, doctorRepository, appointmentRepository, notificationService }) {
 		this.patientRepository = patientRepository;
@@ -43,6 +45,12 @@ export class ScheduleAppointmentUseCase {
 		const patient = await this.patientRepository.findById(input.patientId);
 		if (!patient) {
 			throw new DomainError('Patient not found.');
+		}
+
+		const patientName = patient.fullName ?? patient.getName?.() ?? '';
+		const patientContact = patient.contactInfo ?? patient.getContact?.() ?? {};
+		if (isBlank(patientName) || isBlank(patientContact.phone) || isBlank(patientContact.address)) {
+			throw new DomainError('Please complete your patient profile (name, phone, and address) before booking.');
 		}
 
 		const doctor = await this.doctorRepository.findById(input.doctorId);

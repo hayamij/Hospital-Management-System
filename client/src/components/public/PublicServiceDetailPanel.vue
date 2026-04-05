@@ -25,7 +25,7 @@
 
           <div class="hero-actions">
             <RouterLink class="cta primary" :to="bookingLink">Đặt lịch khám</RouterLink>
-            <RouterLink class="cta secondary" to="/public">Trao đổi với tư vấn viên</RouterLink>
+            <RouterLink class="cta secondary" to="/about">Trao đổi với tư vấn viên</RouterLink>
           </div>
         </div>
 
@@ -72,26 +72,28 @@
         <p>Khám phá các dịch vụ thường được chọn kèm với lựa chọn này.</p>
       </header>
 
-      <div class="related-grid">
-        <RouterLink
-          v-for="item in relatedServices"
-          :key="item.id"
-          :to="`/services/${item.id}`"
-          class="related-link"
-        >
-          <article class="related-card">
-            <img :src="item.image" :alt="`Hình dịch vụ ${item.name}`" loading="lazy" />
-            <h3>{{ item.name }}</h3>
-            <p>{{ item.description || 'Thông tin dịch vụ có thể được cung cấp tại quầy tiếp đón.' }}</p>
-            <p class="sub-price" v-if="item.price !== null && item.price !== undefined">{{ formatPrice(item.price) }}</p>
-          </article>
-        </RouterLink>
-      </div>
+      <SlidingPager :items="relatedServices" :items-per-page="3" :mobile-items-per-page="1">
+        <template #default="{ item }">
+          <RouterLink
+            :to="`/services/${item.id}`"
+            class="related-link"
+          >
+            <article class="related-card">
+              <img :src="item.image" :alt="`Hình dịch vụ ${item.name}`" loading="lazy" />
+              <h3>{{ item.name }}</h3>
+              <p>{{ item.description || 'Thông tin dịch vụ có thể được cung cấp tại quầy tiếp đón.' }}</p>
+              <p class="sub-price" v-if="item.price !== null && item.price !== undefined">{{ formatPrice(item.price) }}</p>
+            </article>
+          </RouterLink>
+        </template>
+      </SlidingPager>
     </section>
   </div>
 </template>
 
 <script setup>
+import SlidingPager from '../shared/SlidingPager.vue';
+
 defineProps({
   loading: { type: Boolean, required: true },
   error: { type: String, default: '' },
@@ -298,16 +300,11 @@ defineEmits(['retry']);
   color: #475569;
 }
 
-.related-grid {
-  margin-top: 14px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-}
-
 .related-link {
   text-decoration: none;
   color: inherit;
+  display: block;
+  height: 100%;
 }
 
 .related-card {

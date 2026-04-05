@@ -17,7 +17,7 @@
 			</div>
 		</header>
 
-		<div v-if="auth.role === 'doctor'" class="panel">
+		<div v-if="isDoctor" class="panel">
 			<h2>Yêu cầu lịch hẹn mới</h2>
 			<p class="muted">Duyệt nhanh các lịch hẹn mới gửi tới bác sĩ.</p>
 			<div v-if="doctorPendingAppointments.length === 0">Không có yêu cầu chờ duyệt.</div>
@@ -36,7 +36,7 @@
 			</div>
 		</div>
 
-		<div v-if="auth.role === 'patient'" class="panel">
+		<div v-if="isPatient" class="panel">
 			<h2>Đặt lịch mới</h2>
 			<form class="grid four" @submit.prevent="handleSchedule">
 				<input v-model="createForm.doctorId" required placeholder="Mã bác sĩ" />
@@ -63,11 +63,11 @@
 						<p>Bác sĩ: {{ item.doctorId || item.doctor?.id || 'Chưa xác định' }}</p>
 					</div>
 					<div class="row">
-						<template v-if="auth.role === 'patient'">
+						<template v-if="isPatient">
 							<button type="button" @click="cancel(item)">Hủy</button>
 							<button type="button" @click="openReschedule(item)">Đổi lịch</button>
 						</template>
-						<template v-else-if="auth.role === 'doctor'">
+						<template v-else-if="isDoctor">
 							<select v-if="canUpdateStatus(item)" v-model="item.statusUpdate" @change="updateStatus(item)">
 								<option disabled value="">Cập nhật</option>
 								<option value="completed">Hoàn tất</option>
@@ -101,9 +101,15 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
 import { useAppointmentsStore } from '../stores/appointments.js';
+import { useRoleVisibility } from '../composables/useRoleVisibility.js';
+import {
+	canRoleUpdateAppointmentStatus,
+	getDoctorPendingAppointments,
+} from './controllers/appointmentsController.js';
 
 const auth = useAuthStore();
 const appointments = useAppointmentsStore();
+const { isPatient, isDoctor, role } = useRoleVisibility(auth);
 const filters = reactive({ status: '' });
 
 const createForm = reactive({ doctorId: '', startAt: '', endAt: '', reason: '' });
@@ -111,18 +117,10 @@ const rescheduleForm = reactive({ startAt: '', endAt: '' });
 const showReschedule = ref(null);
 
 const doctorPendingAppointments = computed(() => {
-	if (auth.role !== 'doctor') return [];
-	return appointments.items.filter((item) => {
-		const status = String(item.status || '').toLowerCase();
-		return status === 'pending' || status === 'requested';
-	});
+	return getDoctorPendingAppointments(appointments.items, role.value);
 });
 
-const canUpdateStatus = (item) => {
-	if (auth.role !== 'doctor') return false;
-	const status = String(item.status || '').toLowerCase();
-	return status === 'scheduled' || status === 'in_progress';
-};
+const canUpdateStatus = (item) => canRoleUpdateAppointmentStatus(item, role.value);
 
 const statusLabelMap = {
 	pending: 'Chờ duyệt',

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { patientApi, adminApi } from '../services/api.js';
 import { useAuthStore } from './auth.js';
+import { isRole } from '../constants/navigation.js';
 
 export const useBillingStore = defineStore('billing', {
 	state: () => ({
@@ -15,7 +16,7 @@ export const useBillingStore = defineStore('billing', {
 	actions: {
 		async fetchBilling(filters = {}) {
 			const auth = useAuthStore();
-			if (auth.role !== 'patient') return;
+			if (!isRole(auth.role, 'patient')) return;
 			this.loading = true;
 			this.error = null;
 			try {
@@ -40,7 +41,7 @@ export const useBillingStore = defineStore('billing', {
 		},
 		async manageInvoice(invoiceId, payload) {
 			const auth = useAuthStore();
-			if (auth.role !== 'admin') return;
+			if (!isRole(auth.role, 'admin')) return;
 			await adminApi.manageBilling(auth.token, invoiceId, payload);
 			await this.fetchBilling();
 		},

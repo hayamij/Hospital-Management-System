@@ -4,6 +4,8 @@ import { useAuthStore } from './auth.js';
 import { useAppointmentsStore } from './appointments.js';
 import { normalizeDoctor } from '../services/mappers.js';
 
+const ACTIVE_DOCTOR_STATUSES = new Set(['active', 'verified']);
+
 const toIsoTime = (value) => {
 	if (!value) return null;
 	const t = new Date(value);
@@ -11,29 +13,50 @@ const toIsoTime = (value) => {
 	return t.toISOString();
 };
 
-const toSlotModel = (source, index = 0) => {
+const isDoctorAvailableForBooking = (doctor) => {
+	const status = String(doctor?.status || 'active').toLowerCase();
+	return ACTIVE_DOCTOR_STATUSES.has(status);
+};
+
+const toSlotModel = (source, doctor, index = 0) => {
 	const start = toIsoTime(source?.start || source?.startAt || source?.from);
 	const end = toIsoTime(source?.end || source?.endAt || source?.to);
 
 	if (!start || !end) {
 		return {
-			id: `slot-${index + 1}`,
+			id: `${doctor?.id || 'doctor'}-slot-${index + 1}`,
 			start: null,
 			end: null,
 			label: 'Invalid slot',
+			doctorId: doctor?.id || '',
+			doctorName: doctor?.name || '',
+			specialty: doctor?.specialty || '',
 		};
 	}
 
 	const startDate = new Date(start);
 	const endDate = new Date(end);
-	const label = `${startDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - ${endDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+	const timeLabel = `${startDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - ${endDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+	const doctorLabel = doctor?.name ? ` • ${doctor.name}` : '';
+	const specialtyLabel = doctor?.specialty ? ` (${doctor.specialty})` : '';
 
 	return {
-		id: source?.id || `slot-${index + 1}`,
+		id: source?.id || `${doctor?.id || 'doctor'}-${start}`,
 		start,
 		end,
-		label,
+		label: `${timeLabel}${doctorLabel}${specialtyLabel}`,
+		timeLabel,
+		doctorId: doctor?.id || '',
+		doctorName: doctor?.name || '',
+		specialty: doctor?.specialty || '',
 	};
+};
+
+const slotSort = (a, b) => {
+	const tA = new Date(a.start).getTime();
+	const tB = new Date(b.start).getTime();
+	if (tA !== tB) return tA - tB;
+	return String(a.doctorName || '').localeCompare(String(b.doctorName || ''));
 };
 
 export const useBookingStore = defineStore('booking', {
@@ -42,6 +65,7 @@ export const useBookingStore = defineStore('booking', {
 		doctors: [],
 		specialties: [],
 		availableSlots: [],
+		slotsChecked: false,
 		loadingDoctors: false,
 		loadingSlots: false,
 		submitting: false,
@@ -57,10 +81,39 @@ export const useBookingStore = defineStore('booking', {
 		},
 	}),
 	getters: {
+		activeDoctors: (state) => state.doctors.filter(isDoctorAvailableForBooking),
 		selectedDoctor: (state) => state.doctors.find((d) => d.id === state.form.doctorId) || null,
 		filteredDoctors: (state) => {
-			if (!state.form.specialty) return state.doctors;
-			return state.doctors.filter((d) => d.specialty === state.form.specialty);
+			const doctors = state.doctors.filter(isDoctorAvailableForBooking);
+			if (!state.form.specialty) return doctors;
+			return doctors.filter((d) => d.specialty === state.form.specialty);
+		},
+		selectedSlot: (state) => {
+			return (
+				state.availableSlots.find(
+					(slot) =>
+						slot.start === state.form.slotStart &&
+						slot.end === state.form.slotEnd &&
+						slot.doctorId === state.form.doctorId
+				) ||
+				state.availableSlots.find(
+					(slot) => slot.start === state.form.slotStart && slot.end === state.form.slotEnd
+				) ||
+				null
+			);
+		},
+		availableDoctorsForSelectedTime: (state) => {
+			if (!state.form.slotStart || !state.form.slotEnd) return [];
+			const map = new Map();
+			for (const slot of state.availableSlots) {
+				if (slot.start !== state.form.slotStart || slot.end !== state.form.slotEnd) continue;
+				if (!slot.doctorId || map.has(slot.doctorId)) continue;
+				const doctor = state.doctors.find((item) => item.id === slot.doctorId);
+				if (doctor) {
+					map.set(slot.doctorId, doctor);
+				}
+			}
+			return Array.from(map.values());
 		},
 	},
 	actions: {
@@ -71,6 +124,7 @@ export const useBookingStore = defineStore('booking', {
 		resetFlow() {
 			this.step = 1;
 			this.availableSlots = [];
+			this.slotsChecked = false;
 			this.error = '';
 			this.successMessage = '';
 			this.form = {
@@ -84,32 +138,83 @@ export const useBookingStore = defineStore('booking', {
 		},
 		setSpecialty(value) {
 			this.form.specialty = value || '';
+			this.error = '';
+
 			if (this.form.doctorId) {
 				const doc = this.doctors.find((d) => d.id === this.form.doctorId);
 				if (!doc || (this.form.specialty && doc.specialty !== this.form.specialty)) {
 					this.form.doctorId = '';
 				}
 			}
+
+			if (this.form.appointmentDate) {
+				this.fetchAvailableSlots().catch(() => {
+					// error already handled in store state
+				});
+			}
 		},
 		setDoctor(doctorId) {
 			this.form.doctorId = doctorId || '';
+			this.error = '';
+
 			const doc = this.doctors.find((d) => d.id === doctorId);
 			if (doc && !this.form.specialty) {
 				this.form.specialty = doc.specialty;
 			}
-			this.availableSlots = [];
-			this.form.slotStart = '';
-			this.form.slotEnd = '';
+
+			if (!this.form.doctorId) {
+				return;
+			}
+
+			const exactWindowSlot = this.availableSlots.find(
+				(slot) =>
+					slot.doctorId === this.form.doctorId &&
+					slot.start === this.form.slotStart &&
+					slot.end === this.form.slotEnd
+			);
+
+			if (exactWindowSlot) {
+				this.selectSlot(exactWindowSlot);
+				return;
+			}
+
+			const firstDoctorSlot = this.availableSlots.find((slot) => slot.doctorId === this.form.doctorId);
+			if (firstDoctorSlot) {
+				this.selectSlot(firstDoctorSlot);
+			}
 		},
 		setDate(value) {
 			this.form.appointmentDate = value || '';
-			this.availableSlots = [];
-			this.form.slotStart = '';
-			this.form.slotEnd = '';
+			this.error = '';
+
+			if (!this.form.appointmentDate) {
+				this.availableSlots = [];
+				this.slotsChecked = false;
+				this.form.slotStart = '';
+				this.form.slotEnd = '';
+				return;
+			}
+
+			this.fetchAvailableSlots().catch(() => {
+				// error already handled in store state
+			});
 		},
 		selectSlot(slot) {
+			if (!slot) {
+				this.form.slotStart = '';
+				this.form.slotEnd = '';
+				return;
+			}
+
 			this.form.slotStart = slot?.start || '';
 			this.form.slotEnd = slot?.end || '';
+			if (slot?.doctorId) {
+				this.form.doctorId = slot.doctorId;
+			}
+			if (slot?.specialty && !this.form.specialty) {
+				this.form.specialty = slot.specialty;
+			}
+			this.error = '';
 		},
 		async initialize() {
 			if (this.doctors.length > 0) return;
@@ -119,11 +224,13 @@ export const useBookingStore = defineStore('booking', {
 			this.loadingDoctors = true;
 			this.error = '';
 			try {
-				const result = await patientApi.searchDoctors({ page: 1, pageSize: 100 });
+				const result = await patientApi.searchDoctors({ page: 1, pageSize: 200 });
 				const list = Array.isArray(result?.doctors) ? result.doctors : [];
-				const normalized = list.map(normalizeDoctor);
+				const normalized = list.map(normalizeDoctor).sort((a, b) => a.name.localeCompare(b.name));
+				const availableDoctors = normalized.filter(isDoctorAvailableForBooking);
+				const specialtiesSource = availableDoctors.length ? availableDoctors : normalized;
 				this.doctors = normalized;
-				this.specialties = Array.from(new Set(normalized.map((d) => d.specialty))).sort((a, b) => a.localeCompare(b));
+				this.specialties = Array.from(new Set(specialtiesSource.map((d) => d.specialty))).sort((a, b) => a.localeCompare(b));
 			} catch (error) {
 				this.error = error?.message || 'Failed to load doctors.';
 				throw error;
@@ -134,19 +241,77 @@ export const useBookingStore = defineStore('booking', {
 		async fetchAvailableSlots() {
 			this.loadingSlots = true;
 			this.error = '';
-			this.availableSlots = [];
-			this.form.slotStart = '';
-			this.form.slotEnd = '';
+			this.slotsChecked = false;
 			try {
-				if (!this.form.doctorId || !this.form.appointmentDate) {
-					throw new Error('Please select doctor and date first.');
+				if (!this.form.appointmentDate) {
+					this.availableSlots = [];
+					this.form.slotStart = '';
+					this.form.slotEnd = '';
+					return [];
 				}
-				const result = await guestApi.availableSlots(this.form.doctorId, {
-					from: this.form.appointmentDate,
-					to: this.form.appointmentDate,
-				});
-				const slots = Array.isArray(result?.slots) ? result.slots : [];
-				this.availableSlots = slots.map(toSlotModel).filter((slot) => slot.start && slot.end);
+
+				const doctorsToQuery = this.filteredDoctors.length
+					? this.filteredDoctors
+					: this.activeDoctors;
+
+				if (doctorsToQuery.length === 0) {
+					this.availableSlots = [];
+					this.form.slotStart = '';
+					this.form.slotEnd = '';
+					this.slotsChecked = true;
+					this.error = 'Không có bác sĩ khả dụng cho bộ lọc hiện tại.';
+					return [];
+				}
+
+				const responses = await Promise.allSettled(
+					doctorsToQuery.map(async (doctor) => {
+						const result = await guestApi.availableSlots(doctor.id, {
+							from: this.form.appointmentDate,
+							to: this.form.appointmentDate,
+						});
+						const slots = Array.isArray(result?.slots) ? result.slots : [];
+						return slots.map((slot, index) => toSlotModel(slot, doctor, index)).filter((slot) => slot.start && slot.end);
+					})
+				);
+
+				const successful = responses.filter((item) => item.status === 'fulfilled');
+				if (successful.length === 0) {
+					throw new Error('Không thể tải khung giờ trống. Vui lòng thử lại.');
+				}
+
+				const allSlots = successful.flatMap((item) => item.value || []);
+				const uniqueSlots = [];
+				const seen = new Set();
+				for (const slot of allSlots) {
+					const key = `${slot.doctorId}|${slot.start}|${slot.end}`;
+					if (seen.has(key)) continue;
+					seen.add(key);
+					uniqueSlots.push(slot);
+				}
+
+				uniqueSlots.sort(slotSort);
+				this.availableSlots = uniqueSlots;
+				this.slotsChecked = true;
+
+				if (!uniqueSlots.length) {
+					this.form.slotStart = '';
+					this.form.slotEnd = '';
+					return [];
+				}
+
+				const currentSlot = uniqueSlots.find(
+					(slot) =>
+						slot.start === this.form.slotStart &&
+						slot.end === this.form.slotEnd &&
+						(!this.form.doctorId || slot.doctorId === this.form.doctorId)
+				);
+
+				const preferredSlot =
+					(this.form.doctorId && uniqueSlots.find((slot) => slot.doctorId === this.form.doctorId)) ||
+					null;
+
+				this.selectSlot(currentSlot || preferredSlot || uniqueSlots[0]);
+				return uniqueSlots;
 			} catch (error) {
 				this.error = error?.message || 'Failed to load available slots.';
 				throw error;
@@ -157,14 +322,14 @@ export const useBookingStore = defineStore('booking', {
 		goNext() {
 			this.error = '';
 			if (this.step === 1) {
-				if (!this.form.specialty || !this.form.doctorId) {
-					this.error = 'Please choose specialty and doctor.';
+				if (!this.form.appointmentDate || !this.form.slotStart || !this.form.slotEnd) {
+					this.error = 'Vui lòng chọn ngày khám và một khung giờ trống.';
 					return false;
 				}
 			}
 			if (this.step === 2) {
-				if (!this.form.appointmentDate || !this.form.slotStart || !this.form.slotEnd) {
-					this.error = 'Please choose date and a time slot.';
+				if (!this.form.doctorId) {
+					this.error = 'Vui lòng chọn bác sĩ phù hợp với khung giờ đã chọn.';
 					return false;
 				}
 			}

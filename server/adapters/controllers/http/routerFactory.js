@@ -72,6 +72,7 @@ export function createHttpRouter(deps) {
   router.get('/patients/medical-records', requireRole(['patient']), patientRecords.viewMedicalRecords);
   router.get('/patients/prescriptions/:id/download', requireRole(['patient']), patientRecords.downloadPrescription);
   router.post('/patients/messages', requireRole(['patient']), patientMessages.sendPatientMessage);
+  router.get('/patients/profile', requireRole(['patient']), patientProfile.viewPatientProfile);
   router.put('/patients/profile', requireRole(['patient']), patientProfile.updatePatientProfile);
 
   // Guests

@@ -1,6 +1,7 @@
 export class LoginOutput {
-	constructor({ userId, role, accessToken, refreshToken, expiresAt }) {
+	constructor({ userId, patientId, role, accessToken, refreshToken, expiresAt }) {
 		this.userId = userId;
+		this.patientId = patientId;
 		this.role = role;
 		this.accessToken = accessToken;
 		this.refreshToken = refreshToken;

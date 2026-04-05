@@ -9,6 +9,7 @@ export function buildAdminUsersControllers({ listUsersUseCase, createUserUseCase
       mapInput: (req) => ({
         adminId: req.user?.id,
         query: req.query?.q ?? req.query?.query,
+        role: req.query?.role ?? req.query?.type,
         type: req.query?.type,
         page: req.query?.page,
         pageSize: req.query?.pageSize,

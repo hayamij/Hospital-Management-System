@@ -30,22 +30,23 @@ import HomeFeaturePage from '../pages/HomeFeaturePage.vue';
 import PublicServicesPage from '../pages/PublicServicesPage.vue';
 import PublicServiceDetailPage from '../pages/PublicServiceDetailPage.vue';
 import PublicCardDetailPage from '../pages/PublicCardDetailPage.vue';
-
-const getRoleHome = (role) => {
-	if (role === 'admin') return '/admin/dashboard';
-	if (role === 'doctor') return '/doctor/dashboard';
-	if (role === 'patient') return '/patient/dashboard';
-	return '/';
-};
+import {
+	AUTH_ROUTE,
+	getRoleHomeRoute,
+	getRoleRedirectPath,
+} from '../constants/navigation.js';
 
 const redirectLegacyByRole = () => {
 	const auth = useAuthStore();
 	auth.fetchCurrentUser();
 
-	if (auth.role === 'admin') return '/admin/dashboard';
-	if (auth.role === 'doctor') return '/doctor/dashboard';
-	if (auth.role === 'patient') return '/patient/dashboard';
-	return '/login';
+	return getRoleHomeRoute(auth.role, AUTH_ROUTE.login);
+};
+
+const resolveLegacyRoleRedirect = (roleMap, fallbackPath) => {
+	const auth = useAuthStore();
+	auth.fetchCurrentUser();
+	return getRoleRedirectPath(auth.role, roleMap, fallbackPath);
 };
 
 const routes = [
@@ -75,7 +76,7 @@ const routes = [
 			{ path: '', redirect: '/patient/dashboard' },
 			{ path: 'dashboard', component: PatientDashboard },
 			{ path: 'profile', component: PatientProfile },
-			{ path: 'booking', component: BookingPage },
+			{ path: 'booking', component: BookingPage, meta: { public: true } },
 			{ path: 'appointments', component: AppointmentsPage },
 			{ path: 'billing', component: InvoicesPage },
 			{ path: 'invoices', component: InvoicesPage },
@@ -115,39 +116,29 @@ const routes = [
 		],
 	},
 	{ path: '/dashboard', redirect: () => redirectLegacyByRole() },
-	{ path: '/appointments', redirect: () => {
-		const auth = useAuthStore();
-		auth.fetchCurrentUser();
-		if (auth.role === 'admin') return '/admin/appointments';
-		if (auth.role === 'doctor') return '/doctor/appointments';
-		return '/patient/appointments';
-	} },
-	{ path: '/patients', redirect: () => {
-		const auth = useAuthStore();
-		auth.fetchCurrentUser();
-		if (auth.role === 'admin') return '/admin/patients';
-		if (auth.role === 'doctor') return '/doctor/patients';
-		return '/patient/dashboard';
-	} },
-	{ path: '/records', redirect: () => {
-		const auth = useAuthStore();
-		auth.fetchCurrentUser();
-		if (auth.role === 'admin') return '/admin/records';
-		if (auth.role === 'doctor') return '/doctor/records';
-		return '/patient/records';
-	} },
-	{ path: '/billing', redirect: () => {
-		const auth = useAuthStore();
-		auth.fetchCurrentUser();
-		if (auth.role === 'admin') return '/admin/billing';
-		return '/patient/billing';
-	} },
-	{ path: '/communications', redirect: () => {
-		const auth = useAuthStore();
-		auth.fetchCurrentUser();
-		if (auth.role === 'doctor') return '/doctor/communications';
-		return '/patient/communications';
-	} },
+	{ path: '/appointments', redirect: () => resolveLegacyRoleRedirect({
+		admin: '/admin/appointments',
+		doctor: '/doctor/appointments',
+		patient: '/patient/appointments',
+	}, '/patient/appointments') },
+	{ path: '/patients', redirect: () => resolveLegacyRoleRedirect({
+		admin: '/admin/patients',
+		doctor: '/doctor/patients',
+		patient: '/patient/dashboard',
+	}, '/patient/dashboard') },
+	{ path: '/records', redirect: () => resolveLegacyRoleRedirect({
+		admin: '/admin/records',
+		doctor: '/doctor/records',
+		patient: '/patient/records',
+	}, '/patient/records') },
+	{ path: '/billing', redirect: () => resolveLegacyRoleRedirect({
+		admin: '/admin/billing',
+		patient: '/patient/billing',
+	}, '/patient/billing') },
+	{ path: '/communications', redirect: () => resolveLegacyRoleRedirect({
+		doctor: '/doctor/communications',
+		patient: '/patient/communications',
+	}, '/patient/communications') },
 	{ path: '/doctor-ops', redirect: '/doctor/dashboard' },
 	{ path: '/admin-ops', redirect: '/admin/ops' },
 	{
@@ -170,11 +161,11 @@ router.beforeEach((to, _from, next) => {
 	}
 
 	if (!auth.isAuthenticated) {
-		return next('/login');
+		return next(AUTH_ROUTE.login);
 	}
 
 	if (to.meta?.roles && !to.meta.roles.includes(auth.role)) {
-		return next(getRoleHome(auth.role));
+		return next(getRoleHomeRoute(auth.role));
 	}
 
 	return next();

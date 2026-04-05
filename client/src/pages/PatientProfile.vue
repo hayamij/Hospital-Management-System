@@ -29,6 +29,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { authApi } from '../services/api.js';
 import { usePatientsStore } from '../stores/patients.js';
 import { useAuthStore } from '../stores/auth.js';
+import { readAuthPrefill } from '../services/sessionStorage.js';
 import PatientProfileInfoForm from '../components/patient/PatientProfileInfoForm.vue';
 import PatientPasswordChangeForm from '../components/patient/PatientPasswordChangeForm.vue';
 
@@ -126,6 +127,14 @@ const touchPasswordField = (field) => {
 const showFieldError = (field) => (profileTouched[field] || profileSubmitted.value) && profileErrors.value[field];
 const showPasswordError = (field) => (passwordTouched[field] || passwordSubmitted.value) && passwordErrors.value[field];
 
+const syncProfileForm = () => {
+  const prefill = readAuthPrefill() || {};
+  profileForm.name = patients.profile?.name || auth.userProfile?.name || prefill.fullName || '';
+  profileForm.phone = patients.profile?.phone || prefill.phone || '';
+  profileForm.address = patients.profile?.address || prefill.address || '';
+  profileForm.allergies = patients.profile?.allergies || prefill.allergies || '';
+};
+
 const submitProfile = async () => {
   profileSubmitted.value = true;
   profileSuccess.value = '';
@@ -134,14 +143,18 @@ const submitProfile = async () => {
     return;
   }
 
-  await patients.updateProfile({
-    name: profileForm.name,
-    phone: profileForm.phone,
-    address: profileForm.address,
-    allergies: profileForm.allergies,
-  });
-
-  profileSuccess.value = 'Cập nhật thông tin cá nhân thành công.';
+  try {
+    await patients.updateProfile({
+      name: profileForm.name,
+      phone: profileForm.phone,
+      address: profileForm.address,
+      allergies: profileForm.allergies,
+    });
+    syncProfileForm();
+    profileSuccess.value = 'Cập nhật thông tin cá nhân thành công.';
+  } catch {
+    profileSuccess.value = '';
+  }
 };
 
 const submitPassword = async () => {
@@ -176,13 +189,14 @@ const submitPassword = async () => {
   }
 };
 
-onMounted(() => {
-  auth.fetchCurrentUser();
-
-  profileForm.name = patients.profile?.name || auth.userProfile?.name || '';
-  profileForm.phone = patients.profile?.phone || '';
-  profileForm.address = patients.profile?.address || '';
-  profileForm.allergies = patients.profile?.allergies || '';
+onMounted(async () => {
+  await auth.fetchCurrentUser();
+  try {
+    await patients.loadProfile();
+  } catch {
+    // Keep fallback values from auth store when profile endpoint is temporarily unavailable.
+  }
+  syncProfileForm();
 });
 </script>
 

@@ -4,7 +4,7 @@
 			<h1>Hồ sơ bệnh án</h1>
 			<p>Xem hồ sơ và thêm ghi chú cho bệnh án.</p>
 			<div class="row">
-				<input v-if="auth.role === 'doctor'" v-model="patientId" placeholder="Mã bệnh nhân" />
+				<input v-if="isDoctor" v-model="patientId" placeholder="Mã bệnh nhân" />
 				<button type="button" @click="refresh">Làm mới</button>
 			</div>
 		</header>
@@ -21,7 +21,7 @@
 			</div>
 		</section>
 
-		<section v-if="auth.role === 'doctor'" class="panel">
+		<section v-if="isDoctor" class="panel">
 			<h2>Thêm ghi chú khám</h2>
 			<form class="grid two" @submit.prevent="addNote">
 				<textarea v-model="note" required rows="4" placeholder="Ghi chú khám"></textarea>
@@ -37,14 +37,16 @@
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
 import { useRecordsStore } from '../stores/records.js';
+import { useRoleVisibility } from '../composables/useRoleVisibility.js';
 
 const auth = useAuthStore();
 const records = useRecordsStore();
+const { isDoctor } = useRoleVisibility(auth);
 const patientId = ref('');
 const note = ref('');
 
 const refresh = () => {
-	const filters = auth.role === 'doctor' ? { patientId: patientId.value } : {};
+	const filters = isDoctor.value ? { patientId: patientId.value } : {};
 	return records.fetchRecords(filters);
 };
 

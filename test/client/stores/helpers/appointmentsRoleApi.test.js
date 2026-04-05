@@ -1,0 +1,153 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { adminApi, doctorApi, patientApi } from '../../../../client/src/services/api.js';
+import {
+  fetchAppointmentsByRole,
+  updateAppointmentStatusByRole,
+} from '../../../../client/src/stores/helpers/appointmentsRoleApi.js';
+
+describe('appointmentsRoleApi helper', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('fetches patient appointments and maps pagination', async () => {
+    const payload = {
+      appointments: [{ id: 'apt-1' }],
+      total: 4,
+      page: 2,
+      pageSize: 5,
+    };
+    const listAppointmentsSpy = vi.spyOn(patientApi, 'listAppointments').mockResolvedValue(payload);
+
+    const result = await fetchAppointmentsByRole({
+      role: 'patient',
+      token: 'token-patient',
+      userId: 'pat-1',
+      filters: { status: 'pending', page: 2 },
+      page: 1,
+      pageSize: 10,
+    });
+
+    expect(listAppointmentsSpy).toHaveBeenCalledWith('token-patient', {
+      status: 'pending',
+      page: 2,
+      pageSize: 10,
+      patientId: 'pat-1',
+    });
+    expect(result).toEqual({
+      response: payload,
+      items: payload.appointments,
+      total: 4,
+      page: 2,
+      pageSize: 5,
+    });
+  });
+
+  it('fetches doctor schedule and maps pagination', async () => {
+    const payload = {
+      appointments: [{ id: 'apt-2' }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    };
+    const getScheduleSpy = vi.spyOn(doctorApi, 'getSchedule').mockResolvedValue(payload);
+
+    const result = await fetchAppointmentsByRole({
+      role: 'doctor',
+      token: 'token-doctor',
+      userId: 'doc-1',
+      filters: { status: 'scheduled' },
+      pageSize: 10,
+    });
+
+    expect(getScheduleSpy).toHaveBeenCalledWith('token-doctor', { status: 'scheduled' });
+    expect(result).toEqual({
+      response: payload,
+      items: payload.appointments,
+      total: 1,
+      page: 1,
+      pageSize: 20,
+    });
+  });
+
+  it('returns null when role is unsupported for appointment listing', async () => {
+    const listAppointmentsSpy = vi.spyOn(patientApi, 'listAppointments').mockResolvedValue({});
+    const getScheduleSpy = vi.spyOn(doctorApi, 'getSchedule').mockResolvedValue({});
+
+    const result = await fetchAppointmentsByRole({ role: 'admin', token: 'token-admin', userId: 'adm-1' });
+
+    expect(result).toBeNull();
+    expect(listAppointmentsSpy).not.toHaveBeenCalled();
+    expect(getScheduleSpy).not.toHaveBeenCalled();
+  });
+
+  it('routes doctor decision updates to decision API', async () => {
+    const decisionSpy = vi.spyOn(doctorApi, 'updateAppointmentDecision').mockResolvedValue({ ok: true });
+    const statusSpy = vi.spyOn(doctorApi, 'updateAppointmentStatus').mockResolvedValue({ ok: true });
+
+    const updated = await updateAppointmentStatusByRole({
+      role: 'doctor',
+      token: 'token-doctor',
+      userId: 'doc-1',
+      appointmentId: 'apt-3',
+      payload: { decision: 'accept' },
+    });
+
+    expect(updated).toBe(true);
+    expect(decisionSpy).toHaveBeenCalledWith('token-doctor', 'apt-3', {
+      decision: 'accept',
+      doctorId: 'doc-1',
+    });
+    expect(statusSpy).not.toHaveBeenCalled();
+  });
+
+  it('routes doctor status updates to status API', async () => {
+    const decisionSpy = vi.spyOn(doctorApi, 'updateAppointmentDecision').mockResolvedValue({ ok: true });
+    const statusSpy = vi.spyOn(doctorApi, 'updateAppointmentStatus').mockResolvedValue({ ok: true });
+
+    const updated = await updateAppointmentStatusByRole({
+      role: 'doctor',
+      token: 'token-doctor',
+      userId: 'doc-2',
+      appointmentId: 'apt-4',
+      payload: { status: 'completed' },
+    });
+
+    expect(updated).toBe(true);
+    expect(statusSpy).toHaveBeenCalledWith('token-doctor', 'apt-4', {
+      status: 'completed',
+      doctorId: 'doc-2',
+    });
+    expect(decisionSpy).not.toHaveBeenCalled();
+  });
+
+  it('routes admin updates to override endpoint', async () => {
+    const overrideSpy = vi.spyOn(adminApi, 'overrideAppointment').mockResolvedValue({ ok: true });
+
+    const updated = await updateAppointmentStatusByRole({
+      role: 'admin',
+      token: 'token-admin',
+      userId: 'adm-2',
+      appointmentId: 'apt-5',
+      payload: { status: 'cancelled' },
+    });
+
+    expect(updated).toBe(true);
+    expect(overrideSpy).toHaveBeenCalledWith('token-admin', 'apt-5', { status: 'cancelled' });
+  });
+
+  it('returns false for unsupported role in update flow', async () => {
+    const overrideSpy = vi.spyOn(adminApi, 'overrideAppointment').mockResolvedValue({ ok: true });
+
+    const updated = await updateAppointmentStatusByRole({
+      role: 'patient',
+      token: 'token-patient',
+      userId: 'pat-2',
+      appointmentId: 'apt-6',
+      payload: { status: 'cancelled' },
+    });
+
+    expect(updated).toBe(false);
+    expect(overrideSpy).not.toHaveBeenCalled();
+  });
+});

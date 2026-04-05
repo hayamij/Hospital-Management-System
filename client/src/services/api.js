@@ -1,7 +1,11 @@
 import axios from 'axios';
+import {
+	clearStoredSession,
+	readStoredToken,
+	redirectToLogin,
+} from './sessionStorage.js';
 
 const API_BASE = '/api';
-const STORAGE_KEY = 'hms.session';
 
 const http = axios.create({
 	baseURL: API_BASE,
@@ -10,19 +14,8 @@ const http = axios.create({
 	},
 });
 
-const readToken = () => {
-	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
-		if (!raw) return null;
-		const parsed = JSON.parse(raw);
-		return parsed?.token ?? null;
-	} catch {
-		return null;
-	}
-};
-
 http.interceptors.request.use((config) => {
-	const token = readToken();
+	const token = readStoredToken();
 	if (token) {
 		config.headers = config.headers || {};
 		config.headers.Authorization = `Bearer ${token}`;
@@ -53,10 +46,8 @@ http.interceptors.response.use(
 		wrapped.details = payload;
 
 		if (status === 401 && typeof window !== 'undefined') {
-			localStorage.removeItem(STORAGE_KEY);
-			if (!window.location.pathname.includes('/login')) {
-				window.location.assign('/login');
-			}
+			clearStoredSession();
+			redirectToLogin();
 		}
 
 		return Promise.reject(wrapped);
@@ -94,8 +85,24 @@ export const authApi = {
 	login(credentials) {
 		return request('/auth/login', { method: 'POST', data: credentials });
 	},
-	logout(token) {
-		return request('/auth/logout', { method: 'POST', token, data: {} });
+	logout(sessionOrToken) {
+		const token =
+			typeof sessionOrToken === 'string'
+				? sessionOrToken
+				: sessionOrToken?.token ?? null;
+		const refreshToken =
+			typeof sessionOrToken === 'string'
+				? null
+				: sessionOrToken?.refreshToken ?? null;
+
+		return request('/auth/logout', {
+			method: 'POST',
+			token,
+			data: {
+				accessToken: token,
+				refreshToken,
+			},
+		});
 	},
 	resetPassword(data) {
 		return request('/auth/reset-password', { method: 'POST', data });
@@ -105,6 +112,9 @@ export const authApi = {
 export const patientApi = {
 	register(data) {
 		return request('/patients/register', { method: 'POST', data });
+	},
+	getProfile(token, params) {
+		return request('/patients/profile', { method: 'GET', token, params });
 	},
 	updateProfile(token, payload) {
 		return request('/patients/profile', { method: 'PUT', token, data: payload });

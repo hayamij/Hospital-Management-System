@@ -1,7 +1,11 @@
 import { defineStore } from 'pinia';
 import { authApi } from '../services/api.js';
-
-const STORAGE_KEY = 'hms.session';
+import { getRoleHomeRoute } from '../constants/navigation.js';
+import {
+	clearStoredSession,
+	readStoredSession,
+	writeStoredSession,
+} from '../services/sessionStorage.js';
 
 const parseJwtPayload = (token) => {
 	try {
@@ -23,6 +27,7 @@ const parseJwtPayload = (token) => {
 export const useAuthStore = defineStore('auth', {
 	state: () => ({
 		token: null,
+		refreshToken: null,
 		userProfile: null,
 		role: null,
 		initialized: false,
@@ -32,42 +37,37 @@ export const useAuthStore = defineStore('auth', {
 	getters: {
 		isAuthenticated: (state) => Boolean(state.token),
 		userId: (state) => state.userProfile?.id ?? null,
+		patientId: (state) => state.userProfile?.patientId ?? null,
 		email: (state) => state.userProfile?.email ?? null,
-		defaultRoute: (state) => {
-			if (state.role === 'admin') return '/admin/dashboard';
-			if (state.role === 'doctor') return '/doctor/dashboard';
-			if (state.role === 'patient') return '/patient/dashboard';
-			return '/';
-		},
+		defaultRoute: (state) => getRoleHomeRoute(state.role, '/'),
 	},
 	actions: {
 		hydrate() {
 			if (this.initialized) return;
-			const raw = localStorage.getItem(STORAGE_KEY);
-			if (raw) {
-				try {
-					const parsed = JSON.parse(raw);
-					this.token = parsed.token ?? null;
-					this.userProfile = parsed.userProfile ?? null;
-					this.role = parsed.role ?? null;
-				} catch (e) {
-					console.error('Failed to parse session', e);
-				}
+			const session = readStoredSession();
+			if (session) {
+				this.token = session.token ?? null;
+				this.refreshToken = session.refreshToken ?? null;
+				this.userProfile = session.userProfile ?? null;
+				this.role = session.role ?? null;
 			}
 			this.initialized = true;
 		},
 		persist() {
-			localStorage.setItem(
-				STORAGE_KEY,
-				JSON.stringify({ token: this.token, userProfile: this.userProfile, role: this.role })
-			);
+			writeStoredSession({
+				token: this.token,
+				refreshToken: this.refreshToken,
+				userProfile: this.userProfile,
+				role: this.role,
+			});
 		},
 		clear() {
 			this.token = null;
+			this.refreshToken = null;
 			this.userProfile = null;
 			this.role = null;
 			this.error = null;
-			localStorage.removeItem(STORAGE_KEY);
+			clearStoredSession();
 		},
 		async login(credentials) {
 			this.loading = true;
@@ -82,9 +82,11 @@ export const useAuthStore = defineStore('auth', {
 				}
 
 				this.token = token;
+				this.refreshToken = data?.refreshToken ?? null;
 				this.role = data?.role ?? decoded?.role ?? null;
 				this.userProfile = {
 					id: data?.userId ?? decoded?.sub ?? null,
+					patientId: data?.patientId ?? this.userProfile?.patientId ?? null,
 					email: data?.email ?? decoded?.email ?? credentials?.identifier ?? null,
 					name: data?.fullName ?? null,
 				};
@@ -106,6 +108,7 @@ export const useAuthStore = defineStore('auth', {
 				this.role = this.role ?? payload.role ?? null;
 				this.userProfile = {
 					id: this.userProfile?.id ?? payload.sub ?? null,
+					patientId: this.userProfile?.patientId ?? null,
 					email: this.userProfile?.email ?? payload.email ?? null,
 					name: this.userProfile?.name ?? null,
 				};
@@ -120,7 +123,10 @@ export const useAuthStore = defineStore('auth', {
 				return;
 			}
 			try {
-				await authApi.logout(this.token);
+				await authApi.logout({
+					token: this.token,
+					refreshToken: this.refreshToken,
+				});
 			} catch (e) {
 				console.warn('Logout failed', e);
 			} finally {

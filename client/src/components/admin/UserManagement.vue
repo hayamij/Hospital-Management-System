@@ -10,8 +10,8 @@
 
     <div class="toolbar">
       <input v-model.trim="searchText" type="text" placeholder="Tìm theo tên, email, ID..." />
-      <select v-model="typeFilter">
-        <option value="all">Tất cả nhóm</option>
+      <select v-model="roleFilter">
+        <option value="all">Tất cả vai trò</option>
         <option value="doctor">Bác sĩ</option>
         <option value="patient">Bệnh nhân</option>
         <option value="admin">Quản trị</option>
@@ -30,7 +30,9 @@
       row-key="id"
       empty-text="Không có người dùng phù hợp điều kiện tìm kiếm."
     >
-      <template #cell-type="{ value }">{{ value === 'doctor' ? 'Bác sĩ' : 'Bệnh nhân' }}</template>
+      <template #cell-role="{ value }">
+        {{ value === 'doctor' ? 'Bác sĩ' : value === 'patient' ? 'Bệnh nhân' : 'Quản trị' }}
+      </template>
       <template #cell-actions="{ row }">
         <div class="row actions">
           <button type="button" @click="openEditModal(row)">Chỉnh sửa</button>
@@ -69,14 +71,6 @@
             <span>Email</span>
             <input v-model.trim="form.email" type="email" placeholder="user@example.com" />
             <small v-if="submitted && fieldErrors.email" class="field-error">{{ fieldErrors.email }}</small>
-          </label>
-
-          <label class="field">
-            <span>Nhóm</span>
-            <select v-model="form.type">
-              <option value="doctor">Bác sĩ</option>
-              <option value="patient">Bệnh nhân</option>
-            </select>
           </label>
 
           <label class="field">
@@ -123,7 +117,6 @@ const columns = [
   { key: 'id', label: 'ID', width: '140px' },
   { key: 'name', label: 'Họ tên' },
   { key: 'email', label: 'Email', width: '230px' },
-  { key: 'type', label: 'Nhóm', width: '120px' },
   { key: 'role', label: 'Vai trò', width: '120px' },
   { key: 'status', label: 'Trạng thái', width: '130px' },
   { key: 'actions', label: 'Thao tác', width: '120px', align: 'center' },
@@ -131,7 +124,7 @@ const columns = [
 
 const store = useAdminUsersStore();
 const searchText = ref('');
-const typeFilter = ref('all');
+const roleFilter = ref('all');
 const page = ref(1);
 const pageSize = ref(10);
 
@@ -146,8 +139,7 @@ const form = reactive({
   id: '',
   name: '',
   email: '',
-  type: 'patient',
-  role: 'doctor',
+  role: 'patient',
   status: 'active',
   password: '',
 });
@@ -157,7 +149,6 @@ const rows = computed(() =>
     id: item.id,
     name: item.name,
     email: item.email,
-    type: item.type,
     role: item.role,
     status: item.status,
   }))
@@ -165,20 +156,7 @@ const rows = computed(() =>
 
 const totalPages = computed(() => Math.max(1, Math.ceil((store.total || 0) / pageSize.value)));
 
-const syncRoleFromType = (type) => {
-  if (type === 'doctor') return 'doctor';
-  if (type === 'admin') return 'admin';
-  return 'patient';
-};
-
-watch(
-  () => form.type,
-  (value) => {
-    form.role = syncRoleFromType(value);
-  }
-);
-
-watch([searchText, typeFilter, pageSize], () => {
+watch([searchText, roleFilter, pageSize], () => {
   page.value = 1;
   refresh();
 });
@@ -203,7 +181,6 @@ const resetForm = () => {
   form.id = '';
   form.name = '';
   form.email = '';
-  form.type = 'patient';
   form.role = 'patient';
   form.status = 'active';
   form.password = '';
@@ -233,7 +210,6 @@ const openEditModal = (row) => {
   form.id = row.id;
   form.name = row.name;
   form.email = row.email;
-  form.type = row.type || (row.role === 'doctor' ? 'doctor' : row.role === 'admin' ? 'admin' : 'patient');
   form.role = row.role;
   form.status = row.status;
   form.password = '';
@@ -244,7 +220,7 @@ const refresh = async () => {
   try {
     await store.fetchUsers({
       query: searchText.value,
-      type: typeFilter.value === 'all' ? undefined : typeFilter.value,
+      role: roleFilter.value === 'all' ? undefined : roleFilter.value,
       page: page.value,
       pageSize: pageSize.value,
     });
@@ -311,24 +287,37 @@ onMounted(() => {
 .head-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: flex-end;
+  gap: 14px;
   flex-wrap: wrap;
 }
 
+.head-row p {
+  margin: 8px 0 0;
+  color: #475569;
+}
+
 .toolbar {
-  margin: 14px 0;
+  margin: 14px 0 16px;
   display: grid;
-  gap: 10px;
-  grid-template-columns: 1fr 180px 140px;
+  gap: 14px;
+  grid-template-columns: 1fr 200px 150px auto;
+}
+
+.toolbar button {
+  min-height: 44px;
 }
 
 .pagination {
-  margin-top: 12px;
+  margin-top: 14px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
+}
+
+.pagination button {
+  min-height: 40px;
 }
 
 .actions {
@@ -359,7 +348,7 @@ onMounted(() => {
 
 .modal-form {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   grid-template-columns: 1fr 1fr;
 }
 
@@ -379,7 +368,8 @@ onMounted(() => {
 
 .modal-actions {
   grid-column: 1 / -1;
-  margin-top: 4px;
+  margin-top: 6px;
+  gap: 10px;
 }
 
 @media (max-width: 900px) {

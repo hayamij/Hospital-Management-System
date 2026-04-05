@@ -2,11 +2,11 @@ import { DomainError } from '../../../domain/exceptions/domainError.js';
 import { ListUsersInput } from '../../dto/admin/listUsersInput.js';
 import { ListUsersOutput } from '../../dto/admin/listUsersOutput.js';
 
-const normalizeTypeToRole = (type) => {
-  const value = String(type || '').trim().toLowerCase();
+const normalizeRoleFilter = ({ role, type }) => {
+  const value = String(role ?? type ?? '').trim().toLowerCase();
   if (!value) return undefined;
   if (value === 'doctor' || value === 'patient' || value === 'admin') return value;
-  throw new DomainError('Invalid user type filter.');
+  throw new DomainError('Invalid user role filter.');
 };
 
 const mapUser = (user) => ({
@@ -39,7 +39,7 @@ export class ListUsersUseCase {
 
     const page = Math.max(1, Number(input.page) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(input.pageSize) || 10));
-    const role = normalizeTypeToRole(input.type);
+    const role = normalizeRoleFilter({ role: input.role, type: input.type });
     const query = String(input.query || '').trim();
 
     const listed = await this.userRepository.list({ page, pageSize, query, role });

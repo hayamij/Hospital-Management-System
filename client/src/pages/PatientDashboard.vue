@@ -17,6 +17,12 @@
         <p><strong>Bác sĩ:</strong> {{ upcomingAppointment.doctorName }}</p>
         <p><strong>Ngày khám:</strong> {{ formatDate(upcomingAppointment.date) }}</p>
         <p><strong>Trạng thái:</strong> {{ upcomingAppointment.status }}</p>
+        <div v-if="canCancelUpcoming" class="appointment-actions">
+          <button type="button" class="danger" :disabled="canceling" @click="cancelUpcoming">
+            {{ canceling ? 'Đang hủy lịch...' : 'Hủy lịch hẹn' }}
+          </button>
+        </div>
+        <p v-if="cancelError" class="message err compact">{{ cancelError }}</p>
       </div>
 
       <p v-else class="message">Bạn chưa có lịch khám sắp tới. Hãy đặt lịch mới ngay hôm nay.</p>
@@ -25,7 +31,10 @@
     <section class="panel">
       <header class="section-head">
         <h2>3 kết quả khám / hóa đơn gần nhất</h2>
-        <RouterLink to="/patient/records" class="view-all">Xem hồ sơ bệnh án</RouterLink>
+        <div class="view-all-actions">
+          <RouterLink to="/patient/records" class="view-all">Xem tất cả bệnh án</RouterLink>
+          <RouterLink to="/patient/invoices" class="view-all">Xem tất cả hóa đơn</RouterLink>
+        </div>
       </header>
 
       <p v-if="loading" class="message">Đang tải danh sách tóm tắt...</p>
@@ -57,8 +66,10 @@ const recordsStore = useRecordsStore();
 const billingStore = useBillingStore();
 
 const loading = ref(false);
+const canceling = ref(false);
 const upcomingError = ref('');
 const summaryError = ref('');
+const cancelError = ref('');
 
 const formatDate = (value) => {
   const d = new Date(value || '');
@@ -87,6 +98,12 @@ const upcomingAppointment = computed(() => {
   return future[0] || null;
 });
 
+const canCancelUpcoming = computed(() => {
+  if (!upcomingAppointment.value?.key) return false;
+  const status = String(upcomingAppointment.value.status || '').toLowerCase();
+  return !['cancelled', 'canceled', 'completed', 'no_show', 'done'].includes(status);
+});
+
 const latestSummary = computed(() => {
   const recordItems = recordsStore.list.map(normalizeRecord);
   const billingItems = billingStore.invoices.map(normalizeInvoice);
@@ -101,6 +118,7 @@ const loadDashboard = async () => {
   loading.value = true;
   upcomingError.value = '';
   summaryError.value = '';
+  cancelError.value = '';
 
   const [appointmentsResult, recordsResult, billingResult] = await Promise.allSettled([
     appointmentsStore.fetchAppointments({ page: 1, pageSize: 20 }),
@@ -117,6 +135,26 @@ const loadDashboard = async () => {
   }
 
   loading.value = false;
+};
+
+const cancelUpcoming = async () => {
+  const appointmentId = upcomingAppointment.value?.key;
+  if (!appointmentId || !canCancelUpcoming.value) return;
+
+  cancelError.value = '';
+  const shouldCancel = typeof window === 'undefined'
+    ? true
+    : window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?');
+  if (!shouldCancel) return;
+
+  canceling.value = true;
+  try {
+    await appointmentsStore.cancel(appointmentId);
+  } catch (error) {
+    cancelError.value = error?.message || 'Không thể hủy lịch hẹn. Vui lòng thử lại.';
+  } finally {
+    canceling.value = false;
+  }
 };
 
 onMounted(loadDashboard);
@@ -170,17 +208,39 @@ onMounted(loadDashboard);
   margin-top: 18px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 18px;
 }
 
 .appointment-card h2 {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-size: 22px;
 }
 
 .appointment-card p {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   color: #334155;
+}
+
+.appointment-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 12px;
+}
+
+.compact {
+  margin-top: 10px;
+}
+
+.danger {
+  border-color: #dc2626;
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.danger:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .section-head {
@@ -200,6 +260,12 @@ onMounted(loadDashboard);
   text-decoration: none;
 }
 
+.view-all-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .summary-list {
   margin-top: 14px;
   display: grid;
@@ -210,7 +276,8 @@ onMounted(loadDashboard);
 .summary-item {
   border: 1px solid #e2e8f0;
   background: #f8fafc;
-  padding: 14px;
+  border-radius: 12px;
+  padding: 16px;
 }
 
 .meta {
@@ -220,7 +287,7 @@ onMounted(loadDashboard);
 }
 
 .summary-item h3 {
-  margin: 8px 0;
+  margin: 10px 0;
   font-size: 18px;
 }
 

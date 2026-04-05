@@ -32,12 +32,12 @@ const hasFetched = ref(false);
 let currentRequestId = 0;
 
 const bookingLink = computed(() => {
-  return buildBookingLink(service.value?.id);
+  return buildBookingLink(service.value);
 });
 
 const relatedServices = computed(() => {
   if (!service.value?.id) return [];
-  return allServices.value.filter((item) => item.id && item.id !== service.value.id).slice(0, 3);
+  return allServices.value.filter((item) => item.id && item.id !== service.value.id);
 });
 
 const loadRelatedServices = async () => {

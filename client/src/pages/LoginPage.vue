@@ -29,11 +29,12 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue';
+import { onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 import FormField from '../components/shared/FormField.vue';
 import Alert from '../components/shared/Alert.vue';
+import { readAuthPrefill, writeAuthPrefill } from '../services/sessionStorage.js';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -43,8 +44,21 @@ const form = reactive({
   password: '',
 });
 
+onMounted(() => {
+  const prefill = readAuthPrefill();
+  if (!prefill) return;
+  if (!form.identifier) {
+    form.identifier = prefill.identifier || prefill.email || '';
+  }
+});
+
 const submit = async () => {
   await auth.login(form);
+  writeAuthPrefill({
+    identifier: form.identifier,
+    email: auth.email || form.identifier,
+    fullName: auth.userProfile?.name || '',
+  });
   router.push(auth.defaultRoute);
 };
 </script>

@@ -32,7 +32,7 @@
 
       <p class="switch">
         Đã có tài khoản?
-        <RouterLink to="/login">Đăng nhập</RouterLink>
+        <RouterLink :to="AUTH_ROUTE.login">Đăng nhập</RouterLink>
       </p>
 
       <Alert v-if="auth.error" :message="auth.error" />
@@ -41,12 +41,14 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue';
+import { onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { patientApi } from '../services/api.js';
 import { useAuthStore } from '../stores/auth.js';
 import FormField from '../components/shared/FormField.vue';
 import Alert from '../components/shared/Alert.vue';
+import { AUTH_ROUTE } from '../constants/navigation.js';
+import { readAuthPrefill, writeAuthPrefill } from '../services/sessionStorage.js';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -58,6 +60,21 @@ const form = reactive({
   phone: '',
   password: '',
   confirmPassword: '',
+});
+
+onMounted(() => {
+  const prefill = readAuthPrefill();
+  if (!prefill) return;
+
+  if (!form.fullName) {
+    form.fullName = prefill.fullName || '';
+  }
+  if (!form.email) {
+    form.email = prefill.email || prefill.identifier || '';
+  }
+  if (!form.phone) {
+    form.phone = prefill.phone || '';
+  }
 });
 
 const submit = async () => {
@@ -96,7 +113,13 @@ const submit = async () => {
       phone: form.phone,
       password: form.password,
     });
-    router.push('/login');
+    writeAuthPrefill({
+      fullName: form.fullName,
+      email: form.email,
+      phone: form.phone,
+      identifier: form.email,
+    });
+    router.push(AUTH_ROUTE.login);
   } catch (error) {
     auth.error = error.message;
   } finally {

@@ -26,7 +26,14 @@ class FakeNotificationService {
   async sendNotification(payload) { this.sent = payload; }
 }
 
-const patient = { id: 'pat-1' };
+const patient = {
+  id: 'pat-1',
+  fullName: 'Patient One',
+  contactInfo: {
+    phone: '0901234567',
+    address: '123 Street',
+  },
+};
 const doctor = { id: 'doc-1' };
 
 async function expectThrows(fn, message) {
@@ -51,6 +58,21 @@ async function run() {
   await expectThrows(() => new ScheduleAppointmentUseCase({ patientRepository: new FakePatientRepository({ patient }), doctorRepository: new FakeDoctorRepository({ doctor }), appointmentRepository: new FakeAppointmentRepository(), notificationService: new FakeNotificationService() }).execute({ ...baseInput, startAt: '2025-01-01T11:00:00Z', endAt: '2025-01-01T10:00:00Z' }), 'Appointment end time must be after start time.');
   await expectThrows(() => new ScheduleAppointmentUseCase({ patientRepository: new FakePatientRepository({}), doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }), appointmentRepository: new FakeAppointmentRepository(), notificationService: new FakeNotificationService() }).execute(baseInput), 'Patient not found.');
   await expectThrows(() => new ScheduleAppointmentUseCase({ patientRepository: new FakePatientRepository({ [patient.id]: patient }), doctorRepository: new FakeDoctorRepository({}), appointmentRepository: new FakeAppointmentRepository(), notificationService: new FakeNotificationService() }).execute(baseInput), 'Doctor not found.');
+  await expectThrows(
+    () =>
+      new ScheduleAppointmentUseCase({
+        patientRepository: new FakePatientRepository({
+          [patient.id]: {
+            ...patient,
+            contactInfo: { phone: patient.contactInfo.phone, address: '' },
+          },
+        }),
+        doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }),
+        appointmentRepository: new FakeAppointmentRepository(),
+        notificationService: new FakeNotificationService(),
+      }).execute(baseInput),
+    'Please complete your patient profile (name, phone, and address) before booking.'
+  );
 
   const appointmentRepo = new FakeAppointmentRepository();
   const notifier = new FakeNotificationService();

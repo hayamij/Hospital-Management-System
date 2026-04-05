@@ -8,10 +8,10 @@
     <section class="panel">
       <h2>Gửi tin nhắn</h2>
       <form class="grid two" @submit.prevent="sendMessage">
-        <input v-if="auth.role === 'patient'" v-model="payload.doctorId" required placeholder="Mã bác sĩ" />
-        <input v-if="auth.role === 'doctor'" v-model="payload.patientId" required placeholder="Mã bệnh nhân" />
-        <input v-if="auth.role === 'patient'" v-model="payload.subject" placeholder="Tiêu đề" />
-        <textarea v-model="payload.message" required rows="4" :placeholder="auth.role === 'doctor' ? 'Nội dung tin nhắn' : 'Nội dung'"
+        <input v-if="isPatient" v-model="payload.doctorId" required placeholder="Mã bác sĩ" />
+        <input v-if="isDoctor" v-model="payload.patientId" required placeholder="Mã bệnh nhân" />
+        <input v-if="isPatient" v-model="payload.subject" placeholder="Tiêu đề" />
+        <textarea v-model="payload.message" required rows="4" :placeholder="isDoctor ? 'Nội dung tin nhắn' : 'Nội dung'"
         ></textarea>
         <button type="submit">Gửi</button>
       </form>
@@ -25,9 +25,11 @@
 <script setup>
 import { reactive, ref } from 'vue';
 import { useAuthStore } from '../stores/auth.js';
-import { doctorApi, patientApi } from '../services/api.js';
+import { useRoleVisibility } from '../composables/useRoleVisibility.js';
+import { sendMessageByRole } from '../stores/helpers/communicationsRoleApi.js';
 
 const auth = useAuthStore();
+const { isDoctor, isPatient, role } = useRoleVisibility(auth);
 const status = ref('');
 const error = ref('');
 
@@ -37,21 +39,16 @@ const sendMessage = async () => {
   error.value = '';
   status.value = '';
 
-  if (auth.role === 'patient') {
-    await patientApi.sendMessage(auth.token, {
-      patientId: auth.userId,
-      doctorId: payload.doctorId,
-      subject: payload.subject,
-      message: payload.message,
-    });
-  }
+  const sent = await sendMessageByRole({
+    role: role.value,
+    token: auth.token,
+    userId: auth.userId,
+    payload,
+  });
 
-  if (auth.role === 'doctor') {
-    await doctorApi.sendMessage(auth.token, {
-      doctorId: auth.userId,
-      patientId: payload.patientId,
-      content: payload.message,
-    });
+  if (!sent) {
+    error.value = 'Vai trò hiện tại không hỗ trợ gửi tin nhắn.';
+    return;
   }
 
   status.value = 'Gửi tin nhắn thành công.';

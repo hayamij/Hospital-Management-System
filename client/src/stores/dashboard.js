@@ -3,6 +3,7 @@ import { useAppointmentsStore } from './appointments.js';
 import { useBillingStore } from './billing.js';
 import { useRecordsStore } from './records.js';
 import { useAuthStore } from './auth.js';
+import { isRole } from '../constants/navigation.js';
 
 export const useDashboardStore = defineStore('dashboard', {
 	state: () => ({
@@ -19,11 +20,12 @@ export const useDashboardStore = defineStore('dashboard', {
 				const appointments = useAppointmentsStore();
 				const billing = useBillingStore();
 				const records = useRecordsStore();
+				const isPatientView = isRole(auth.role, 'patient');
 
 				await Promise.allSettled([
 					appointments.fetchAppointments({ pageSize: 5 }),
-					auth.role === 'patient' ? billing.fetchBilling({ pageSize: 5 }) : Promise.resolve(),
-					auth.role === 'patient' ? records.fetchRecords({}) : Promise.resolve(),
+					isPatientView ? billing.fetchBilling({ pageSize: 5 }) : Promise.resolve(),
+					isPatientView ? records.fetchRecords({}) : Promise.resolve(),
 				]);
 
 				this.snapshot = {

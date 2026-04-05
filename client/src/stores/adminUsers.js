@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { adminApi } from '../services/api.js';
 import { useAuthStore } from './auth.js';
+import { isRole } from '../constants/navigation.js';
 
 const toUserModel = (source) => ({
   id: source?.id || source?.userId || '',
@@ -8,7 +9,6 @@ const toUserModel = (source) => ({
   email: source?.email || '',
   role: source?.role || 'patient',
   status: source?.status || 'active',
-  type: source?.type || (source?.role === 'doctor' ? 'doctor' : source?.role === 'admin' ? 'admin' : 'patient'),
 });
 
 export const useAdminUsersStore = defineStore('adminUsers', {
@@ -24,14 +24,14 @@ export const useAdminUsersStore = defineStore('adminUsers', {
   actions: {
     async fetchUsers(filters = {}) {
       const auth = useAuthStore();
-      if (auth.role !== 'admin') return;
+      if (!isRole(auth.role, 'admin')) return;
 
       this.loading = true;
       this.error = null;
       try {
         const response = await adminApi.listUsers(auth.token, {
           q: filters.query,
-          type: filters.type,
+          role: filters.role ?? filters.type,
           page: filters.page || this.page,
           pageSize: filters.pageSize || this.pageSize,
         });
@@ -51,7 +51,7 @@ export const useAdminUsersStore = defineStore('adminUsers', {
 
     async createUser(payload) {
       const auth = useAuthStore();
-      if (auth.role !== 'admin') return;
+      if (!isRole(auth.role, 'admin')) return;
 
       this.saving = true;
       this.error = null;
@@ -69,7 +69,7 @@ export const useAdminUsersStore = defineStore('adminUsers', {
 
     async updateUser(userId, payload) {
       const auth = useAuthStore();
-      if (auth.role !== 'admin') return;
+      if (!isRole(auth.role, 'admin')) return;
 
       this.saving = true;
       this.error = null;

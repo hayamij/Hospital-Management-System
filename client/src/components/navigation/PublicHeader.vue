@@ -1,5 +1,5 @@
 <template>
-  <header class="public-header">
+  <header class="app-header">
     <div class="header-inner">
       <RouterLink class="brand" to="/">Hospital Management</RouterLink>
 
@@ -11,26 +11,25 @@
 
       <div class="right-zone" :class="{ open: isMenuOpen }">
         <nav class="menu">
-          <RouterLink to="/" @click="closeMenu">Home</RouterLink>
-          <RouterLink to="/services" @click="closeMenu">Dịch vụ</RouterLink>
-          <RouterLink to="/doctors" @click="closeMenu">Bác sĩ</RouterLink>
-          <RouterLink to="/news" @click="closeMenu">Tin tức</RouterLink>
-          <RouterLink to="/about" @click="closeMenu">About</RouterLink>
+          <RouterLink
+            v-for="item in publicLinks"
+            :key="item.to"
+            :to="item.to"
+            @click="closeMenu"
+          >
+            {{ item.label }}
+          </RouterLink>
         </nav>
 
         <div class="auth-zone">
           <template v-if="!auth.isAuthenticated">
-            <RouterLink to="/login" class="action" @click="closeMenu">Đăng nhập</RouterLink>
-            <RouterLink to="/register" class="action" @click="closeMenu">Đăng ký</RouterLink>
-          </template>
-          <template v-else-if="auth.role === 'patient'">
-            <div class="avatar" :title="auth.email || 'Bệnh nhân'">{{ avatarInitial }}</div>
-            <RouterLink to="/patient/dashboard" class="action" @click="closeMenu">Tổng quan của tôi</RouterLink>
-            <RouterLink to="/patient/profile" class="action" @click="closeMenu">Hồ sơ của tôi</RouterLink>
-            <button type="button" class="action" @click="handleLogout">Đăng xuất</button>
+            <RouterLink :to="AUTH_ROUTE.login" class="action" @click="closeMenu">Đăng nhập</RouterLink>
+            <RouterLink :to="AUTH_ROUTE.register" class="action" @click="closeMenu">Đăng ký</RouterLink>
           </template>
           <template v-else>
-            <RouterLink :to="auth.role === 'admin' ? '/admin/dashboard' : '/doctor/dashboard'" class="action" @click="closeMenu">Backoffice</RouterLink>
+            <p class="identity" v-if="auth.email">{{ auth.email }}</p>
+            <RouterLink :to="dashboardRoute" class="action primary" @click="closeMenu">{{ roleLabel }}</RouterLink>
+            <RouterLink v-if="isPatient" to="/patient/profile" class="action" @click="closeMenu">Hồ sơ</RouterLink>
             <button type="button" class="action" @click="handleLogout">Đăng xuất</button>
           </template>
         </div>
@@ -43,16 +42,29 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth.js';
+import { useRoleVisibility } from '../../composables/useRoleVisibility.js';
+import {
+  AUTH_ROUTE,
+  getRoleDisplayLabel,
+  getRoleHomeRoute,
+  PUBLIC_HEADER_LINKS,
+} from '../../constants/navigation.js';
 
 const auth = useAuthStore();
 const router = useRouter();
 const isMenuOpen = ref(false);
+const { isPatient, role } = useRoleVisibility(auth);
 
 auth.fetchCurrentUser();
 
-const avatarInitial = computed(() => {
-  const source = auth.userProfile?.name || auth.email || 'P';
-  return source.charAt(0).toUpperCase();
+const publicLinks = PUBLIC_HEADER_LINKS;
+
+const roleLabel = computed(() => {
+  return getRoleDisplayLabel(role.value, 'Tài khoản');
+});
+
+const dashboardRoute = computed(() => {
+  return getRoleHomeRoute(role.value, '/');
 });
 
 const closeMenu = () => {
@@ -62,24 +74,28 @@ const closeMenu = () => {
 const handleLogout = async () => {
   await auth.logout();
   closeMenu();
-  router.push('/login');
+  router.push(AUTH_ROUTE.login);
 };
 </script>
 
 <style scoped>
-.public-header {
+.app-header {
   width: 100%;
   background: #ffffff;
   border-bottom: 1px solid #d1d5db;
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }
 
 .header-inner {
-  width: 100%;
+  width: min(1800px, 96vw);
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 28px;
+  padding: 12px 0;
   box-sizing: border-box;
 }
 
@@ -125,26 +141,27 @@ const handleLogout = async () => {
 .menu a {
   color: #111827;
   text-decoration: none;
-  padding: 8px 6px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+}
+
+.menu a:hover,
+.menu a:focus-visible {
+  border-color: #d1d5db;
+  background: #f8fafc;
 }
 
 .auth-zone {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
-.avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  border: 1px solid #9ca3af;
-  background: #eef2ff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  color: #1f2937;
+.identity {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
 }
 
 .action {
@@ -163,10 +180,18 @@ const handleLogout = async () => {
   cursor: pointer;
 }
 
+.action.primary {
+  border-color: #111827;
+  background: #111827;
+  color: #ffffff;
+  font-weight: 600;
+}
+
 @media (max-width: 900px) {
   .header-inner {
     align-items: center;
-    padding: 12px 16px;
+    width: 92vw;
+    padding: 10px 0;
   }
 
   .hamburger {
@@ -191,6 +216,10 @@ const handleLogout = async () => {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .identity {
+    text-align: center;
   }
 
   .menu a,
