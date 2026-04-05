@@ -40,6 +40,14 @@ export class SendDoctorMessageViewModel {
   }
 }
 
+export class ViewDoctorMessagesViewModel {
+  constructor(output) {
+    this.limit = output?.limit ?? 20;
+    this.total = output?.total ?? 0;
+    this.messages = output?.messages ?? [];
+  }
+}
+
 export class ViewPatientRecordsForDoctorViewModel {
   constructor(output) {
     const records = Array.isArray(output?.records)
@@ -55,6 +63,18 @@ export class ViewPatientRecordsForDoctorViewModel {
     this.recordCreatedAt = output?.recordCreatedAt ?? null;
     this.hasRecord = Boolean(output?.hasRecord || output?.recordId);
     this.records = records;
+  }
+}
+
+export class ViewDoctorProfileViewModel {
+  constructor(output) {
+    this.doctorId = output?.doctorId ?? null;
+    this.fullName = output?.fullName ?? '';
+    this.specialization = output?.specialization ?? '';
+    this.department = output?.department ?? '';
+    this.status = output?.status ?? 'active';
+    this.slotsPerDay = output?.slotsPerDay ?? 0;
+    this.updatedAt = output?.updatedAt ?? null;
   }
 }
 

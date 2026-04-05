@@ -35,10 +35,45 @@ export class ViewDoctorScheduleUseCase {
 		}
 
 		const appointments = await this.appointmentRepository.listByDoctor(input.doctorId, range);
+		const pageInput = input.page;
+		const pageSizeInput = input.pageSize;
+		const parsedPage =
+			pageInput === undefined || pageInput === null || pageInput === ''
+				? 1
+				: Number(pageInput);
+		const parsedPageSize =
+			pageSizeInput === undefined || pageSizeInput === null || pageSizeInput === ''
+				? 20
+				: Number(pageSizeInput);
+		if (!Number.isFinite(parsedPage) || !Number.isFinite(parsedPageSize) || parsedPage <= 0 || parsedPageSize <= 0) {
+			throw new DomainError('Invalid pagination parameters.');
+		}
+		const page = Math.floor(parsedPage);
+		const pageSize = Math.floor(parsedPageSize);
+
+		const normalized = Array.isArray(appointments) ? appointments : [appointments].filter(Boolean);
+		const statusFilter = input.status ? String(input.status).trim().toLowerCase() : null;
+		const filtered = statusFilter
+			? normalized.filter((appt) => {
+				const status = String(appt?.getStatus?.() ?? appt?.status ?? '').toLowerCase();
+				if (statusFilter === 'pending') {
+					return status === 'pending' || status === 'requested';
+				}
+				return status === statusFilter;
+			})
+			: normalized;
+
+		const total = filtered.length;
+		const start = (page - 1) * pageSize;
+		const pagedAppointments = filtered.slice(start, start + pageSize);
 
 		return new ViewDoctorScheduleOutput({
 			doctorId: input.doctorId,
-			appointments: appointments ?? [],
+			appointments: pagedAppointments,
+			page,
+			pageSize,
+			total,
+			status: statusFilter,
 		});
 	}
 }

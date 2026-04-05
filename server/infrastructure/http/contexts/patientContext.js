@@ -7,6 +7,7 @@ import { ViewBillingAndPaymentsUseCase } from '../../../application/use-cases/pa
 import { ViewMedicalRecordsUseCase } from '../../../application/use-cases/patient/viewMedicalRecords.usecase.js';
 import { DownloadPrescriptionUseCase } from '../../../application/use-cases/patient/downloadPrescription.usecase.js';
 import { SendPatientMessageUseCase } from '../../../application/use-cases/patient/sendPatientMessage.usecase.js';
+import { ViewPatientMessagesUseCase } from '../../../application/use-cases/patient/viewPatientMessages.usecase.js';
 import { RegisterPatientAccountUseCase } from '../../../application/use-cases/patient/registerPatientAccount.usecase.js';
 import { UpdatePatientProfileUseCase } from '../../../application/use-cases/patient/updatePatientProfile.usecase.js';
 import { ViewPatientProfileUseCase } from '../../../application/use-cases/patient/viewPatientProfile.usecase.js';
@@ -68,6 +69,11 @@ export const createPatientUseCases = ({
     messageRepository,
     notificationService: noopNotification,
   });
+  const viewPatientMessagesClass = new ViewPatientMessagesUseCase({
+    patientRepository,
+    doctorRepository,
+    messageRepository,
+  });
   const registerPatientAccountClass = new RegisterPatientAccountUseCase({
     userRepository,
     patientRepository,
@@ -106,6 +112,7 @@ export const createPatientUseCases = ({
     viewMedicalRecordsUseCase: viewMedicalRecordsClass,
     downloadPrescriptionUseCase: downloadPrescriptionClass,
     sendPatientMessageUseCase: sendPatientMessageClass,
+    viewPatientMessagesUseCase: viewPatientMessagesClass,
     registerPatientAccountUseCase: registerPatientAccountClass,
     updatePatientProfileUseCase: updatePatientProfileClass,
     viewPatientProfileUseCase: viewPatientProfileClass,

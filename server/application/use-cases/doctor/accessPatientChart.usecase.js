@@ -30,7 +30,41 @@ export class AccessPatientChartUseCase {
 		}
 
 		const record = await this.medicalRecordRepository.findByPatientId(input.patientId);
-		const entries = record?.getEntries?.() ?? record?.entries ?? [];
+		const rawEntries = record?.getEntries?.() ?? record?.entries ?? [];
+		const doctorNameCache = new Map();
+
+		const resolveDoctorName = async (doctorId) => {
+			if (!doctorId) return null;
+			if (doctorNameCache.has(doctorId)) return doctorNameCache.get(doctorId);
+
+			const entryDoctor = await this.doctorRepository.findById(doctorId);
+			const doctorName =
+				entryDoctor?.fullName ??
+				entryDoctor?.getName?.() ??
+				null;
+
+			doctorNameCache.set(doctorId, doctorName);
+			return doctorName;
+		};
+
+		const entries = await Promise.all(
+			rawEntries.map(async (entry) => {
+				const rawEntry = entry && typeof entry === 'object' ? entry : { note: String(entry ?? '') };
+				const authorDoctorId = rawEntry.authorDoctorId ?? rawEntry.doctorId ?? null;
+				const doctorName =
+					rawEntry.doctorName ??
+					rawEntry.authorDoctorName ??
+					(await resolveDoctorName(authorDoctorId));
+
+				return {
+					...rawEntry,
+					doctorId: rawEntry.doctorId ?? authorDoctorId,
+					authorDoctorId: rawEntry.authorDoctorId ?? authorDoctorId,
+					doctorName: doctorName ?? null,
+					authorDoctorName: rawEntry.authorDoctorName ?? doctorName ?? null,
+				};
+			})
+		);
 		const recordId = record?.id ?? record?.getId?.() ?? null;
 		const recordCreatedAt = record?.createdAt ?? record?.getCreatedAt?.() ?? null;
 

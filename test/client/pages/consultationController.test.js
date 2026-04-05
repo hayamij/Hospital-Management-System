@@ -3,7 +3,7 @@ import {
   buildConsultationErrors,
   buildConsultationNoteBlock,
   mapRecordRows,
-} from '../../../client/src/pages/controllers/consultationController.js';
+} from '../../../client/src/pages/controllers/doctor/consultationController.js';
 
 describe('consultationController', () => {
   it('validates required consultation data', () => {
@@ -43,13 +43,26 @@ describe('consultationController', () => {
         visitDate: '2026-01-01T08:00:00.000Z',
         diagnosis: 'Acute bronchitis',
       },
+      {
+        id: 'rec-2',
+        note: 'Follow-up note',
+        authorDoctorId: 'doc-22',
+        authorDoctorName: 'Dr. Lan',
+      },
     ]);
 
-    expect(rows).toHaveLength(1);
+    expect(rows).toHaveLength(2);
     expect(rows[0]).toMatchObject({
       id: 'rec-1',
       doctorId: '-',
       note: 'Acute bronchitis',
+    });
+
+    expect(rows[1]).toMatchObject({
+      id: 'rec-2',
+      doctorId: 'Dr. Lan',
+      doctorName: 'Dr. Lan',
+      note: 'Follow-up note',
     });
   });
 });

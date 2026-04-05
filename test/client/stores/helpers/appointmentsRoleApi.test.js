@@ -57,10 +57,15 @@ describe('appointmentsRoleApi helper', () => {
       token: 'token-doctor',
       userId: 'doc-1',
       filters: { status: 'scheduled' },
+      page: 1,
       pageSize: 10,
     });
 
-    expect(getScheduleSpy).toHaveBeenCalledWith('token-doctor', { status: 'scheduled' });
+    expect(getScheduleSpy).toHaveBeenCalledWith('token-doctor', {
+      status: 'scheduled',
+      page: 1,
+      pageSize: 10,
+    });
     expect(result).toEqual({
       response: payload,
       items: payload.appointments,
@@ -70,15 +75,49 @@ describe('appointmentsRoleApi helper', () => {
     });
   });
 
+  it('fetches admin appointments and maps pagination', async () => {
+    const payload = {
+      appointments: [{ id: 'apt-3' }],
+      total: 12,
+      page: 2,
+      pageSize: 10,
+    };
+    const listAdminAppointmentsSpy = vi.spyOn(adminApi, 'listAppointments').mockResolvedValue(payload);
+
+    const result = await fetchAppointmentsByRole({
+      role: 'admin',
+      token: 'token-admin',
+      userId: 'adm-1',
+      filters: { status: 'pending', page: 2 },
+      page: 1,
+      pageSize: 10,
+    });
+
+    expect(listAdminAppointmentsSpy).toHaveBeenCalledWith('token-admin', {
+      status: 'pending',
+      page: 2,
+      pageSize: 10,
+    });
+    expect(result).toEqual({
+      response: payload,
+      items: payload.appointments,
+      total: 12,
+      page: 2,
+      pageSize: 10,
+    });
+  });
+
   it('returns null when role is unsupported for appointment listing', async () => {
     const listAppointmentsSpy = vi.spyOn(patientApi, 'listAppointments').mockResolvedValue({});
     const getScheduleSpy = vi.spyOn(doctorApi, 'getSchedule').mockResolvedValue({});
+    const listAdminAppointmentsSpy = vi.spyOn(adminApi, 'listAppointments').mockResolvedValue({});
 
-    const result = await fetchAppointmentsByRole({ role: 'admin', token: 'token-admin', userId: 'adm-1' });
+    const result = await fetchAppointmentsByRole({ role: 'guest', token: 'token-guest', userId: 'gst-1' });
 
     expect(result).toBeNull();
     expect(listAppointmentsSpy).not.toHaveBeenCalled();
     expect(getScheduleSpy).not.toHaveBeenCalled();
+    expect(listAdminAppointmentsSpy).not.toHaveBeenCalled();
   });
 
   it('routes doctor decision updates to decision API', async () => {

@@ -59,9 +59,42 @@ async function run() {
   const result = await new ViewDoctorScheduleUseCase({ doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }), appointmentRepository: apptRepo }).execute({ doctorId: doctor.id, from: fromStr, to: toStr });
   assert.strictEqual(result.doctorId, doctor.id);
   assert.deepStrictEqual(result.appointments, [{ id: 'appt-1' }]);
+  assert.strictEqual(result.page, 1);
+  assert.strictEqual(result.pageSize, 20);
+  assert.strictEqual(result.total, 1);
   assert.strictEqual(apptRepo.lastArgs.doctorId, doctor.id);
   assert.ok(apptRepo.lastArgs.range.from instanceof Date);
   assert.ok(apptRepo.lastArgs.range.to instanceof Date);
+
+  // Status filter + pagination
+  const scheduleWithStatuses = [
+    { id: 'appt-pending', status: 'pending' },
+    { id: 'appt-requested', status: 'requested' },
+    { id: 'appt-completed-1', status: 'completed' },
+    { id: 'appt-completed-2', status: 'completed' },
+  ];
+  const filteredRepo = new FakeAppointmentRepository(scheduleWithStatuses);
+  const filteredResult = await new ViewDoctorScheduleUseCase({
+    doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }),
+    appointmentRepository: filteredRepo,
+  }).execute({ doctorId: doctor.id, status: 'completed', page: 1, pageSize: 1 });
+
+  assert.strictEqual(filteredResult.total, 2);
+  assert.strictEqual(filteredResult.page, 1);
+  assert.strictEqual(filteredResult.pageSize, 1);
+  assert.deepStrictEqual(filteredResult.appointments, [{ id: 'appt-completed-1', status: 'completed' }]);
+
+  const pendingResult = await new ViewDoctorScheduleUseCase({
+    doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }),
+    appointmentRepository: new FakeAppointmentRepository(scheduleWithStatuses),
+  }).execute({ doctorId: doctor.id, status: 'pending' });
+  assert.strictEqual(pendingResult.total, 2);
+
+  // Invalid pagination
+  await expectThrows(
+    () => new ViewDoctorScheduleUseCase({ doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }), appointmentRepository: new FakeAppointmentRepository([]) }).execute({ doctorId: doctor.id, page: 0, pageSize: 20 }),
+    'Invalid pagination parameters.',
+  );
 }
 
 wrapLegacyRun(run, 'viewDoctorSchedule.usecase');

@@ -9,6 +9,8 @@ import { AuditMedicalRecordsUseCase } from '../../../application/use-cases/admin
 import { ListUsersUseCase } from '../../../application/use-cases/admin/listUsers.usecase.js';
 import { CreateUserUseCase } from '../../../application/use-cases/admin/createUser.usecase.js';
 import { UpdateUserUseCase } from '../../../application/use-cases/admin/updateUser.usecase.js';
+import { ViewAppointmentsUseCase } from '../../../application/use-cases/admin/viewAppointments.usecase.js';
+import { ViewBillingUseCase } from '../../../application/use-cases/admin/viewBilling.usecase.js';
 import { adaptUseCase, noopNotification, normalizeIdentifier } from './common.js';
 
 const mapCreateDoctorInput = (input = {}) => {
@@ -114,6 +116,8 @@ export const createAdminUseCases = ({
   const listUsersClass = new ListUsersUseCase({ userRepository });
   const createUserClass = new CreateUserUseCase({ userRepository, authService });
   const updateUserClass = new UpdateUserUseCase({ userRepository });
+  const viewAppointmentsClass = new ViewAppointmentsUseCase({ userRepository, appointmentRepository });
+  const viewBillingClass = new ViewBillingUseCase({ userRepository, billingRepository });
 
   const adminLoginUseCase = adaptUseCase(
     adminLoginClass,
@@ -208,6 +212,8 @@ export const createAdminUseCases = ({
     runReportUseCase: runOperationalReportUseCase,
     manageBillingUseCase: processBackofficeBillingUseCase,
     auditMedicalRecordsUseCase: reviewAuditLogUseCase,
+    viewAppointmentsUseCase: viewAppointmentsClass,
+    viewBillingUseCase: viewBillingClass,
     listUsersUseCase: listUsersClass,
     createUserUseCase: createUserClass,
     updateUserUseCase: updateUserClass,

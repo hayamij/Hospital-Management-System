@@ -16,16 +16,22 @@ export const useBillingStore = defineStore('billing', {
 	actions: {
 		async fetchBilling(filters = {}) {
 			const auth = useAuthStore();
-			if (!isRole(auth.role, 'patient')) return;
+			if (!isRole(auth.role, 'patient') && !isRole(auth.role, 'admin')) return null;
 			this.loading = true;
 			this.error = null;
 			try {
-				const response = await patientApi.listBilling(auth.token, {
+				const params = {
 					...filters,
 					page: filters.page || this.page,
 					pageSize: filters.pageSize || this.pageSize,
-					patientId: auth.userId,
-				});
+				};
+
+				const response = isRole(auth.role, 'admin')
+					? await adminApi.listBilling(auth.token, params)
+					: await patientApi.listBilling(auth.token, {
+						...params,
+						patientId: auth.userId,
+					});
 				this.invoices = response.billings || [];
 				this.payments = response.payments || [];
 				this.total = response.total || 0;
@@ -43,7 +49,7 @@ export const useBillingStore = defineStore('billing', {
 			const auth = useAuthStore();
 			if (!isRole(auth.role, 'admin')) return;
 			await adminApi.manageBilling(auth.token, invoiceId, payload);
-			await this.fetchBilling();
+			await this.fetchBilling({ page: this.page, pageSize: this.pageSize });
 		},
 	},
 });

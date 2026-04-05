@@ -13,6 +13,7 @@ export const useAppointmentsStore = defineStore('appointments', {
 		page: 1,
 		pageSize: 10,
 		total: 0,
+		activeFilters: {},
 		loading: false,
 		error: null,
 	}),
@@ -21,6 +22,7 @@ export const useAppointmentsStore = defineStore('appointments', {
 			const auth = useAuthStore();
 			this.loading = true;
 			this.error = null;
+			this.activeFilters = { ...filters };
 			try {
 				const result = await fetchAppointmentsByRole({
 					role: auth.role,
@@ -39,7 +41,6 @@ export const useAppointmentsStore = defineStore('appointments', {
 					return result.response;
 				}
 
-				// Admin has override endpoint but no dedicated list; keep current list untouched
 				return null;
 			} catch (error) {
 				this.error = error.message;
@@ -55,7 +56,7 @@ export const useAppointmentsStore = defineStore('appointments', {
 				...payload,
 				patientId: auth.patientId || auth.userId,
 			});
-			await this.fetchAppointments();
+			await this.fetchAppointments(this.activeFilters);
 		},
 		async reschedule(appointmentId, payload) {
 			const auth = useAuthStore();
@@ -64,13 +65,13 @@ export const useAppointmentsStore = defineStore('appointments', {
 				...payload,
 				patientId: auth.patientId || auth.userId,
 			});
-			await this.fetchAppointments();
+			await this.fetchAppointments(this.activeFilters);
 		},
 		async cancel(appointmentId) {
 			const auth = useAuthStore();
 			if (!isRole(auth.role, 'patient')) return;
 			await patientApi.cancelAppointment(auth.token, appointmentId);
-			await this.fetchAppointments();
+			await this.fetchAppointments(this.activeFilters);
 		},
 		async updateStatus(appointmentId, payload) {
 			const auth = useAuthStore();
@@ -82,7 +83,7 @@ export const useAppointmentsStore = defineStore('appointments', {
 				payload,
 			});
 			if (!updated) return;
-			await this.fetchAppointments();
+			await this.fetchAppointments(this.activeFilters);
 		},
 	},
 });

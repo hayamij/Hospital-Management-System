@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapDoctorScheduleItems } from '../../../client/src/pages/controllers/doctorLabResultsController.js';
+import { mapDoctorScheduleItems } from '../../../client/src/pages/controllers/doctor/doctorLabResultsController.js';
 
 describe('doctorLabResultsController', () => {
   it('maps appointment list into UI-friendly schedule items', () => {

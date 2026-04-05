@@ -83,13 +83,9 @@ export const useBookingPageOrchestration = () => {
   const isPatientAccount = computed(() => auth.isAuthenticated && auth.role === 'patient');
 
   const selectedSlotLabel = computed(() => {
-    const slot =
-      booking.availableSlots.find(
-        (item) =>
-          item.start === booking.form.slotStart &&
-          item.end === booking.form.slotEnd &&
-          item.doctorId === booking.form.doctorId
-      ) || booking.availableSlots.find((item) => item.start === booking.form.slotStart && item.end === booking.form.slotEnd);
+    const slot = booking.availableSlots.find(
+      (item) => item.start === booking.form.slotStart && item.end === booking.form.slotEnd
+    );
     return slot?.timeLabel || 'Chưa chọn';
   });
 
@@ -270,7 +266,7 @@ export const useBookingPageOrchestration = () => {
 
     await loadSlots();
 
-    if (doctorFromQuery && booking.availableSlots.some((slot) => slot.doctorId === doctorFromQuery)) {
+    if (doctorFromQuery && booking.availableSlots.some((slot) => slot.doctors?.some((doctor) => doctor.id === doctorFromQuery))) {
       booking.setDoctor(doctorFromQuery);
     }
   });

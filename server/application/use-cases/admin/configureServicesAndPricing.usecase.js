@@ -18,8 +18,10 @@ export class ConfigureServicesAndPricingUseCase {
 			throw new DomainError('Action is required.');
 		}
 
-		const allowedActions = new Set(['upsert', 'remove']);
-		if (!allowedActions.has(input.action)) {
+		const action = String(input.action).trim().toLowerCase();
+
+		const allowedActions = new Set(['upsert', 'remove', 'list']);
+		if (!allowedActions.has(action)) {
 			throw new DomainError('Invalid service catalog action.');
 		}
 
@@ -29,7 +31,39 @@ export class ConfigureServicesAndPricingUseCase {
 			throw new DomainError('Access denied. Admin role required.');
 		}
 
-		if (input.action === 'remove') {
+		if (action === 'list') {
+			const pageInput = input.page;
+			const pageSizeInput = input.pageSize;
+			const page = pageInput === undefined || pageInput === null || pageInput === '' ? 1 : Number(pageInput);
+			const pageSize = pageSizeInput === undefined || pageSizeInput === null || pageSizeInput === '' ? 10 : Number(pageSizeInput);
+
+			if (!Number.isFinite(page) || !Number.isFinite(pageSize) || page <= 0 || pageSize <= 0) {
+				throw new DomainError('Invalid pagination parameters.');
+			}
+
+			const query = String(input.query || '').trim().toLowerCase();
+			const allServices = await this.serviceCatalogRepository.listServices();
+			const filteredServices = query
+				? allServices.filter((service) => {
+					const haystack = `${service?.id || ''} ${service?.name || ''}`.toLowerCase();
+					return haystack.includes(query);
+				})
+				: allServices;
+
+			const safePage = Math.floor(page);
+			const safePageSize = Math.floor(pageSize);
+			const offset = (safePage - 1) * safePageSize;
+
+			return new ConfigureServicesAndPricingOutput({
+				action: 'list',
+				services: filteredServices.slice(offset, offset + safePageSize),
+				page: safePage,
+				pageSize: safePageSize,
+				total: filteredServices.length,
+			});
+		}
+
+		if (action === 'remove') {
 			if (!input.service?.id) {
 				throw new DomainError('Service id is required to remove.');
 			}

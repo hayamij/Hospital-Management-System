@@ -2,34 +2,36 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 import PublicLayout from '../app/layouts/PublicLayout.vue';
 import BackofficeLayout from '../app/layouts/BackofficeLayout.vue';
-import AdminDashboard from '../pages/AdminDashboard.vue';
-import AppointmentsPage from '../pages/AppointmentsPage.vue';
-import InvoicesPage from '../pages/InvoicesPage.vue';
-import BookingPage from '../pages/BookingPage.vue';
-import BackofficeBillingPage from '../pages/BackofficeBillingPage.vue';
-import DoctorsPage from '../pages/DoctorsPage.vue';
-import MedicalRecordsPage from '../pages/MedicalRecordsPage.vue';
-import BackofficeMedicalRecordsPage from '../pages/BackofficeMedicalRecordsPage.vue';
-import PatientsPage from '../pages/PatientsPage.vue';
-import PatientDashboard from '../pages/PatientDashboard.vue';
-import PatientProfile from '../pages/PatientProfile.vue';
-import LoginPage from '../pages/LoginPage.vue';
-import RegisterPage from '../pages/RegisterPage.vue';
-import PublicPortalPage from '../pages/PublicPortalPage.vue';
-import AboutUsPage from '../pages/AboutUsPage.vue';
-import NewsPage from '../pages/NewsPage.vue';
-import CommunicationsPage from '../pages/CommunicationsPage.vue';
-import AdminOpsPage from '../pages/AdminOpsPage.vue';
-import ConsultationPage from '../pages/ConsultationPage.vue';
-import DoctorDashboard from '../pages/DoctorDashboard.vue';
-import DoctorLabResultsPage from '../pages/DoctorLabResultsPage.vue';
-import DoctorProfilePage from '../pages/DoctorProfilePage.vue';
-import HomePage from '../pages/HomePage.vue';
-import DoctorDirectoryPage from '../pages/DoctorDirectoryPage.vue';
-import HomeFeaturePage from '../pages/HomeFeaturePage.vue';
-import PublicServicesPage from '../pages/PublicServicesPage.vue';
-import PublicServiceDetailPage from '../pages/PublicServiceDetailPage.vue';
-import PublicCardDetailPage from '../pages/PublicCardDetailPage.vue';
+import AdminDashboard from '../pages/admin/AdminDashboard.vue';
+import AppointmentsPage from '../pages/backoffice/AppointmentsPage.vue';
+import InvoicesPage from '../pages/patient/InvoicesPage.vue';
+import BookingPage from '../pages/patient/BookingPage.vue';
+import BackofficeBillingPage from '../pages/backoffice/BackofficeBillingPage.vue';
+import DoctorsPage from '../pages/admin/DoctorsPage.vue';
+import MedicalRecordsPage from '../pages/patient/MedicalRecordsPage.vue';
+import BackofficeMedicalRecordsPage from '../pages/backoffice/BackofficeMedicalRecordsPage.vue';
+import PatientsPage from '../pages/backoffice/PatientsPage.vue';
+import PatientDashboard from '../pages/patient/PatientDashboard.vue';
+import PatientProfile from '../pages/patient/PatientProfile.vue';
+import LoginPage from '../pages/auth/LoginPage.vue';
+import RegisterPage from '../pages/auth/RegisterPage.vue';
+import PublicPortalPage from '../pages/public/PublicPortalPage.vue';
+import AboutUsPage from '../pages/public/AboutUsPage.vue';
+import NewsPage from '../pages/public/NewsPage.vue';
+import CommunicationsPage from '../pages/backoffice/CommunicationsPage.vue';
+import AdminOpsPage from '../pages/admin/AdminOpsPage.vue';
+import AdminStaffPage from '../pages/admin/AdminStaffPage.vue';
+import AdminServicesPage from '../pages/admin/AdminServicesPage.vue';
+import ConsultationPage from '../pages/doctor/ConsultationPage.vue';
+import DoctorDashboard from '../pages/doctor/DoctorDashboard.vue';
+import DoctorLabResultsPage from '../pages/doctor/DoctorLabResultsPage.vue';
+import DoctorProfilePage from '../pages/doctor/DoctorProfilePage.vue';
+import HomePage from '../pages/public/HomePage.vue';
+import DoctorDirectoryPage from '../pages/public/DoctorDirectoryPage.vue';
+import HomeFeaturePage from '../pages/public/HomeFeaturePage.vue';
+import PublicServicesPage from '../pages/public/PublicServicesPage.vue';
+import PublicServiceDetailPage from '../pages/public/PublicServiceDetailPage.vue';
+import PublicCardDetailPage from '../pages/public/PublicCardDetailPage.vue';
 import {
 	AUTH_ROUTE,
 	getRoleHomeRoute,
@@ -107,11 +109,13 @@ const routes = [
 		children: [
 			{ path: '', redirect: '/admin/dashboard' },
 			{ path: 'dashboard', component: AdminDashboard },
+			{ path: 'staff', component: AdminStaffPage },
 			{ path: 'appointments', component: AppointmentsPage },
 			{ path: 'doctors', component: DoctorsPage },
 			{ path: 'patients', component: PatientsPage },
 			{ path: 'records', component: BackofficeMedicalRecordsPage },
 			{ path: 'billing', component: BackofficeBillingPage },
+			{ path: 'services', component: AdminServicesPage },
 			{ path: 'ops', component: AdminOpsPage },
 		],
 	},

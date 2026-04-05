@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { doctorApi, patientApi } from '../../../../client/src/services/api.js';
-import { sendMessageByRole } from '../../../../client/src/stores/helpers/communicationsRoleApi.js';
+import { fetchMessagesByRole, sendMessageByRole } from '../../../../client/src/stores/helpers/communicationsRoleApi.js';
 
 describe('communicationsRoleApi helper', () => {
   beforeEach(() => {
@@ -69,5 +69,60 @@ describe('communicationsRoleApi helper', () => {
     expect(sent).toBe(false);
     expect(sendPatientSpy).not.toHaveBeenCalled();
     expect(sendDoctorSpy).not.toHaveBeenCalled();
+  });
+
+  it('routes patient history request to patientApi.listMessages', async () => {
+    const listPatientSpy = vi.spyOn(patientApi, 'listMessages').mockResolvedValue({ messages: [] });
+    const listDoctorSpy = vi.spyOn(doctorApi, 'listMessages').mockResolvedValue({ messages: [] });
+
+    const response = await fetchMessagesByRole({
+      role: 'patient',
+      token: 'token-patient',
+      userId: 'pat-3',
+      filters: { limit: 10 },
+    });
+
+    expect(response).toEqual({ messages: [] });
+    expect(listPatientSpy).toHaveBeenCalledWith('token-patient', {
+      limit: 10,
+      patientId: 'pat-3',
+    });
+    expect(listDoctorSpy).not.toHaveBeenCalled();
+  });
+
+  it('routes doctor history request to doctorApi.listMessages', async () => {
+    const listPatientSpy = vi.spyOn(patientApi, 'listMessages').mockResolvedValue({ messages: [] });
+    const listDoctorSpy = vi.spyOn(doctorApi, 'listMessages').mockResolvedValue({ messages: [{ id: 'm-1' }] });
+
+    const response = await fetchMessagesByRole({
+      role: 'doctor',
+      token: 'token-doctor',
+      userId: 'doc-3',
+      filters: { limit: 5, patientId: 'should-be-overridden' },
+    });
+
+    expect(response).toEqual({ messages: [{ id: 'm-1' }] });
+    expect(listDoctorSpy).toHaveBeenCalledWith('token-doctor', {
+      limit: 5,
+      patientId: 'should-be-overridden',
+      doctorId: 'doc-3',
+    });
+    expect(listPatientSpy).not.toHaveBeenCalled();
+  });
+
+  it('returns null for unsupported role when fetching history', async () => {
+    const listPatientSpy = vi.spyOn(patientApi, 'listMessages').mockResolvedValue({ messages: [] });
+    const listDoctorSpy = vi.spyOn(doctorApi, 'listMessages').mockResolvedValue({ messages: [] });
+
+    const response = await fetchMessagesByRole({
+      role: 'admin',
+      token: 'token-admin',
+      userId: 'adm-1',
+      filters: { limit: 10 },
+    });
+
+    expect(response).toBeNull();
+    expect(listPatientSpy).not.toHaveBeenCalled();
+    expect(listDoctorSpy).not.toHaveBeenCalled();
   });
 });

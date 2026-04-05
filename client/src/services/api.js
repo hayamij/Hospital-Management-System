@@ -140,6 +140,9 @@ export const patientApi = {
 	listRecords(token, filters) {
 		return request('/patients/medical-records', { method: 'GET', token, params: filters });
 	},
+	listMessages(token, filters) {
+		return request('/patients/messages', { method: 'GET', token, params: filters });
+	},
 	downloadPrescription(token, prescriptionId) {
 		return request(`/patients/prescriptions/${prescriptionId}/download`, { method: 'GET', token });
 	},
@@ -155,6 +158,9 @@ export const patientApi = {
 export const doctorApi = {
 	login(credentials) {
 		return authApi.login(credentials);
+	},
+	getProfile(token, params) {
+		return request('/doctors/profile', { method: 'GET', token, params });
 	},
 	getSchedule(token, params) {
 		return request('/doctors/schedule', { method: 'GET', token, params });
@@ -177,6 +183,9 @@ export const doctorApi = {
 	viewPatientRecords(token, patientId, params) {
 		return request(`/doctors/patients/${patientId}/chart`, { method: 'GET', token, params });
 	},
+	listMessages(token, params) {
+		return request('/doctors/messages', { method: 'GET', token, params });
+	},
 	sendMessage(token, payload) {
 		return request('/doctors/messages', { method: 'POST', token, data: payload });
 	},
@@ -192,14 +201,23 @@ export const adminApi = {
 	login(credentials) {
 		return authApi.login(credentials);
 	},
+	listAppointments(token, params) {
+		return request('/admin/appointments', { method: 'GET', token, params });
+	},
 	overrideAppointment(token, appointmentId, payload) {
 		return request(`/admin/appointments/${appointmentId}/override`, { method: 'POST', token, data: payload });
+	},
+	listBilling(token, params) {
+		return request('/admin/billing', { method: 'GET', token, params });
 	},
 	manageBilling(token, invoiceId, payload) {
 		return request(`/admin/billing/${invoiceId}/action`, { method: 'POST', token, data: payload });
 	},
 	manageDoctorSchedule(token, doctorId, payload) {
 		return request(`/admin/doctors/${doctorId}/schedule`, { method: 'PUT', token, data: payload });
+	},
+	listServices(token, params) {
+		return request('/admin/services', { method: 'GET', token, params });
 	},
 	upsertService(token, payload) {
 		return request('/admin/services', { method: 'POST', token, data: payload });

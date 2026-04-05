@@ -73,9 +73,9 @@ export const BACKOFFICE_SIDEBAR_ITEMS = {
   ],
   admin: [
     { label: 'Bảng điều khiển', path: '/admin/dashboard', icon: 'DB' },
-    { label: 'Quản lý nhân sự', path: '/admin/ops#staff', icon: 'HR' },
+    { label: 'Quản lý nhân sự', path: '/admin/staff', icon: 'HR' },
     { label: 'Quản lý bệnh nhân', path: '/admin/patients', icon: 'PT' },
-    { label: 'Quản lý dịch vụ', path: '/admin/ops#services', icon: 'SV' },
+    { label: 'Quản lý dịch vụ', path: '/admin/services', icon: 'SV' },
     { label: 'Lịch trình', path: '/admin/appointments', icon: 'SC' },
     { label: 'Tài chính', path: '/admin/billing', icon: 'FN' },
   ],

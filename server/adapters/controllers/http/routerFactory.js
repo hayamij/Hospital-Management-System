@@ -71,6 +71,7 @@ export function createHttpRouter(deps) {
   router.get('/patients/invoices/:id/download', requireRole(['patient']), patientBilling.downloadInvoice);
   router.get('/patients/medical-records', requireRole(['patient']), patientRecords.viewMedicalRecords);
   router.get('/patients/prescriptions/:id/download', requireRole(['patient']), patientRecords.downloadPrescription);
+  router.get('/patients/messages', requireRole(['patient']), patientMessages.viewMessages);
   router.post('/patients/messages', requireRole(['patient']), patientMessages.sendPatientMessage);
   router.get('/patients/profile', requireRole(['patient']), patientProfile.viewPatientProfile);
   router.put('/patients/profile', requireRole(['patient']), patientProfile.updatePatientProfile);
@@ -100,9 +101,11 @@ export function createHttpRouter(deps) {
   router.post('/doctors/lab-results/:labResultId/review', requireRole(['doctor']), doctorRecords.reviewTestResults);
 
   // Doctor profile
+  router.get('/doctors/profile', requireRole(['doctor']), doctorProfile.viewProfile);
   router.put('/doctors/profile', requireRole(['doctor']), doctorProfile.updateProfile);
 
   // Doctor messages
+  router.get('/doctors/messages', requireRole(['doctor']), doctorMessages.viewMessages);
   router.post('/doctors/messages', requireRole(['doctor']), doctorMessages.sendMessage);
 
   // Admin access
@@ -117,12 +120,15 @@ export function createHttpRouter(deps) {
 
   // Admin doctor scheduling and appointment overrides
   router.put('/admin/doctors/:doctorId/schedule', requireRole(['admin']), adminScheduling.setDoctorSlots);
+  router.get('/admin/appointments', requireRole(['admin']), adminScheduling.viewAppointments);
   router.post('/admin/appointments/:appointmentId/override', requireRole(['admin']), adminScheduling.overrideAppointment);
 
   // Admin billing
+  router.get('/admin/billing', requireRole(['admin']), adminBilling.viewBilling);
   router.post('/admin/billing/:invoiceId/action', requireRole(['admin']), adminBilling.manageBilling);
 
   // Admin services/catalog
+  router.get('/admin/services', requireRole(['admin']), adminServices.listServices);
   router.post('/admin/services', requireRole(['admin']), adminServices.upsertService);
   router.delete('/admin/services/:serviceId', requireRole(['admin']), adminServices.removeService);
 

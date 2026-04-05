@@ -84,5 +84,23 @@ export const useAdminUsersStore = defineStore('adminUsers', {
         this.saving = false;
       }
     },
+
+    async updateUserStatus(userId, action) {
+      const auth = useAuthStore();
+      if (!isRole(auth.role, 'admin')) return;
+
+      this.saving = true;
+      this.error = null;
+      try {
+        const updated = await adminApi.updateUserStatus(auth.token, userId, { action });
+        await this.fetchUsers({ page: this.page, pageSize: this.pageSize });
+        return updated;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.saving = false;
+      }
+    },
   },
 });

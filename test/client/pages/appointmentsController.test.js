@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canRoleUpdateAppointmentStatus,
   getDoctorPendingAppointments,
-} from '../../../client/src/pages/controllers/appointmentsController.js';
+} from '../../../client/src/pages/controllers/backoffice/appointmentsController.js';
 
 describe('appointmentsController', () => {
   it('returns only pending/requested appointments for doctor role', () => {

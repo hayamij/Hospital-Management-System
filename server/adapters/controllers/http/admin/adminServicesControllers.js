@@ -1,9 +1,20 @@
 import { createHandler } from '../createHandler.js';
-import { UpdateServiceCatalogItemViewModel } from '../../../viewmodels/adminViewModels.js';
+import { UpdateServiceCatalogItemViewModel, ViewAdminServicesViewModel } from '../../../viewmodels/adminViewModels.js';
 
 // Admin service catalog (pricing/services)
 export function buildAdminServicesControllers({ configureServicesAndPricingUseCase }) {
   return {
+    listServices: createHandler({
+      useCase: configureServicesAndPricingUseCase,
+      mapInput: (req) => ({
+        adminId: req.user?.id,
+        action: 'list',
+        query: req.query?.q,
+        page: req.query?.page,
+        pageSize: req.query?.pageSize,
+      }),
+      mapOutput: (result) => new ViewAdminServicesViewModel(result),
+    }),
     upsertService: createHandler({
       useCase: configureServicesAndPricingUseCase,
       mapInput: (req) => ({
