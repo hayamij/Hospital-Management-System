@@ -5,7 +5,7 @@ import {
   buildServicePayload,
   prettyReport,
   withFeedback,
-} from '../../../client/src/pages/controllers/adminOpsController.js';
+} from '../../../client/src/pages/controllers/admin/adminOpsController.js';
 
 describe('adminOpsController', () => {
   it('formats report output safely', () => {

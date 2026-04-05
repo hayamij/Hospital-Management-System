@@ -3,7 +3,7 @@ import {
   buildConsultationErrors,
   buildConsultationNoteBlock,
   mapRecordRows,
-} from '../../../client/src/pages/controllers/consultationController.js';
+} from '../../../client/src/pages/controllers/doctor/consultationController.js';
 
 describe('consultationController', () => {
   it('validates required consultation data', () => {

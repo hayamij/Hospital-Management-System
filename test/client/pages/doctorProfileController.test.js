@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createDoctorProfilePageActions,
   formatDoctorStatus,
-} from '../../../client/src/pages/controllers/doctorProfileController.js';
+} from '../../../client/src/pages/controllers/doctor/doctorProfileController.js';
 
 describe('doctorProfileController', () => {
   it('formats doctor status labels for UI display', () => {
