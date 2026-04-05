@@ -13,13 +13,23 @@
         Dịch vụ đã chọn: <strong>{{ selectedServiceName }}</strong>
       </p>
 
-      <div class="grid two-col slot-controls">
+      <div class="grid three-col slot-controls">
         <label class="field">
           <span>Lọc theo chuyên khoa (tùy chọn)</span>
           <select :value="form.specialty" @change="$emit('specialty-change', $event.target.value)">
             <option value="">Tất cả chuyên khoa</option>
             <option v-for="item in specialties" :key="item" :value="item">{{ item }}</option>
           </select>
+        </label>
+
+        <label class="field">
+          <span>Lọc theo bác sĩ (tên hoặc mã)</span>
+          <input
+            type="text"
+            :value="form.doctorFilter"
+            placeholder="Ví dụ: Nguyen Van A hoặc doc-1"
+            @input="$emit('doctor-filter-change', $event.target.value)"
+          />
         </label>
 
         <label class="field">
@@ -37,11 +47,12 @@
           :key="slot.id"
           type="button"
           class="slot-btn"
-          :class="{ selected: form.slotStart === slot.start && form.slotEnd === slot.end && form.doctorId === slot.doctorId }"
+          :class="{ selected: form.slotStart === slot.start && form.slotEnd === slot.end }"
           @click="$emit('select-slot', slot)"
         >
           <strong>{{ slot.timeLabel || slot.label }}</strong>
-          <small>{{ slot.doctorName }} <span v-if="slot.specialty">• {{ slot.specialty }}</span></small>
+          <small>{{ slot.doctorNamesDisplay || 'Không có bác sĩ khả dụng' }}</small>
+          <small v-if="slot.specialties?.length">{{ slot.specialties.join(', ') }}</small>
         </button>
       </div>
 
@@ -201,8 +212,7 @@ watch(
     const selectedIndex = props.availableSlots.findIndex(
       (slot) =>
         slot.start === props.form.slotStart &&
-        slot.end === props.form.slotEnd &&
-        (!props.form.doctorId || slot.doctorId === props.form.doctorId)
+        slot.end === props.form.slotEnd
     );
     if (selectedIndex >= 0) {
       slotPage.value = Math.floor(selectedIndex / SLOT_PAGE_SIZE) + 1;
@@ -238,6 +248,7 @@ watch(
 
 defineEmits([
   'specialty-change',
+  'doctor-filter-change',
   'doctor-change',
   'date-input',
   'select-slot',
@@ -281,6 +292,10 @@ defineEmits([
 
 .two-col {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.three-col {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .slot-controls {
@@ -337,11 +352,11 @@ defineEmits([
 }
 
 .slot-btn {
-  min-height: 78px;
+  min-height: 102px;
   border: 1px solid #cbd5e1;
   background: #f8fafc;
   display: grid;
-  grid-template-rows: 24px minmax(34px, auto);
+  grid-template-rows: 24px minmax(24px, auto) minmax(22px, auto);
   gap: 6px;
   text-align: left;
   align-items: start;
@@ -362,7 +377,7 @@ defineEmits([
   width: 100%;
   color: #334155;
   line-height: 1.35;
-  min-height: calc(1.35em * 2);
+  min-height: calc(1.35em * 1);
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;

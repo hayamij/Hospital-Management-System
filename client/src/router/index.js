@@ -20,6 +20,8 @@ import AboutUsPage from '../pages/AboutUsPage.vue';
 import NewsPage from '../pages/NewsPage.vue';
 import CommunicationsPage from '../pages/CommunicationsPage.vue';
 import AdminOpsPage from '../pages/AdminOpsPage.vue';
+import AdminStaffPage from '../pages/AdminStaffPage.vue';
+import AdminServicesPage from '../pages/AdminServicesPage.vue';
 import ConsultationPage from '../pages/ConsultationPage.vue';
 import DoctorDashboard from '../pages/DoctorDashboard.vue';
 import DoctorLabResultsPage from '../pages/DoctorLabResultsPage.vue';
@@ -107,11 +109,13 @@ const routes = [
 		children: [
 			{ path: '', redirect: '/admin/dashboard' },
 			{ path: 'dashboard', component: AdminDashboard },
+			{ path: 'staff', component: AdminStaffPage },
 			{ path: 'appointments', component: AppointmentsPage },
 			{ path: 'doctors', component: DoctorsPage },
 			{ path: 'patients', component: PatientsPage },
 			{ path: 'records', component: BackofficeMedicalRecordsPage },
 			{ path: 'billing', component: BackofficeBillingPage },
+			{ path: 'services', component: AdminServicesPage },
 			{ path: 'ops', component: AdminOpsPage },
 		],
 	},

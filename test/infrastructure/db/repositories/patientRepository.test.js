@@ -36,7 +36,7 @@ async function run() {
   const repoInsert = new SqlPatientRepository(poolInsert);
   const created = await repoInsert.create({ fullName: 'John Doe', contactInfo: { email: 'a@example.com' }, status: 'active' });
   assert.strictEqual(created.id, 'p1');
-  assert.ok(poolInsert.calls[0].text.includes('INSERT INTO patients'));
+  assert.ok(poolInsert.calls.some((call) => call.text.includes('INSERT INTO patients')));
 
   // save update
   const poolUpdate = new FakePool([sampleRow()]);

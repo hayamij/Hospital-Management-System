@@ -46,6 +46,51 @@ export class SqlBillingRepository extends BillingRepositoryPort {
     return rows.map(toEntity);
   }
 
+  async list({ status, patientId, page = 1, pageSize = 20 } = {}) {
+    const safePage = Math.max(1, Number(page) || 1);
+    const safePageSize = Math.min(100, Math.max(1, Number(pageSize) || 20));
+    const offset = (safePage - 1) * safePageSize;
+
+    const filters = [];
+    const values = [];
+
+    if (status) {
+      values.push(String(status).trim().toLowerCase());
+      filters.push(`LOWER(COALESCE(status, '')) = $${values.length}`);
+    }
+
+    if (patientId) {
+      values.push(patientId);
+      filters.push(`patient_id = $${values.length}`);
+    }
+
+    const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+
+    const countQuery = `SELECT COUNT(*) AS total FROM billings ${whereClause}`;
+    const countResult = await this.pool.query(countQuery, values);
+    const total = Number(countResult.rows?.[0]?.total ?? 0);
+
+    const listValues = [...values, offset, safePageSize];
+    const offsetIdx = listValues.length - 1;
+    const limitIdx = listValues.length;
+
+    const listQuery = `
+      SELECT *
+      FROM billings
+      ${whereClause}
+      ORDER BY created_at DESC
+      OFFSET $${offsetIdx} ROWS FETCH NEXT $${limitIdx} ROWS ONLY`;
+
+    const listResult = await this.pool.query(listQuery, listValues);
+
+    return {
+      page: safePage,
+      pageSize: safePageSize,
+      total,
+      items: (listResult.rows || []).map(toEntity),
+    };
+  }
+
   async save(billing) {
     const id = ensureId(billing.id);
     const charges = Array.isArray(billing.charges)

@@ -7,7 +7,7 @@
 				<input v-model="filters.query" placeholder="Tên hoặc từ khóa" />
 				<input v-model="filters.specialty" placeholder="Chuyên khoa" />
 				<button type="submit">Tìm kiếm</button>
-				<button type="button" @click="search">Làm mới</button>
+				<button type="button" @click="handleRefreshSearch">Làm mới</button>
 			</form>
 		</header>
 
@@ -105,6 +105,12 @@ const allDoctorsLoading = ref(false);
 const allDoctorsError = ref('');
 
 const search = () => doctors.search(filters);
+
+const handleRefreshSearch = () => {
+	filters.query = '';
+	filters.specialty = '';
+	search();
+};
 
 const loadAllDoctors = async () => {
 	if (allDoctorsLoading.value) return;

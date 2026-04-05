@@ -201,14 +201,23 @@ export const adminApi = {
 	login(credentials) {
 		return authApi.login(credentials);
 	},
+	listAppointments(token, params) {
+		return request('/admin/appointments', { method: 'GET', token, params });
+	},
 	overrideAppointment(token, appointmentId, payload) {
 		return request(`/admin/appointments/${appointmentId}/override`, { method: 'POST', token, data: payload });
+	},
+	listBilling(token, params) {
+		return request('/admin/billing', { method: 'GET', token, params });
 	},
 	manageBilling(token, invoiceId, payload) {
 		return request(`/admin/billing/${invoiceId}/action`, { method: 'POST', token, data: payload });
 	},
 	manageDoctorSchedule(token, doctorId, payload) {
 		return request(`/admin/doctors/${doctorId}/schedule`, { method: 'PUT', token, data: payload });
+	},
+	listServices(token, params) {
+		return request('/admin/services', { method: 'GET', token, params });
 	},
 	upsertService(token, payload) {
 		return request('/admin/services', { method: 'POST', token, data: payload });

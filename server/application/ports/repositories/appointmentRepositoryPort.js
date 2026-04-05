@@ -19,4 +19,8 @@ export class AppointmentRepositoryPort {
 	async listByPatient(patientId) {
 		throw new Error('AppointmentRepositoryPort.listByPatient not implemented');
 	}
+
+	async list({ status, doctorId, patientId, page, pageSize } = {}) {
+		throw new Error('AppointmentRepositoryPort.list not implemented');
+	}
 }

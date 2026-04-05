@@ -41,7 +41,6 @@ export const useAppointmentsStore = defineStore('appointments', {
 					return result.response;
 				}
 
-				// Admin has override endpoint but no dedicated list; keep current list untouched
 				return null;
 			} catch (error) {
 				this.error = error.message;

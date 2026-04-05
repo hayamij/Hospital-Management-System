@@ -35,6 +35,15 @@ export const fetchAppointmentsByRole = async ({
     return { response, ...toPagedResult(response, pageSize) };
   }
 
+  if (isRole(role, 'admin')) {
+    const response = await adminApi.listAppointments(token, {
+      ...filters,
+      page: filters.page || page,
+      pageSize: filters.pageSize || pageSize,
+    });
+    return { response, ...toPagedResult(response, pageSize) };
+  }
+
   return null;
 };
 

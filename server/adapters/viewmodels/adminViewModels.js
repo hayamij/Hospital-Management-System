@@ -87,3 +87,30 @@ export class AuditRecordViewModel {
     Object.assign(this, output);
   }
 }
+
+export class ViewAdminAppointmentsViewModel {
+  constructor(output) {
+    this.page = output?.page ?? 1;
+    this.pageSize = output?.pageSize ?? 20;
+    this.total = output?.total ?? 0;
+    this.appointments = output?.appointments ?? [];
+  }
+}
+
+export class ViewAdminBillingViewModel {
+  constructor(output) {
+    this.page = output?.page ?? 1;
+    this.pageSize = output?.pageSize ?? 20;
+    this.total = output?.total ?? 0;
+    this.billings = output?.billings ?? [];
+  }
+}
+
+export class ViewAdminServicesViewModel {
+  constructor(output) {
+    this.page = output?.page ?? 1;
+    this.pageSize = output?.pageSize ?? 10;
+    this.total = output?.total ?? 0;
+    this.services = output?.services ?? [];
+  }
+}

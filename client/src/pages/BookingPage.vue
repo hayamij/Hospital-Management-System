@@ -25,6 +25,7 @@
       :submit-label="isPatientAccount ? 'Xac nhan tao lich' : 'Tiep tuc va nhap thong tin'"
       :submitting="booking.submitting"
       @specialty-change="booking.setSpecialty"
+      @doctor-filter-change="booking.setDoctorFilter"
       @doctor-change="booking.setDoctor"
       @date-input="booking.setDate"
       @select-slot="booking.selectSlot"

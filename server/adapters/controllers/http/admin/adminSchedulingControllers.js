@@ -1,9 +1,22 @@
 import { createHandler } from '../createHandler.js';
 import { UpdateAppointmentStatusViewModel } from '../../../viewmodels/doctorViewModels.js';
+import { ViewAdminAppointmentsViewModel } from '../../../viewmodels/adminViewModels.js';
 
 // Admin handles doctor schedules and appointment overrides
-export function buildAdminSchedulingControllers({ manageDoctorSchedulesUseCase, overrideAppointmentUseCase }) {
+export function buildAdminSchedulingControllers({ manageDoctorSchedulesUseCase, overrideAppointmentUseCase, viewAppointmentsUseCase }) {
   return {
+    viewAppointments: createHandler({
+      useCase: viewAppointmentsUseCase,
+      mapInput: (req) => ({
+        adminId: req.user?.id,
+        status: req.query?.status,
+        doctorId: req.query?.doctorId,
+        patientId: req.query?.patientId,
+        page: req.query?.page,
+        pageSize: req.query?.pageSize,
+      }),
+      mapOutput: (result) => new ViewAdminAppointmentsViewModel(result),
+    }),
     setDoctorSlots: createHandler({
       useCase: manageDoctorSchedulesUseCase,
       mapInput: (req) => ({

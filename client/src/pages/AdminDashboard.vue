@@ -83,9 +83,14 @@
           <p>Kiểm soát dòng tiền, hóa đơn và công nợ theo thời gian thực.</p>
         </RouterLink>
 
-        <RouterLink class="module-card" to="/admin/ops">
-          <h3>Điều phối vận hành</h3>
-          <p>Thiết lập dịch vụ, nhân sự và tham số vận hành hệ thống.</p>
+        <RouterLink class="module-card" to="/admin/staff">
+          <h3>Quản lý nhân sự</h3>
+          <p>Tạo và cập nhật tài khoản bác sĩ, bệnh nhân, quản trị viên.</p>
+        </RouterLink>
+
+        <RouterLink class="module-card" to="/admin/services">
+          <h3>Quản lý dịch vụ</h3>
+          <p>Điều chỉnh danh mục dịch vụ, cấu hình và báo cáo vận hành.</p>
         </RouterLink>
       </div>
     </section>

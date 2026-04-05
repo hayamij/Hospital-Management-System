@@ -3,12 +3,15 @@
 		<header class="panel workspace-header" :class="{ 'doctor-theme': isDoctor }">
 			<div class="header-copy">
 				<p v-if="isDoctor" class="eyebrow">DOCTOR SCHEDULER</p>
-				<h1>{{ isDoctor ? 'Điều phối lịch hẹn bác sĩ' : 'Lịch hẹn' }}</h1>
+				<p v-if="isAdmin" class="eyebrow">ADMIN APPOINTMENTS</p>
+				<h1>{{ isDoctor ? 'Điều phối lịch hẹn bác sĩ' : isAdmin ? 'Lịch trình toàn hệ thống' : 'Lịch hẹn' }}</h1>
 				<p>
 					{{
 						isDoctor
 							? 'Duyệt lịch mới, cập nhật trạng thái khám và theo dõi toàn bộ lịch hẹn theo thời gian thực.'
-							: 'Yêu cầu, đặt lịch, đổi lịch, hủy và cập nhật trạng thái lịch hẹn.'
+							: isAdmin
+								? 'Theo dõi và lọc danh sách lịch hẹn theo trạng thái cho toàn bộ hệ thống.'
+								: 'Yêu cầu, đặt lịch, đổi lịch, hủy và cập nhật trạng thái lịch hẹn.'
 					}}
 				</p>
 			</div>
@@ -26,10 +29,10 @@
 						<option value="no_show">Vắng mặt</option>
 					</select>
 				</label>
-				<span v-if="isDoctor" class="header-page-indicator">
+				<span v-if="showBackofficePagination" class="header-page-indicator">
 					Trang {{ appointments.page }} / {{ totalPages }}
 				</span>
-				<button type="button" @click="refresh">Làm mới</button>
+				<button type="button" class="refresh-btn" :disabled="appointments.loading" @click="handleRefresh">Làm mới</button>
 			</div>
 		</header>
 
@@ -92,7 +95,28 @@
 				<small>{{ appointments.items.length }} / {{ appointments.total }} bản ghi</small>
 			</div>
 			<div v-if="appointments.items.length === 0">Chưa có lịch hẹn.</div>
-			<div class="list-grid">
+			<div v-else-if="isAdmin" class="appointments-table-wrap">
+				<DataTable
+					:columns="adminTableColumns"
+					:rows="adminTableRows"
+					row-key="id"
+					empty-text="Chưa có lịch hẹn."
+				>
+					<template #cell-id="{ value }">
+						<span class="cell-clip cell-mono" :title="value || '-'">{{ value || '-' }}</span>
+					</template>
+					<template #cell-reason="{ value }">
+						<span class="cell-clip" :title="value || '-'">{{ value || '-' }}</span>
+					</template>
+					<template #cell-time="{ value }">
+						<span class="cell-clip" :title="value || '-'">{{ value || '-' }}</span>
+					</template>
+					<template #cell-status="{ value }">
+						<span class="status-pill" :class="statusBadgeClass(value)" :title="formatStatus(value)">{{ formatStatus(value) }}</span>
+					</template>
+				</DataTable>
+			</div>
+			<div v-else class="list-grid">
 				<div
 					v-for="item in appointments.items"
 					:key="item.id || item.appointmentId"
@@ -122,40 +146,38 @@
 				</div>
 			</div>
 
-			<div v-if="showDoctorPagination" class="pagination-bar">
+			<div v-if="showBackofficePagination" class="pagination-bar">
 				<div class="pagination-meta">
 					Trang {{ appointments.page }} / {{ totalPages }} · {{ appointments.total }} lịch hẹn
 				</div>
 
 				<div class="pagination-controls">
-					<label class="page-size-control">
-						<span>Mỗi trang</span>
-						<select
-							v-model.number="appointments.pageSize"
-							:disabled="appointments.loading"
-							@change="onPageSizeChange"
-						>
-							<option v-for="size in pageSizeOptions" :key="size" :value="size">{{ size }}</option>
-						</select>
-					</label>
+					<span class="pager-inline-label">Mỗi trang</span>
+					<select
+						class="pager-field pager-select"
+						v-model.number="appointments.pageSize"
+						:disabled="appointments.loading"
+						@change="onPageSizeChange"
+					>
+						<option v-for="size in pageSizeOptions" :key="size" :value="size">{{ size }}</option>
+					</select>
 
-					<label class="page-jump-control">
-						<span>Đến trang</span>
-						<input
-							v-model.number="quickPageInput"
-							type="number"
-							min="1"
-							:max="totalPages"
-							:disabled="appointments.loading"
-							@keyup.enter="jumpToPage"
-						/>
-					</label>
-					<button type="button" :disabled="appointments.loading" @click="jumpToPage">Đi</button>
+					<span class="pager-inline-label">Đến trang</span>
+					<input
+						class="pager-field"
+						v-model.number="quickPageInput"
+						type="number"
+						min="1"
+						:max="totalPages"
+						:disabled="appointments.loading"
+						@keyup.enter="jumpToPage"
+					/>
+					<button type="button" class="pager-btn" :disabled="appointments.loading" @click="jumpToPage">Đi</button>
 
-					<button type="button" :disabled="appointments.loading || !canGoPrev" @click="goToPrevPage">
+					<button type="button" class="pager-btn" :disabled="appointments.loading || !canGoPrev" @click="goToPrevPage">
 						Trang trước
 					</button>
-					<button type="button" :disabled="appointments.loading || !canGoNext" @click="goToNextPage">
+					<button type="button" class="pager-btn" :disabled="appointments.loading || !canGoNext" @click="goToNextPage">
 						Trang sau
 					</button>
 				</div>
@@ -183,6 +205,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import DataTable from '../components/shared/DataTable.vue';
 import { useAuthStore } from '../stores/auth.js';
 import { useAppointmentsStore } from '../stores/appointments.js';
 import { useRoleVisibility } from '../composables/useRoleVisibility.js';
@@ -193,7 +216,8 @@ import {
 
 const auth = useAuthStore();
 const appointments = useAppointmentsStore();
-const { isPatient, isDoctor, role } = useRoleVisibility(auth);
+const { isPatient, isDoctor, isAdmin, role } = useRoleVisibility(auth);
+const ADMIN_DEFAULT_PAGE_SIZE = 10;
 const filters = reactive({ status: '' });
 const pageSizeOptions = [5, 10, 20, 50];
 const quickPageInput = ref(1);
@@ -210,14 +234,34 @@ const doctorActionableCount = computed(() => {
 	return appointments.items.filter((item) => canRoleUpdateAppointmentStatus(item, role.value)).length;
 });
 
+const adminTableColumns = [
+	{ key: 'id', label: 'Mã lịch', width: '130px' },
+	{ key: 'reason', label: 'Lý do' },
+	{ key: 'time', label: 'Khung giờ', width: '280px' },
+	{ key: 'doctorId', label: 'Bác sĩ', width: '110px' },
+	{ key: 'patientId', label: 'Bệnh nhân', width: '110px' },
+	{ key: 'status', label: 'Trạng thái', width: '130px', align: 'center' },
+];
+
+const adminTableRows = computed(() => {
+	return appointments.items.map((item) => ({
+		id: item.id || item.appointmentId || '-',
+		reason: item.reason || 'Lịch hẹn',
+		time: `${item.startAt || '-'} -> ${item.endAt || '-'}`,
+		doctorId: item.doctorId || item.doctor?.id || '-',
+		patientId: item.patientId || item.patient?.id || '-',
+		status: item.status || '',
+	}));
+});
+
 const totalPages = computed(() => {
 	const pageSize = Number(appointments.pageSize) || 10;
 	const total = Number(appointments.total) || 0;
 	return Math.max(1, Math.ceil(total / pageSize));
 });
 
-const showDoctorPagination = computed(() => {
-	return isDoctor.value && appointments.total > 0;
+const showBackofficePagination = computed(() => {
+	return (isDoctor.value || isAdmin.value) && appointments.total > 0;
 });
 
 const canGoPrev = computed(() => appointments.page > 1);
@@ -255,6 +299,15 @@ const statusLabelMap = {
 
 const formatStatus = (status) => statusLabelMap[String(status || '').toLowerCase()] || status || 'Chưa rõ';
 
+const statusBadgeClass = (status) => {
+	const normalized = String(status || '').toLowerCase();
+	if (normalized === 'completed') return 'is-ok';
+	if (normalized === 'scheduled' || normalized === 'in_progress') return 'is-info';
+	if (normalized === 'pending' || normalized === 'requested') return 'is-warn';
+	if (normalized === 'cancelled' || normalized === 'no_show') return 'is-off';
+	return 'is-neutral';
+};
+
 const refresh = async ({ resetPage = false } = {}) => {
 	if (resetPage) {
 		appointments.page = 1;
@@ -262,7 +315,7 @@ const refresh = async ({ resetPage = false } = {}) => {
 
 	await appointments.fetchAppointments({ status: filters.status });
 
-	if (isDoctor.value && appointments.total > 0 && appointments.page > totalPages.value) {
+	if ((isDoctor.value || isAdmin.value) && appointments.total > 0 && appointments.page > totalPages.value) {
 		appointments.page = totalPages.value;
 		await appointments.fetchAppointments({ status: filters.status });
 	}
@@ -270,6 +323,19 @@ const refresh = async ({ resetPage = false } = {}) => {
 
 const onStatusFilterChange = async () => {
 	await refresh({ resetPage: true });
+};
+
+const handleRefresh = async () => {
+	if (isAdmin.value) {
+		filters.status = '';
+		appointments.page = 1;
+		appointments.pageSize = ADMIN_DEFAULT_PAGE_SIZE;
+		quickPageInput.value = 1;
+		await refresh();
+		return;
+	}
+
+	await refresh();
 };
 
 const onPageSizeChange = async () => {
@@ -406,38 +472,116 @@ const decide = async (item, decision) => {
 }
 
 .pagination-meta {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
 	color: #334155;
 	font-weight: 600;
 }
 
 .pagination-controls {
 	display: flex;
-	align-items: flex-end;
-	gap: 10px;
+	align-items: center;
+	gap: 8px;
 	flex-wrap: wrap;
+	justify-content: flex-end;
 }
 
-.page-size-control {
-	display: grid;
-	gap: 6px;
-}
-
-.page-jump-control {
-	display: grid;
-	gap: 6px;
-	min-width: 108px;
-}
-
-.page-size-control span {
+.pagination-controls .pager-inline-label {
 	font-size: 12px;
 	font-weight: 600;
 	color: #475569;
+	height: 44px;
+	display: inline-flex;
+	align-items: center;
 }
 
-.page-jump-control span {
+.pagination-controls .pager-field {
+	min-width: 84px;
+	height: 44px;
+}
+
+.pagination-controls .pager-select {
+	min-width: 88px;
+}
+
+.pagination-controls .pager-btn {
+	min-width: 106px;
+	padding: 0 12px;
+	height: 44px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.appointments-table-wrap :deep(.data-table) {
+	table-layout: fixed;
+}
+
+.appointments-table-wrap :deep(.data-table th),
+.appointments-table-wrap :deep(.data-table td) {
+	vertical-align: middle;
+}
+
+.cell-clip {
+	display: block;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.cell-mono {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+}
+
+.status-pill {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 100%;
+	height: 26px;
+	padding: 0 10px;
+	border: 1px solid transparent;
 	font-size: 12px;
 	font-weight: 600;
-	color: #475569;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.status-pill.is-ok {
+	background: #ecfdf5;
+	border-color: #86efac;
+	color: #166534;
+}
+
+.status-pill.is-info {
+	background: #eff6ff;
+	border-color: #93c5fd;
+	color: #1d4ed8;
+}
+
+.status-pill.is-warn {
+	background: #fffbeb;
+	border-color: #fcd34d;
+	color: #92400e;
+}
+
+.status-pill.is-off {
+	background: #fef2f2;
+	border-color: #fca5a5;
+	color: #991b1b;
+}
+
+.status-pill.is-neutral {
+	background: #f8fafc;
+	border-color: #cbd5e1;
+	color: #334155;
+}
+
+.refresh-btn {
+	min-width: 110px;
 }
 
 .doctor-kpi-grid {
@@ -513,6 +657,11 @@ const decide = async (item, decision) => {
 @media (max-width: 1100px) {
 	.header-copy h1 {
 		font-size: 28px;
+	}
+
+	.pagination-controls {
+		flex-wrap: wrap;
+		justify-content: flex-end;
 	}
 
 	.doctor-kpi-grid {

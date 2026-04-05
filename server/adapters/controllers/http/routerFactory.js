@@ -120,12 +120,15 @@ export function createHttpRouter(deps) {
 
   // Admin doctor scheduling and appointment overrides
   router.put('/admin/doctors/:doctorId/schedule', requireRole(['admin']), adminScheduling.setDoctorSlots);
+  router.get('/admin/appointments', requireRole(['admin']), adminScheduling.viewAppointments);
   router.post('/admin/appointments/:appointmentId/override', requireRole(['admin']), adminScheduling.overrideAppointment);
 
   // Admin billing
+  router.get('/admin/billing', requireRole(['admin']), adminBilling.viewBilling);
   router.post('/admin/billing/:invoiceId/action', requireRole(['admin']), adminBilling.manageBilling);
 
   // Admin services/catalog
+  router.get('/admin/services', requireRole(['admin']), adminServices.listServices);
   router.post('/admin/services', requireRole(['admin']), adminServices.upsertService);
   router.delete('/admin/services/:serviceId', requireRole(['admin']), adminServices.removeService);
 

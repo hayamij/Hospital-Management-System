@@ -1,9 +1,20 @@
 import { createHandler } from '../createHandler.js';
-import { ManageBillingViewModel } from '../../../viewmodels/adminViewModels.js';
+import { ManageBillingViewModel, ViewAdminBillingViewModel } from '../../../viewmodels/adminViewModels.js';
 
 // Admin billing actions
-export function buildAdminBillingControllers({ manageBillingUseCase }) {
+export function buildAdminBillingControllers({ manageBillingUseCase, viewBillingUseCase }) {
   return {
+    viewBilling: createHandler({
+      useCase: viewBillingUseCase,
+      mapInput: (req) => ({
+        adminId: req.user?.id,
+        status: req.query?.status,
+        patientId: req.query?.patientId,
+        page: req.query?.page,
+        pageSize: req.query?.pageSize,
+      }),
+      mapOutput: (result) => new ViewAdminBillingViewModel(result),
+    }),
     manageBilling: createHandler({
       useCase: manageBillingUseCase,
       mapInput: (req) => ({

@@ -1,9 +1,16 @@
-import crypto from 'node:crypto';
 import { PatientRepositoryPort } from '../../../application/ports/repositories/patientRepositoryPort.js';
 import { Patient } from '../../../domain/entities/patient.js';
 
-const ensureId = (id) => id || crypto.randomUUID();
 const toDate = (value) => (value ? new Date(value) : null);
+
+const parsePatternIndex = (value, prefix) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  const pattern = new RegExp(`^${prefix}-(\\d+)$`, 'i');
+  const match = normalized.match(pattern);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+};
 
 const toEntity = (row) => {
   if (!row) return null;
@@ -35,9 +42,21 @@ export class SqlPatientRepository extends PatientRepositoryPort {
     return toEntity(rows[0]);
   }
 
+  async nextPatientId() {
+    const { rows } = await this.pool.query("SELECT id FROM patients WHERE id LIKE 'pat-%'");
+    let maxIndex = 0;
+    for (const row of rows || []) {
+      const index = parsePatternIndex(row?.id, 'pat');
+      if (index && index > maxIndex) {
+        maxIndex = index;
+      }
+    }
+    return `pat-${maxIndex + 1}`;
+  }
+
   async create(patient) {
     const contact = patient.contactInfo ?? {};
-    const id = ensureId(patient.id);
+    const id = patient.id || (await this.nextPatientId());
     const emergency = contact.emergencyContact ? JSON.stringify(contact.emergencyContact) : null;
     const dob = patient.dateOfBirth ? new Date(patient.dateOfBirth).toISOString() : null;
 

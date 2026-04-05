@@ -1,7 +1,13 @@
-import crypto from 'node:crypto';
 import { UserRepositoryPort } from '../../../application/ports/repositories/userRepositoryPort.js';
 
-const ensureId = (id) => id || crypto.randomUUID();
+const parsePatternIndex = (value, prefix) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  const pattern = new RegExp(`^${prefix}-(\\d+)$`, 'i');
+  const match = normalized.match(pattern);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+};
 
 const toEntity = (row) => {
   if (!row) return null;
@@ -23,6 +29,28 @@ export class SqlUserRepository extends UserRepositoryPort {
   constructor(pool) {
     super();
     this.pool = pool;
+  }
+
+  async nextPatternId(prefix) {
+    const { rows } = await this.pool.query('SELECT id FROM users WHERE id LIKE $1', [`${prefix}-%`]);
+    let maxIndex = 0;
+    for (const row of rows || []) {
+      const index = parsePatternIndex(row?.id, prefix);
+      if (index && index > maxIndex) {
+        maxIndex = index;
+      }
+    }
+    return `${prefix}-${maxIndex + 1}`;
+  }
+
+  async ensureUserId(user) {
+    if (user?.id) return user.id;
+
+    const role = String(user?.role || '').trim().toLowerCase();
+    if (role === 'patient') return this.nextPatternId('pat');
+    if (role === 'doctor') return this.nextPatternId('doc');
+    if (role === 'admin') return this.nextPatternId('admin');
+    return this.nextPatternId('usr');
   }
 
   async list({ page = 1, pageSize = 10, query = '', role } = {}) {
@@ -81,7 +109,7 @@ export class SqlUserRepository extends UserRepositoryPort {
   }
 
   async save(user) {
-    const id = ensureId(user.id);
+    const id = await this.ensureUserId(user);
     const status = user.status ?? 'active';
 
     const existing = await this.findById(id);
