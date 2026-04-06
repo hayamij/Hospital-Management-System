@@ -7,10 +7,10 @@ const getMssqlPool = async () => {
     const mssqlModule = await import('mssql');
     const sql = mssqlModule.default ?? mssqlModule;
     const connection = new sql.ConnectionPool({
-      server: process.env.MSSQL_SERVER || 'PHUONGTUAN',
-      user: process.env.MSSQL_USER || 'fuongtuan',
-      password: process.env.MSSQL_PASSWORD || 'toilabanhmochi',
-      database: process.env.MSSQL_DATABASE || 'HospitalManagementSystem',
+      server: process.env.MSSQL_SERVER,
+      user: process.env.MSSQL_USER,
+      password: process.env.MSSQL_PASSWORD,
+      database: process.env.MSSQL_DATABASE,
       options: {
         encrypt: String(process.env.MSSQL_ENCRYPT || 'false').toLowerCase() === 'true',
         trustServerCertificate: String(process.env.MSSQL_TRUST_SERVER_CERT || 'true').toLowerCase() === 'true',
