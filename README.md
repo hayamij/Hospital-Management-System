@@ -87,10 +87,5 @@ API HTTP method split: GET / POST / PUT / PATCH / DELETE = 22 / 23 / 6 / 1 / 2.
 
 ## 7) Demo credentials (seed)
 
-- Admin shortcut: `admin` / `123`
 - Admin email: `admin@example.com` / `12345678`
 - Doctor: `doc@example.com` / `12345678`
-
----
-
-If you need an investor-facing version, this README can be converted to a 1-page valuation memo (scope, architecture maturity, QA posture, and delivery risk profile).
