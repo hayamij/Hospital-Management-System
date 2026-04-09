@@ -23,7 +23,9 @@ export class ResetPasswordUseCase {
 		if (String(input.newPassword).length < 8) {
 			throw new DomainError('New password must be at least 8 characters.');
 		}
-
+		if (String(input.newPassword) === String(input.oldPassword)) {
+			throw new DomainError('New password must be different from the old password.');
+		}
 		const user = await this.userRepository.findByEmail(input.email.trim());
 		if (!user) {
 			throw new DomainError('User not found.');
