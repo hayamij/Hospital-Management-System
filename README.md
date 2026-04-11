@@ -88,4 +88,4 @@ API HTTP method split: GET / POST / PUT / PATCH / DELETE = 22 / 23 / 6 / 1 / 2.
 ## 7) Demo credentials (seed)
 
 - Admin email: `admin@example.com` / `12345678`
-- Doctor: `doc@example.com` / `12345678`
+- Doctor: `doc2@example.com` / `12345678`
