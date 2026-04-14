@@ -6,7 +6,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
-    // Run every *.test.js under the test folder
     include: ['test/**/*.test.js'],
   },
   resolve: {
