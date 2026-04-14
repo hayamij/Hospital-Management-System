@@ -53,6 +53,7 @@ import { readAuthPrefill, writeAuthPrefill } from '../../services/sessionStorage
 const router = useRouter();
 const auth = useAuthStore();
 const phoneRegex = /^(\+?84|0)(3|5|7|8|9)\d{8}$/;
+const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
 const form = reactive({
   fullName: '',
@@ -87,6 +88,11 @@ const submit = async () => {
 
   if (!form.email) {
     auth.error = 'Email là bắt buộc.';
+    return;
+  }
+
+  if (!emailRegex.test(form.email)) {
+    auth.error = 'Email không đúng định dạng (ví dụ: name@abc.xyz).';
     return;
   }
 

@@ -180,6 +180,76 @@ async function run() {
   assert.strictEqual(billingRepository.saved[0].getPatientId(), 'pat-1');
   assert.strictEqual(billingRepository.saved[0].getCharges()[0].amount, 50);
 
+  const invalidBillingRepository = new FakeBillingRepository();
+  const invalidAppointment = new FakeAppointment({
+    id: 'appt-2-invalid',
+    doctorId: doctor.id,
+    patientId: 'pat-2',
+    reason: 'General Consultation',
+  });
+  const invalidRepo = new FakeAppointmentRepository({ [invalidAppointment.id]: invalidAppointment });
+  const useCaseInvalidInvoice = new MarkAppointmentStatusUseCase({
+    doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }),
+    appointmentRepository: invalidRepo,
+    billingRepository: invalidBillingRepository,
+    serviceCatalogRepository,
+  });
+
+  // Invalid manual invoice details
+  await expectThrows(
+    () => useCaseInvalidInvoice.execute({
+      doctorId: doctor.id,
+      appointmentId: invalidAppointment.id,
+      status: 'completed',
+      invoiceDetails: { amount: 1000 },
+    }),
+    'Invoice service name is required.',
+  );
+
+  await expectThrows(
+    () => useCaseInvalidInvoice.execute({
+      doctorId: doctor.id,
+      appointmentId: invalidAppointment.id,
+      status: 'completed',
+      invoiceDetails: { serviceName: 'Kham tong quat', amount: 0 },
+    }),
+    'Invoice amount must be greater than 0.',
+  );
+
+  // Success completed with manual invoice details
+  const manualBillingRepository = new FakeBillingRepository();
+  const appointmentManualInvoice = new FakeAppointment({
+    id: 'appt-3',
+    doctorId: doctor.id,
+    patientId: 'pat-3',
+    reason: 'Khong dung de map service catalog',
+  });
+  const repoManualInvoice = new FakeAppointmentRepository({ [appointmentManualInvoice.id]: appointmentManualInvoice });
+  const useCaseManualInvoice = new MarkAppointmentStatusUseCase({
+    doctorRepository: new FakeDoctorRepository({ [doctor.id]: doctor }),
+    appointmentRepository: repoManualInvoice,
+    billingRepository: manualBillingRepository,
+    serviceCatalogRepository: new FakeServiceCatalogRepository([]),
+  });
+
+  const manualResult = await useCaseManualInvoice.execute({
+    doctorId: doctor.id,
+    appointmentId: appointmentManualInvoice.id,
+    status: 'completed',
+    invoiceDetails: {
+      serviceName: 'Kham tong quat VIP',
+      amount: 125000,
+      note: 'Bao gom tu van va ke don',
+    },
+  });
+
+  assert.strictEqual(manualResult.status, 'completed');
+  assert.strictEqual(manualResult.billingCreated, true);
+  assert.strictEqual(manualBillingRepository.saved.length, 1);
+  assert.strictEqual(manualBillingRepository.saved[0].getCharges()[0].description, 'Kham tong quat VIP');
+  assert.strictEqual(manualBillingRepository.saved[0].getCharges()[0].amount, 125000);
+  assert.strictEqual(manualBillingRepository.saved[0].getCharges()[0].note, 'Bao gom tu van va ke don');
+
   await useCaseWithBilling.execute({ doctorId: doctor.id, appointmentId: appointmentWithPatient.id, status: 'completed' });
   assert.strictEqual(billingRepository.saved.length, 1);
 }

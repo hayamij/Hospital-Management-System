@@ -12,7 +12,8 @@ async function run() {
   const repo = new SqlPaymentRepository(pool);
   const list = await repo.listByPatient('p1');
   assert.strictEqual(list[0].id, 'pay-1');
-  assert.ok(pool.calls[0].text.includes('FROM payments'));
+  assert.ok(pool.calls.some((call) => call.text.includes("COL_LENGTH('payments', 'transfer_reference')")));
+  assert.ok(pool.calls.some((call) => call.text.includes('FROM payments p')));
 }
 
 wrapLegacyRun(run, 'paymentRepository');

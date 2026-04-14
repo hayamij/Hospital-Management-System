@@ -91,6 +91,20 @@ export class DownloadInvoiceViewModel {
   }
 }
 
+export class SubmitTransferPaymentViewModel {
+  constructor(output) {
+    this.paymentId = output.paymentId;
+    this.patientId = output.patientId;
+    this.invoiceId = output.invoiceId;
+    this.amount = output.amount;
+    this.status = output.status;
+    this.method = output.method;
+    this.transferReference = output.transferReference;
+    this.submittedAt = output.submittedAt;
+    this.note = output.note;
+  }
+}
+
 export class ViewMedicalRecordsViewModel {
   constructor(output) {
     this.page = output.page;

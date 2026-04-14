@@ -9,7 +9,7 @@
 			<div class="header-actions">
 				<input v-if="isDoctor" v-model="patientId" placeholder="Mã bệnh nhân" />
 				<button v-if="isDoctor" type="button" @click="createMedicalRecord" :disabled="records.loading">Tạo hồ sơ bệnh án</button>
-				<button type="button" @click="refresh" :disabled="records.loading">Làm mới</button>
+				<button type="button" @click="refresh" :disabled="records.loading">Tìm kiếm</button>
 			</div>
 		</header>
 

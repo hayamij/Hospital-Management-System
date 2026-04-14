@@ -2,6 +2,7 @@ import { DomainError } from '../../../domain/exceptions/domainError.js';
 import { MedicalRecord } from '../../../domain/entities/medicalRecord.js';
 import { StartRegistrationInput } from '../../dto/guest/startRegistrationInput.js';
 import { StartRegistrationOutput } from '../../dto/guest/startRegistrationOutput.js';
+import { isValidEmail, normalizeEmail } from '../../utils/email.js';
 
 export class StartRegistrationUseCase {
 	constructor({ patientRepository, medicalRecordRepository }) {
@@ -18,13 +19,18 @@ export class StartRegistrationUseCase {
 		if (!input.email || !String(input.email).trim()) {
 			throw new DomainError('Email is required.');
 		}
+		if (!isValidEmail(input.email)) {
+			throw new DomainError('Email format is invalid. Expected format: name@abc.xyz.');
+		}
 		if (!input.phone || !String(input.phone).trim()) {
 			throw new DomainError('Phone is required.');
 		}
 
+		const email = normalizeEmail(input.email);
+
 		const patient = {
 			fullName: String(input.fullName).trim(),
-			contactInfo: { email: String(input.email).trim(), phone: String(input.phone).trim() },
+			contactInfo: { email, phone: String(input.phone).trim() },
 			status: 'pending',
 			createdAt: new Date(),
 		};

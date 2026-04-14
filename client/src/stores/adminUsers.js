@@ -85,6 +85,24 @@ export const useAdminUsersStore = defineStore('adminUsers', {
       }
     },
 
+    async assignRole(userId, role) {
+      const auth = useAuthStore();
+      if (!isRole(auth.role, 'admin')) return;
+
+      this.saving = true;
+      this.error = null;
+      try {
+        const assigned = await adminApi.assignRole(auth.token, userId, { role });
+        await this.fetchUsers({ page: this.page, pageSize: this.pageSize });
+        return assigned;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.saving = false;
+      }
+    },
+
     async updateUserStatus(userId, action) {
       const auth = useAuthStore();
       if (!isRole(auth.role, 'admin')) return;

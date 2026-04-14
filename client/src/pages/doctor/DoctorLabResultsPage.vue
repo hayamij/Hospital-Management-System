@@ -8,6 +8,7 @@
       </div>
 
       <div class="header-actions">
+        <span class="pager-inline-label">Trang {{ schedulePage }} / {{ scheduleTotalPages }}</span>
         <button type="button" @click="refreshSchedule" :disabled="loadingSchedule">Làm mới lịch khám</button>
       </div>
     </header>
@@ -35,7 +36,7 @@
     <section class="panel">
       <div class="section-head">
         <h2>Danh sách lịch khám gần đây</h2>
-        <small>Dùng để điền nhanh thông tin bệnh nhân trước khi duyệt xét nghiệm</small>
+        <small>Dùng để điền nhanh thông tin bệnh nhân trước khi duyệt xét nghiệm · Trang {{ schedulePage }} / {{ scheduleTotalPages }}</small>
       </div>
 
       <p v-if="loadingSchedule" class="muted">Đang tải lịch khám...</p>
@@ -53,6 +54,15 @@
             <button type="button" @click="applyFromAppointment(item)">Điền nhanh</button>
           </div>
         </article>
+      </div>
+
+      <div class="schedule-pager" role="group" aria-label="Phân trang lịch khám">
+        <span class="pager-inline-label">Mỗi trang</span>
+        <select v-model.number="schedulePageSize" :disabled="loadingSchedule" @change="changeSchedulePageSize">
+          <option v-for="size in schedulePageSizeOptions" :key="size" :value="size">{{ size }}</option>
+        </select>
+        <button type="button" :disabled="loadingSchedule || schedulePage <= 1" @click="goToPrevSchedulePage">Trang trước</button>
+        <button type="button" :disabled="loadingSchedule || schedulePage >= scheduleTotalPages" @click="goToNextSchedulePage">Trang sau</button>
       </div>
     </section>
 
@@ -127,6 +137,9 @@ const labResults = useDoctorLabResultsStore();
 
 const loadingSchedule = ref(false);
 const scheduleError = ref('');
+const schedulePage = ref(1);
+const schedulePageSize = ref(10);
+const schedulePageSizeOptions = [10, 20, 50];
 
 const reviewForm = reactive({
   labResultId: '',
@@ -145,16 +158,49 @@ const pendingScheduleCount = computed(() => {
   }).length;
 });
 
-const refreshSchedule = async () => {
+const scheduleTotalPages = computed(() => {
+  const total = Number(appointments.total) || 0;
+  const size = Number(schedulePageSize.value) || 10;
+  return Math.max(1, Math.ceil(total / size));
+});
+
+const refreshSchedule = async ({ resetPage = false } = {}) => {
+  if (resetPage) {
+    schedulePage.value = 1;
+  }
+
   loadingSchedule.value = true;
   scheduleError.value = '';
   try {
-    await appointments.fetchAppointments();
+    await appointments.fetchAppointments({
+      page: schedulePage.value,
+      pageSize: schedulePageSize.value,
+    });
+
+    schedulePage.value = Number(appointments.page) || schedulePage.value;
+    schedulePageSize.value = Number(appointments.pageSize) || schedulePageSize.value;
   } catch (e) {
     scheduleError.value = e?.message || 'Không thể tải lịch khám.';
   } finally {
     loadingSchedule.value = false;
   }
+};
+
+const changeSchedulePageSize = async () => {
+  schedulePage.value = 1;
+  await refreshSchedule();
+};
+
+const goToPrevSchedulePage = async () => {
+  if (schedulePage.value <= 1) return;
+  schedulePage.value -= 1;
+  await refreshSchedule();
+};
+
+const goToNextSchedulePage = async () => {
+  if (schedulePage.value >= scheduleTotalPages.value) return;
+  schedulePage.value += 1;
+  await refreshSchedule();
 };
 
 const applyFromAppointment = (item) => {
@@ -182,7 +228,9 @@ const resetForm = () => {
   labResults.clearMessages();
 };
 
-onMounted(refreshSchedule);
+onMounted(() => {
+  void refreshSchedule({ resetPage: true });
+});
 </script>
 
 <style scoped>
@@ -339,6 +387,21 @@ onMounted(refreshSchedule);
 .review-item p {
   margin: 0 0 6px;
   color: #334155;
+}
+
+.schedule-pager {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.pager-inline-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
 }
 
 @media (max-width: 900px) {

@@ -65,6 +65,7 @@ export const BACKOFFICE_SIDEBAR_ITEMS = {
     { label: 'Vận hành bác sĩ', path: '/doctor/dashboard', icon: 'DO' },
     { label: 'Khám bệnh', path: '/doctor/consultation', icon: 'CS' },
     { label: 'Lịch hẹn', path: '/doctor/appointments', icon: 'SC' },
+    { label: 'Hóa đơn bệnh nhân', path: '/doctor/billing', icon: 'FN' },
     { label: 'Xét nghiệm', path: '/doctor/lab-results', icon: 'LB' },
     { label: 'Bệnh nhân', path: '/doctor/patients', icon: 'PT' },
     { label: 'Hồ sơ', path: '/doctor/records', icon: 'MR' },

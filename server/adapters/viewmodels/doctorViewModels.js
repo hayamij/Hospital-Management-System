@@ -12,6 +12,9 @@ export class UpdateAppointmentStatusViewModel {
     this.appointmentId = output.appointmentId;
     this.status = output.status;
     this.updatedAt = output.updatedAt;
+    this.billingCreated = output.billingCreated ?? false;
+    this.invoiceId = output.invoiceId ?? null;
+    this.invoiceNumber = output.invoiceNumber ?? null;
   }
 }
 
@@ -87,5 +90,37 @@ export class UpdateDoctorProfileViewModel {
 export class DoctorLoginViewModel {
   constructor(output) {
     Object.assign(this, output);
+  }
+}
+
+export class ViewPendingPaymentsViewModel {
+  constructor(output) {
+    this.doctorId = output?.doctorId ?? null;
+    this.page = output?.page ?? 1;
+    this.pageSize = output?.pageSize ?? 20;
+    this.total = output?.total ?? 0;
+    this.payments = output?.payments ?? [];
+  }
+}
+
+export class ReviewTransferPaymentViewModel {
+  constructor(output) {
+    this.paymentId = output?.paymentId ?? null;
+    this.invoiceId = output?.invoiceId ?? null;
+    this.status = output?.status ?? null;
+    this.invoiceStatus = output?.invoiceStatus ?? null;
+    this.reviewedAt = output?.reviewedAt ?? null;
+    this.doctorId = output?.doctorId ?? null;
+    this.decision = output?.decision ?? null;
+  }
+}
+
+export class ViewDoctorBillingsViewModel {
+  constructor(output) {
+    this.doctorId = output?.doctorId ?? null;
+    this.page = output?.page ?? 1;
+    this.pageSize = output?.pageSize ?? 20;
+    this.total = output?.total ?? 0;
+    this.billings = output?.billings ?? [];
   }
 }

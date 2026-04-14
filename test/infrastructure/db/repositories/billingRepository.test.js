@@ -32,7 +32,8 @@ async function run() {
   const repoList = new SqlBillingRepository(poolList);
   const list = await repoList.listByPatient('p1');
   assert.strictEqual(list.length, 1);
-  assert.ok(poolList.calls[0].text.includes('FROM billings WHERE patient_id'));
+  assert.ok(poolList.calls.some((c) => c.text.includes("COL_LENGTH('billings', 'doctor_id')")));
+  assert.ok(poolList.calls.some((c) => c.text.includes('FROM billings WHERE patient_id')));
 
   // save insert
   const poolInsert = new FakePool([sampleRow()]);

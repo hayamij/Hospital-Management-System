@@ -38,6 +38,7 @@ export const useAuthStore = defineStore('auth', {
 		isAuthenticated: (state) => Boolean(state.token),
 		userId: (state) => state.userProfile?.id ?? null,
 		patientId: (state) => state.userProfile?.patientId ?? null,
+		doctorId: (state) => state.userProfile?.doctorId ?? null,
 		email: (state) => state.userProfile?.email ?? null,
 		defaultRoute: (state) => getRoleHomeRoute(state.role, '/'),
 	},
@@ -87,7 +88,11 @@ export const useAuthStore = defineStore('auth', {
 				this.userProfile = {
 					id: data?.userId ?? decoded?.sub ?? null,
 					patientId: data?.patientId ?? this.userProfile?.patientId ?? null,
-					email: data?.email ?? decoded?.email ?? credentials?.identifier ?? null,
+					doctorId:
+						data?.doctorId
+						?? decoded?.doctorId
+						?? (this.role === 'doctor' ? (data?.userId ?? decoded?.sub ?? this.userProfile?.doctorId ?? null) : this.userProfile?.doctorId ?? null),
+					email: data?.email ?? decoded?.email ?? credentials?.email ?? credentials?.identifier ?? null,
 					name: data?.fullName ?? null,
 				};
 				this.persist();
@@ -109,6 +114,7 @@ export const useAuthStore = defineStore('auth', {
 				this.userProfile = {
 					id: this.userProfile?.id ?? payload.sub ?? null,
 					patientId: this.userProfile?.patientId ?? null,
+					doctorId: this.userProfile?.doctorId ?? (this.role === 'doctor' ? (payload.sub ?? null) : null),
 					email: this.userProfile?.email ?? payload.email ?? null,
 					name: this.userProfile?.name ?? null,
 				};

@@ -17,6 +17,32 @@ const buildInvoiceNumber = (appointmentId) => {
 	return `INV-SVC-${safeAppointment}-${Date.now()}`;
 };
 
+const normalizeInvoiceDetails = (input) => {
+	if (!input || typeof input !== 'object') return null;
+
+	const amountRaw = Number(input.amount);
+	const amount = Number.isFinite(amountRaw) ? amountRaw : Number.NaN;
+	const serviceName = String(input.serviceName ?? input.service ?? input.description ?? '').trim();
+	const note = String(input.note ?? '').trim();
+	const invoiceNumber = String(input.invoiceNumber ?? '').trim();
+
+	let dueDate = null;
+	if (input.dueDate) {
+		const parsedDueDate = new Date(input.dueDate);
+		if (!Number.isNaN(parsedDueDate.getTime())) {
+			dueDate = parsedDueDate;
+		}
+	}
+
+	return {
+		amount,
+		serviceName,
+		note,
+		invoiceNumber,
+		dueDate,
+	};
+};
+
 export class MarkAppointmentStatusUseCase {
 	constructor({ doctorRepository, appointmentRepository, billingRepository, serviceCatalogRepository }) {
 		this.doctorRepository = doctorRepository;
@@ -25,7 +51,18 @@ export class MarkAppointmentStatusUseCase {
 		this.serviceCatalogRepository = serviceCatalogRepository;
 	}
 
-	async resolveServiceCharge(reason, appointmentId) {
+	async resolveServiceCharge(reason, appointmentId, invoiceDetails) {
+		if (invoiceDetails) {
+			return {
+				description: invoiceDetails.serviceName,
+				serviceName: invoiceDetails.serviceName,
+				serviceId: null,
+				appointmentId,
+				amount: invoiceDetails.amount,
+				note: invoiceDetails.note || null,
+			};
+		}
+
 		const services = (await this.serviceCatalogRepository?.listServices?.()) ?? [];
 		const normalizedReason = normalizeText(reason);
 
@@ -59,44 +96,59 @@ export class MarkAppointmentStatusUseCase {
 			serviceId: matchedService?.id ?? null,
 			appointmentId,
 			amount: toAmount(matchedService?.price),
+			note: null,
 		};
 	}
 
-	async maybeCreateServiceBilling(appointment) {
+	async maybeCreateServiceBilling(appointment, inputInvoiceDetails) {
 		if (!this.billingRepository?.save || !this.billingRepository?.listByPatient) {
-			return;
+			return { created: false, invoice: null };
 		}
 
 		const appointmentId = appointment.id ?? appointment.getId?.() ?? null;
 		const patientId = appointment.getPatientId?.() ?? appointment.patientId ?? null;
 		const reason = appointment.getReason?.() ?? appointment.reason ?? '';
 		if (!appointmentId || !patientId) {
-			return;
+			return { created: false, invoice: null };
 		}
 
 		const existing = (await this.billingRepository.listByPatient(patientId)) ?? [];
-		const hasGeneratedInvoice = existing.some((invoice) => {
+		const existingInvoice = existing.find((invoice) => {
 			const charges = invoice?.charges ?? invoice?.getCharges?.() ?? [];
 			return Array.isArray(charges)
 				&& charges.some((line) => String(line?.appointmentId || '') === String(appointmentId));
 		});
 
-		if (hasGeneratedInvoice) {
-			return;
+		if (existingInvoice) {
+			return { created: false, invoice: existingInvoice };
 		}
 
-		const chargeLine = await this.resolveServiceCharge(reason, appointmentId);
-		const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+		const invoiceDetails = normalizeInvoiceDetails(inputInvoiceDetails);
+		if (invoiceDetails) {
+			if (!invoiceDetails.serviceName) {
+				throw new DomainError('Invoice service name is required.');
+			}
+			if (!Number.isFinite(invoiceDetails.amount) || invoiceDetails.amount <= 0) {
+				throw new DomainError('Invoice amount must be greater than 0.');
+			}
+		}
+
+		const chargeLine = await this.resolveServiceCharge(reason, appointmentId, invoiceDetails);
+		const dueDate =
+			invoiceDetails?.dueDate
+				?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 		const billing = new Billing({
-			invoiceNumber: buildInvoiceNumber(appointmentId),
+			invoiceNumber: invoiceDetails?.invoiceNumber || buildInvoiceNumber(appointmentId),
 			patientId,
+			doctorId: appointment.getDoctorId?.() ?? appointment.doctorId ?? null,
 			charges: [chargeLine],
 			status: 'issued',
 			dueDate,
 			createdAt: new Date(),
 		});
 
-		await this.billingRepository.save(billing);
+		const saved = await this.billingRepository.save(billing);
+		return { created: true, invoice: saved ?? billing };
 	}
 
 	async execute(inputDto) {
@@ -144,13 +196,21 @@ export class MarkAppointmentStatusUseCase {
 		}
 
 		await this.appointmentRepository.save(appointment);
+		let billingResult = { created: false, invoice: null };
 		if (input.status === 'completed') {
-			await this.maybeCreateServiceBilling(appointment);
+			billingResult = await this.maybeCreateServiceBilling(appointment, input.invoiceDetails);
 		}
+
+		const invoice = billingResult?.invoice;
+		const invoiceId = invoice?.id ?? invoice?.getId?.() ?? null;
+		const invoiceNumber = invoice?.invoiceNumber ?? invoice?.getInvoiceNumber?.() ?? null;
 
 		return new MarkAppointmentStatusOutput({
 			appointmentId: appointment.id ?? appointment.getId?.() ?? input.appointmentId,
 			status: appointment.getStatus?.() ?? appointment.status,
+			billingCreated: Boolean(billingResult?.created),
+			invoiceId,
+			invoiceNumber,
 		});
 	}
 }

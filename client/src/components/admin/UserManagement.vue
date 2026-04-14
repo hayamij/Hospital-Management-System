@@ -55,9 +55,9 @@
         <h3>{{ modalMode === 'create' ? 'Thêm người dùng mới' : 'Chỉnh sửa người dùng' }}</h3>
 
         <form class="modal-form" @submit.prevent="saveUser">
-          <label class="field">
+          <label v-if="modalMode === 'edit'" class="field">
             <span>ID</span>
-            <input v-model.trim="form.id" :disabled="modalMode === 'edit'" placeholder="user-001" />
+            <input v-model.trim="form.id" disabled placeholder="user-001" />
             <small v-if="submitted && fieldErrors.id" class="field-error">{{ fieldErrors.id }}</small>
           </label>
 
@@ -134,6 +134,7 @@ const error = ref('');
 const modalOpen = ref(false);
 const modalMode = ref('create');
 const submitted = ref(false);
+const editOriginalRole = ref('');
 
 const form = reactive({
   id: '',
@@ -168,7 +169,7 @@ watch(totalPages, (val) => {
 const fieldErrors = computed(() => {
   const e = {};
 
-  if (!form.id || form.id.length < 3) e.id = 'ID tối thiểu 3 ký tự.';
+  if (modalMode.value === 'edit' && (!form.id || form.id.length < 3)) e.id = 'ID tối thiểu 3 ký tự.';
   if (!form.name || form.name.length < 2) e.name = 'Họ tên tối thiểu 2 ký tự.';
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email || '');
@@ -184,6 +185,7 @@ const resetForm = () => {
   form.role = 'patient';
   form.status = 'active';
   form.password = '';
+  editOriginalRole.value = '';
   submitted.value = false;
 };
 
@@ -213,6 +215,7 @@ const openEditModal = (row) => {
   form.role = row.role;
   form.status = row.status;
   form.password = '';
+  editOriginalRole.value = row.role;
 };
 
 const refresh = async () => {
@@ -252,10 +255,15 @@ const saveUser = async () => {
       await store.updateUser(form.id, {
         fullName: form.name,
         email: form.email,
-        role: form.role,
         status: form.status,
       });
-      status.value = 'Cập nhật người dùng thành công.';
+
+      if (form.role !== editOriginalRole.value) {
+        await store.assignRole(form.id, form.role);
+        status.value = 'Cập nhật người dùng và phân quyền thành công.';
+      } else {
+        status.value = 'Cập nhật người dùng thành công.';
+      }
     }
 
     closeModal();

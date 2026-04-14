@@ -61,6 +61,13 @@ const recordColumns = [
 ];
 
 const recordRows = computed(() => mapRecordRows(records.list));
+const activeRecordId = computed(() => {
+  return (
+    records.recordMeta?.recordId ||
+    selectedRecord.value?.recordId ||
+    null
+  );
+});
 
 const errors = computed(() => {
   return buildConsultationErrors({
@@ -102,11 +109,18 @@ const submitConsultation = async () => {
   try {
     const noteBlock = buildConsultationNoteBlock(form);
 
-    // A consultation save should append one note only.
-    await doctorApi.addVisitNote(auth.token, activePatientId.value, {
-      doctorId: auth.userId,
-      note: noteBlock,
-    });
+    if (activeRecordId.value) {
+      await doctorApi.updateMedicalRecordEntry(auth.token, activeRecordId.value, {
+        doctorId: auth.userId,
+        note: noteBlock,
+      });
+    } else {
+      // Fallback for patients that do not have a record yet.
+      await doctorApi.addVisitNote(auth.token, activePatientId.value, {
+        doctorId: auth.userId,
+        note: noteBlock,
+      });
+    }
 
     success.value = 'Đã lưu thông tin ca khám hiện tại thành công.';
     await records.fetchRecords({ patientId: activePatientId.value });

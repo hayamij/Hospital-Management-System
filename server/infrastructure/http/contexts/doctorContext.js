@@ -11,6 +11,9 @@ import { UpdateDoctorProfileAndAvailabilityUseCase } from '../../../application/
 import { ViewDoctorProfileUseCase } from '../../../application/use-cases/doctor/viewDoctorProfile.usecase.js';
 import { SendDoctorMessageUseCase } from '../../../application/use-cases/doctor/sendDoctorMessage.usecase.js';
 import { ViewDoctorMessagesUseCase } from '../../../application/use-cases/doctor/viewDoctorMessages.usecase.js';
+import { ViewPendingPaymentsUseCase } from '../../../application/use-cases/doctor/viewPendingPayments.usecase.js';
+import { ReviewTransferPaymentUseCase } from '../../../application/use-cases/doctor/reviewTransferPayment.usecase.js';
+import { ViewDoctorBillingUseCase } from '../../../application/use-cases/doctor/viewDoctorBilling.usecase.js';
 import { adaptUseCase, noopNotification } from './common.js';
 
 export const createDoctorUseCases = ({
@@ -23,6 +26,7 @@ export const createDoctorUseCases = ({
   medicalRecordRepository,
   messageRepository,
   labResultRepository,
+  paymentRepository,
   authService,
 }) => {
   const doctorLoginClass = new DoctorLoginUseCase({ userRepository, authService });
@@ -76,6 +80,20 @@ export const createDoctorUseCases = ({
     doctorRepository,
     patientRepository,
     messageRepository,
+  });
+  const viewPendingPaymentsClass = new ViewPendingPaymentsUseCase({
+    doctorRepository,
+    paymentRepository,
+  });
+  const reviewTransferPaymentClass = new ReviewTransferPaymentUseCase({
+    doctorRepository,
+    patientRepository,
+    billingRepository,
+    paymentRepository,
+  });
+  const viewDoctorBillingClass = new ViewDoctorBillingUseCase({
+    doctorRepository,
+    billingRepository,
   });
 
   const doctorLoginUseCase = adaptUseCase(
@@ -153,5 +171,8 @@ export const createDoctorUseCases = ({
     updateDoctorProfileAndAvailabilityUseCase: updateDoctorProfileAndAvailabilityClass,
     sendDoctorMessageUseCase,
     viewDoctorMessagesUseCase: viewDoctorMessagesClass,
+    viewPendingPaymentsUseCase: viewPendingPaymentsClass,
+    reviewTransferPaymentUseCase: reviewTransferPaymentClass,
+    viewDoctorBillingUseCase: viewDoctorBillingClass,
   };
 };

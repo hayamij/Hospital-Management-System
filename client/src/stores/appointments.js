@@ -43,6 +43,7 @@ export const useAppointmentsStore = defineStore('appointments', {
 					role: auth.role,
 					token: auth.token,
 					userId: auth.userId,
+					doctorId: auth.doctorId,
 						patientId,
 					filters,
 					page: this.page,
@@ -97,11 +98,13 @@ export const useAppointmentsStore = defineStore('appointments', {
 				role: auth.role,
 				token: auth.token,
 				userId: auth.userId,
+				doctorId: auth.doctorId,
 				appointmentId,
 				payload,
 			});
 			if (!updated) return;
 			await this.fetchAppointments(this.activeFilters);
+			return updated;
 		},
 	},
 });

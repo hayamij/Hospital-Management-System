@@ -15,6 +15,14 @@ export class BillingRepositoryAdapter extends BillingRepositoryPort {
     return toPlain(await this.inner.listByPatient(patientId));
   }
 
+  async list(options = {}) {
+    return toPlain(await this.inner.list(options));
+  }
+
+  async listByDoctor(doctorId, options = {}) {
+    return toPlain(await this.inner.listByDoctor(doctorId, options));
+  }
+
   async save(billing) {
     return toPlain(await this.inner.save(billing));
   }

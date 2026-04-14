@@ -12,6 +12,7 @@ export const fetchAppointmentsByRole = async ({
   role,
   token,
   userId,
+  doctorId,
   patientId,
   filters = {},
   page = 1,
@@ -32,6 +33,7 @@ export const fetchAppointmentsByRole = async ({
       ...filters,
       page: filters.page || page,
       pageSize: filters.pageSize || pageSize,
+      doctorId: doctorId || userId,
     });
     return { response, ...toPagedResult(response, pageSize) };
   }
@@ -52,21 +54,22 @@ export const updateAppointmentStatusByRole = async ({
   role,
   token,
   userId,
+  doctorId,
   appointmentId,
   payload,
 }) => {
+  const actorDoctorId = doctorId || userId;
+
   if (isRole(role, 'doctor')) {
     if (payload?.decision) {
-      await doctorApi.updateAppointmentDecision(token, appointmentId, { ...payload, doctorId: userId });
+      return doctorApi.updateAppointmentDecision(token, appointmentId, { ...payload, doctorId: actorDoctorId });
     } else {
-      await doctorApi.updateAppointmentStatus(token, appointmentId, { ...payload, doctorId: userId });
+      return doctorApi.updateAppointmentStatus(token, appointmentId, { ...payload, doctorId: actorDoctorId });
     }
-    return true;
   }
 
   if (isRole(role, 'admin')) {
-    await adminApi.overrideAppointment(token, appointmentId, payload);
-    return true;
+    return adminApi.overrideAppointment(token, appointmentId, payload);
   }
 
   return false;

@@ -40,10 +40,33 @@ JWT_SECRET=change-me
 - Run:
 
 ```powershell
+<<<<<<< HEAD
+# Full stack (API + Frontend)
+npm run dev
+
+# Frontend only
+npm run dev:web
+
+# API only
+npm run dev:api
+
+# Test
+npm test
+
+# Production build
+npm run build
+
+# Generate backend vs frontend route matrix
+npm run report:route-matrix
+
+# Generate use case activation matrix
+npm run report:usecase-matrix
+=======
 npm run dev:api   # API
 npm run dev       # Frontend
 npm test          # Test
 npm run build     # Production build
+>>>>>>> 51d84777fc18a196700d0d3d2a290e584df9c5c2
 ```
 
 ## 4) Architecture and patterns
