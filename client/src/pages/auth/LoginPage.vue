@@ -2,11 +2,11 @@
   <section class="auth-wrap">
     <div class="auth-card">
       <h1>Đăng nhập</h1>
-      <p class="muted">Đăng nhập bằng tài khoản. Vai trò được hệ thống gán.</p>
+      <p class="muted">Đăng nhập bằng email. Vai trò được hệ thống gán.</p>
 
       <form class="form" @submit.prevent="submit">
-        <FormField label="Tài khoản">
-          <input v-model="form.identifier" required placeholder="Email hoặc tên đăng nhập" />
+        <FormField label="Email">
+          <input v-model.trim="form.email" type="email" required placeholder="name@abc.xyz" />
         </FormField>
 
         <FormField label="Mật khẩu">
@@ -40,26 +40,44 @@ const auth = useAuthStore();
 const router = useRouter();
 
 const form = reactive({
-  identifier: '',
+  email: '',
   password: '',
 });
+
+const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
 onMounted(() => {
   const prefill = readAuthPrefill();
   if (!prefill) return;
-  if (!form.identifier) {
-    form.identifier = prefill.identifier || prefill.email || '';
+  if (!form.email) {
+    form.email = prefill.email || prefill.identifier || '';
   }
 });
 
 const submit = async () => {
-  await auth.login(form);
-  writeAuthPrefill({
-    identifier: form.identifier,
-    email: auth.email || form.identifier,
-    fullName: auth.userProfile?.name || '',
-  });
-  router.push(auth.defaultRoute);
+  auth.error = null;
+
+  if (!form.email) {
+    auth.error = 'Email là bắt buộc.';
+    return;
+  }
+
+  if (!emailRegex.test(form.email)) {
+    auth.error = 'Email không đúng định dạng (ví dụ: name@abc.xyz).';
+    return;
+  }
+
+  try {
+    await auth.login({ email: form.email, password: form.password });
+    writeAuthPrefill({
+      identifier: form.email,
+      email: auth.email || form.email,
+      fullName: auth.userProfile?.name || '',
+    });
+    router.push(auth.defaultRoute);
+  } catch {
+    // auth.error is set in auth store.
+  }
 };
 </script>
 

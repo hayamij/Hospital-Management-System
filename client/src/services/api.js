@@ -134,6 +134,13 @@ export const patientApi = {
 	listBilling(token, filters) {
 		return request('/patients/billing', { method: 'GET', token, params: filters });
 	},
+	submitTransferPayment(token, invoiceId, payload) {
+		return request(`/patients/invoices/${invoiceId}/payments/transfer`, {
+			method: 'POST',
+			token,
+			data: payload,
+		});
+	},
 	downloadInvoice(token, invoiceId) {
 		return request(`/patients/invoices/${invoiceId}/download`, { method: 'GET', token });
 	},
@@ -156,9 +163,6 @@ export const patientApi = {
 };
 
 export const doctorApi = {
-	login(credentials) {
-		return authApi.login(credentials);
-	},
 	getProfile(token, params) {
 		return request('/doctors/profile', { method: 'GET', token, params });
 	},
@@ -192,15 +196,25 @@ export const doctorApi = {
 	updateProfile(token, payload) {
 		return request('/doctors/profile', { method: 'PUT', token, data: payload });
 	},
+	listPendingPayments(token, params) {
+		return request('/doctors/payments/pending', { method: 'GET', token, params });
+	},
+	listBilling(token, params) {
+		return request('/doctors/billing', { method: 'GET', token, params });
+	},
+	reviewPayment(token, paymentId, payload) {
+		return request(`/doctors/payments/${paymentId}/review`, {
+			method: 'POST',
+			token,
+			data: payload,
+		});
+	},
 	reviewLabResult(token, labResultId, payload) {
 		return request(`/doctors/lab-results/${labResultId}/review`, { method: 'POST', token, data: payload });
 	},
 };
 
 export const adminApi = {
-	login(credentials) {
-		return authApi.login(credentials);
-	},
 	listAppointments(token, params) {
 		return request('/admin/appointments', { method: 'GET', token, params });
 	},

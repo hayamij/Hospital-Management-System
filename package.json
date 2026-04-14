@@ -15,9 +15,12 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "vite --config client/vite.config.js",
-    "dev:api": "node --env-file=.env server/infrastructure/http/server.js",
-    "dev:api:mssql": "node --env-file=.env server/infrastructure/http/server.js",
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite --config client/vite.config.js",
+    "dev:api": "node --watch --env-file=.env server/infrastructure/http/server.js",
+    "dev:api:mssql": "node --watch --env-file=.env server/infrastructure/http/server.js",
+    "report:route-matrix": "node scripts/generate-route-matrix.mjs",
+    "report:usecase-matrix": "node scripts/generate-usecase-activation-matrix.mjs",
     "build": "vite build --config client/vite.config.js",
     "preview": "vite preview --config client/vite.config.js",
     "test": "vitest run --config test/vitest.config.js"

@@ -85,13 +85,15 @@ CREATE TABLE billings (
 	id NVARCHAR(64) NOT NULL PRIMARY KEY,
 	invoice_number NVARCHAR(64) NOT NULL,
 	patient_id NVARCHAR(64) NOT NULL,
+	doctor_id NVARCHAR(64) NULL,
 	charges NVARCHAR(MAX) NOT NULL,
 	status NVARCHAR(32) NOT NULL DEFAULT N'draft',
 	due_date DATETIME2 NULL,
 	created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
 	updated_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
 	CONSTRAINT uq_billings_invoice_number UNIQUE (invoice_number),
-	CONSTRAINT fk_billings_patient FOREIGN KEY (patient_id) REFERENCES patients(id)
+	CONSTRAINT fk_billings_patient FOREIGN KEY (patient_id) REFERENCES patients(id),
+	CONSTRAINT fk_billings_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(id)
 );
 GO
 
@@ -101,6 +103,7 @@ CREATE TABLE payments (
 	invoice_id NVARCHAR(64) NULL,
 	amount DECIMAL(12,2) NOT NULL,
 	method NVARCHAR(50) NULL,
+	transfer_reference NVARCHAR(64) NULL,
 	status NVARCHAR(32) NOT NULL DEFAULT N'initiated',
 	created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
 	CONSTRAINT fk_payments_patient FOREIGN KEY (patient_id) REFERENCES patients(id),
@@ -224,7 +227,9 @@ CREATE INDEX ix_users_role ON users(role);
 CREATE INDEX ix_appointments_doctor_start ON appointments(doctor_id, start_at);
 CREATE INDEX ix_appointments_patient_start ON appointments(patient_id, start_at);
 CREATE INDEX ix_billings_patient_created ON billings(patient_id, created_at);
+CREATE INDEX ix_billings_doctor_created ON billings(doctor_id, created_at);
 CREATE INDEX ix_payments_patient_created ON payments(patient_id, created_at);
+CREATE INDEX ix_payments_transfer_reference ON payments(transfer_reference);
 CREATE INDEX ix_messages_created ON messages(created_at);
 CREATE INDEX ix_audit_logs_record_created ON audit_logs(record_id, created_at);
 GO
@@ -347,21 +352,21 @@ VALUES
 	(N'inv-19', N'INV-019', N'pat-11', N'[{"item":"Eye pressure test","amount":3200000}]', N'draft', DATEADD(HOUR, 432, SYSUTCDATETIME())),
 	(N'inv-20', N'INV-020', N'pat-14', N'[{"item":"Joint therapy package","amount":12000000}]', N'open', DATEADD(HOUR, 456, SYSUTCDATETIME()));
 
-INSERT INTO payments (id, patient_id, invoice_id, amount, method, status)
+INSERT INTO payments (id, patient_id, invoice_id, amount, method, transfer_reference, status)
 VALUES
-	(N'pay-1', N'pat-1', N'inv-1', 5000000, N'card', N'completed'),
-	(N'pay-2', N'pat-3', N'inv-3', 7000000, N'cash', N'completed'),
-	(N'pay-3', N'pat-4', N'inv-4', 1500000, N'bank_transfer', N'partial'),
-	(N'pay-4', N'pat-6', N'inv-6', 6000000, N'card', N'completed'),
-	(N'pay-5', N'pat-7', N'inv-7', 1000000, N'cash', N'partial'),
-	(N'pay-6', N'pat-8', N'inv-8', 12000000, N'bank_transfer', N'completed'),
-	(N'pay-7', N'pat-9', N'inv-9', 11000000, N'card', N'completed'),
-	(N'pay-8', N'pat-10', N'inv-10', 500000, N'cash', N'initiated'),
-	(N'pay-9', N'pat-11', N'inv-11', 4000000, N'card', N'completed'),
-	(N'pay-10', N'pat-2', N'inv-16', 17000000, N'bank_transfer', N'completed'),
-	(N'pay-11', N'pat-4', N'inv-17', 8500000, N'card', N'completed'),
-	(N'pay-12', N'pat-7', N'inv-18', 200000, N'e_wallet', N'failed'),
-	(N'pay-13', N'pat-14', N'inv-20', 3500000, N'cash', N'partial');
+	(N'pay-1', N'pat-1', N'inv-1', 5000000, N'card', NULL, N'completed'),
+	(N'pay-2', N'pat-3', N'inv-3', 7000000, N'cash', NULL, N'completed'),
+	(N'pay-3', N'pat-4', N'inv-4', 1500000, N'bank_transfer', N'BT-PAY-0003', N'partial'),
+	(N'pay-4', N'pat-6', N'inv-6', 6000000, N'card', NULL, N'completed'),
+	(N'pay-5', N'pat-7', N'inv-7', 1000000, N'cash', NULL, N'partial'),
+	(N'pay-6', N'pat-8', N'inv-8', 12000000, N'bank_transfer', N'BT-PAY-0006', N'completed'),
+	(N'pay-7', N'pat-9', N'inv-9', 11000000, N'card', NULL, N'completed'),
+	(N'pay-8', N'pat-10', N'inv-10', 500000, N'cash', NULL, N'initiated'),
+	(N'pay-9', N'pat-11', N'inv-11', 4000000, N'card', NULL, N'completed'),
+	(N'pay-10', N'pat-2', N'inv-16', 17000000, N'bank_transfer', N'BT-PAY-0010', N'completed'),
+	(N'pay-11', N'pat-4', N'inv-17', 8500000, N'card', NULL, N'completed'),
+	(N'pay-12', N'pat-7', N'inv-18', 200000, N'e_wallet', NULL, N'failed'),
+	(N'pay-13', N'pat-14', N'inv-20', 3500000, N'cash', NULL, N'partial');
 
 INSERT INTO medical_records (id, patient_id, entries)
 VALUES
@@ -589,20 +594,20 @@ VALUES
 	(N'inv-29', N'INV-029', N'pat-24', N'[{"item":"Imaging","amount":9800000}]', N'paid', DATEADD(HOUR, 264, SYSUTCDATETIME())),
 	(N'inv-30', N'INV-030', N'pat-25', N'[{"item":"Pulmonary monitor","amount":6200000}]', N'draft', DATEADD(HOUR, 288, SYSUTCDATETIME()));
 
-INSERT INTO payments (id, patient_id, invoice_id, amount, method, status)
+INSERT INTO payments (id, patient_id, invoice_id, amount, method, transfer_reference, status)
 VALUES
-	(N'pay-14', N'pat-16', N'inv-21', 6000000, N'card', N'completed'),
-	(N'pay-15', N'pat-17', N'inv-22', 3000000, N'cash', N'partial'),
-	(N'pay-16', N'pat-18', N'inv-23', 500000, N'e_wallet', N'initiated'),
-	(N'pay-17', N'pat-19', N'inv-24', 8900000, N'bank_transfer', N'paid'),
-	(N'pay-18', N'pat-20', N'inv-25', 4200000, N'card', N'completed'),
-	(N'pay-19', N'pat-21', N'inv-26', 200000, N'e_wallet', N'failed'),
-	(N'pay-20', N'pat-22', N'inv-27', 2000000, N'cash', N'partial'),
-	(N'pay-21', N'pat-23', N'inv-28', 4500000, N'bank_transfer', N'completed'),
-	(N'pay-22', N'pat-24', N'inv-29', 9800000, N'card', N'paid'),
-	(N'pay-23', N'pat-25', N'inv-30', 1200000, N'cash', N'initiated'),
-	(N'pay-24', N'pat-17', N'inv-22', 4600000, N'bank_transfer', N'completed'),
-	(N'pay-25', N'pat-25', N'inv-30', 5000000, N'e_wallet', N'completed');
+	(N'pay-14', N'pat-16', N'inv-21', 6000000, N'card', NULL, N'completed'),
+	(N'pay-15', N'pat-17', N'inv-22', 3000000, N'cash', NULL, N'partial'),
+	(N'pay-16', N'pat-18', N'inv-23', 500000, N'e_wallet', NULL, N'initiated'),
+	(N'pay-17', N'pat-19', N'inv-24', 8900000, N'bank_transfer', N'BT-PAY-0017', N'paid'),
+	(N'pay-18', N'pat-20', N'inv-25', 4200000, N'card', NULL, N'completed'),
+	(N'pay-19', N'pat-21', N'inv-26', 200000, N'e_wallet', NULL, N'failed'),
+	(N'pay-20', N'pat-22', N'inv-27', 2000000, N'cash', NULL, N'partial'),
+	(N'pay-21', N'pat-23', N'inv-28', 4500000, N'bank_transfer', N'BT-PAY-0021', N'completed'),
+	(N'pay-22', N'pat-24', N'inv-29', 9800000, N'card', NULL, N'paid'),
+	(N'pay-23', N'pat-25', N'inv-30', 1200000, N'cash', NULL, N'initiated'),
+	(N'pay-24', N'pat-17', N'inv-22', 4600000, N'bank_transfer', N'BT-PAY-0024', N'completed'),
+	(N'pay-25', N'pat-25', N'inv-30', 5000000, N'e_wallet', NULL, N'completed');
 
 INSERT INTO medical_records (id, patient_id, entries)
 VALUES

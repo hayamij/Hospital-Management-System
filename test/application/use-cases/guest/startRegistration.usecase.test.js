@@ -62,6 +62,12 @@ async function run() {
     'Phone is required.',
   );
 
+  // Invalid email format
+  await expectThrows(
+    () => new StartRegistrationUseCase({ patientRepository: new FakePatientRepository() }).execute({ fullName: 'A', email: 'a@invalid', phone: '123' }),
+    'Email format is invalid. Expected format: name@abc.xyz.',
+  );
+
   // Success with default created object
   const repo = new FakePatientRepository();
   const medicalRecordRepo = new FakeMedicalRecordRepository();

@@ -60,7 +60,7 @@
       <article class="panel">
         <h2>Liên hệ phòng khám</h2>
         <form class="grid" @submit.prevent="sendContact">
-          <input v-model="contact.fullName" required placeholder="Họ và tên" />
+          <input v-model="contact.name" required placeholder="Họ và tên" />
           <input v-model="contact.phone" required placeholder="Số điện thoại" />
           <input v-model="contact.email" type="email" placeholder="Email" />
           <textarea v-model="contact.message" required rows="4" placeholder="Nội dung liên hệ"></textarea>
@@ -89,7 +89,7 @@ const error = ref('');
 const search = reactive({ query: '', specialty: '' });
 const slotForm = reactive({ doctorId: '', from: '', to: '' });
 const registration = reactive({ fullName: '', email: '', phone: '' });
-const contact = reactive({ fullName: '', phone: '', email: '', message: '' });
+const contact = reactive({ name: '', phone: '', email: '', message: '' });
 
 const pretty = (value) => (value ? JSON.stringify(value, null, 2) : 'Chưa có dữ liệu.');
 

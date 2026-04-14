@@ -22,9 +22,9 @@
 
 		<section v-if="isDoctor" class="doctor-kpi-grid">
 			<article class="panel kpi-card primary">
-				<p class="kpi-label">Bản ghi hiện có</p>
-				<p class="kpi-value">{{ patients.records.length }}</p>
-				<p class="kpi-note">Tổng số bản ghi bệnh án đã tải.</p>
+				<p class="kpi-label">Bệnh nhân đã đặt lịch/đã khám</p>
+				<p class="kpi-value">{{ filteredDoctorPatients.length }}</p>
+				<p class="kpi-note">Tổng bệnh nhân theo lịch hẹn thuộc bác sĩ.</p>
 			</article>
 
 			<article class="panel kpi-card waiting">
@@ -32,6 +32,50 @@
 				<p class="kpi-value code">{{ patientId || '--' }}</p>
 				<p class="kpi-note">Nhập mã bệnh nhân để lọc hồ sơ chuyên biệt.</p>
 			</article>
+		</section>
+
+		<section v-if="isDoctor" class="panel">
+			<div class="section-head">
+				<h2>Danh sách bệnh nhân đã đặt lịch / đã khám</h2>
+				<small>{{ pagedDoctorPatients.length }} / {{ filteredDoctorPatients.length }} bệnh nhân</small>
+			</div>
+
+			<div class="toolbar" role="group" aria-label="Bộ lọc bệnh nhân bác sĩ">
+				<input v-model.trim="doctorPatientSearch" type="text" placeholder="Tìm theo mã hoặc tên bệnh nhân..." />
+				<select v-model.number="doctorPatientsPageSize">
+					<option :value="5">5 / trang</option>
+					<option :value="10">10 / trang</option>
+					<option :value="20">20 / trang</option>
+				</select>
+				<button type="button" @click="loadDoctorPatientsList" :disabled="doctorPatientsLoading">Tải danh sách</button>
+			</div>
+
+			<p v-if="doctorPatientsLoading" class="muted">Đang tải danh sách bệnh nhân từ lịch hẹn...</p>
+			<p v-else-if="doctorPatientsError" class="msg err">{{ doctorPatientsError }}</p>
+			<p v-else-if="filteredDoctorPatients.length === 0" class="muted">Chưa có bệnh nhân phù hợp.</p>
+
+			<DataTable
+				v-else
+				:columns="doctorPatientColumns"
+				:rows="pagedDoctorPatients"
+				row-key="patientId"
+				empty-text="Không có bệnh nhân phù hợp."
+			>
+				<template #cell-lastAppointmentAt="{ value }">
+					{{ formatDoctorDateTime(value) }}
+				</template>
+				<template #cell-actions="{ row }">
+					<div class="table-actions single-action">
+						<button type="button" @click="openDoctorPatientRecord(row)">Mở hồ sơ</button>
+					</div>
+				</template>
+			</DataTable>
+
+			<div class="pagination" v-if="filteredDoctorPatients.length > 0">
+				<button type="button" class="pager-btn" :disabled="doctorPatientsPage <= 1" @click="goPrevDoctorPatientsPage">Trước</button>
+				<span class="pagination-status">Trang {{ doctorPatientsPage }} / {{ doctorPatientsTotalPages }}</span>
+				<button type="button" class="pager-btn" :disabled="doctorPatientsPage >= doctorPatientsTotalPages" @click="goNextDoctorPatientsPage">Sau</button>
+			</div>
 		</section>
 
 		<section v-if="isAdmin" class="doctor-kpi-grid">
@@ -166,6 +210,7 @@ import DataTable from '../../components/shared/DataTable.vue';
 import { usePatientsStore } from '../../stores/patients.js';
 import { useAdminUsersStore } from '../../stores/adminUsers.js';
 import { useAuthStore } from '../../stores/auth.js';
+import { doctorApi } from '../../services/api.js';
 import { useRoleVisibility } from '../../composables/useRoleVisibility.js';
 
 const auth = useAuthStore();
@@ -180,6 +225,14 @@ const pageSize = ref(10);
 const adminPage = ref(1);
 const quickPageInput = ref(1);
 const isRefreshingAdmin = ref(false);
+const doctorPatientsLoading = ref(false);
+const doctorPatientsError = ref('');
+const doctorPatientsRaw = ref([]);
+const doctorPatientSearch = ref('');
+const doctorPatientsPage = ref(1);
+const doctorPatientsPageSize = ref(10);
+
+const completedAppointmentStatuses = new Set(['completed', 'done']);
 
 const adminColumns = [
 	{ key: 'id', label: 'ID', width: '140px' },
@@ -190,7 +243,78 @@ const adminColumns = [
 	{ key: 'actions', label: 'Thao tác', width: '120px', align: 'center' },
 ];
 
+const doctorPatientColumns = [
+	{ key: 'patientId', label: 'Mã bệnh nhân', width: '150px' },
+	{ key: 'patientName', label: 'Tên bệnh nhân' },
+	{ key: 'bookedCount', label: 'Số lịch đã đặt', width: '140px', align: 'right' },
+	{ key: 'completedCount', label: 'Số lần đã khám', width: '140px', align: 'right' },
+	{ key: 'lastAppointmentAt', label: 'Lịch gần nhất', width: '180px' },
+	{ key: 'actions', label: 'Thao tác', width: '120px', align: 'center' },
+];
+
 const adminTotalPages = computed(() => Math.max(1, Math.ceil((adminUsers.total || 0) / pageSize.value)));
+
+const doctorPatients = computed(() => {
+	const byPatientId = new Map();
+
+	for (const item of doctorPatientsRaw.value) {
+		const patientIdValue = String(item?.patientId || '').trim();
+		if (!patientIdValue) continue;
+
+		const rawDate = item?.startAt || item?.appointmentDate || item?.scheduledAt || null;
+		const parsedDate = rawDate ? new Date(rawDate) : null;
+		const dateValue = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : null;
+		const normalizedStatus = String(item?.status || '').trim().toLowerCase();
+
+		if (!byPatientId.has(patientIdValue)) {
+			byPatientId.set(patientIdValue, {
+				patientId: patientIdValue,
+				patientName: item?.patientName || item?.patientFullName || item?.patient?.fullName || patientIdValue,
+				bookedCount: 0,
+				completedCount: 0,
+				lastAppointmentAt: dateValue,
+			});
+		}
+
+		const bucket = byPatientId.get(patientIdValue);
+		bucket.bookedCount += 1;
+		if (completedAppointmentStatuses.has(normalizedStatus)) {
+			bucket.completedCount += 1;
+		}
+		if (dateValue && (!bucket.lastAppointmentAt || dateValue > bucket.lastAppointmentAt)) {
+			bucket.lastAppointmentAt = dateValue;
+		}
+	}
+
+	return Array.from(byPatientId.values()).sort((a, b) => {
+		const timeA = a.lastAppointmentAt ? a.lastAppointmentAt.getTime() : 0;
+		const timeB = b.lastAppointmentAt ? b.lastAppointmentAt.getTime() : 0;
+		return timeB - timeA;
+	});
+});
+
+const filteredDoctorPatients = computed(() => {
+	const keyword = String(doctorPatientSearch.value || '').trim().toLowerCase();
+	if (!keyword) return doctorPatients.value;
+
+	return doctorPatients.value.filter((item) => {
+		const id = String(item.patientId || '').toLowerCase();
+		const name = String(item.patientName || '').toLowerCase();
+		return id.includes(keyword) || name.includes(keyword);
+	});
+});
+
+const doctorPatientsTotalPages = computed(() => {
+	const size = Math.max(1, Number(doctorPatientsPageSize.value) || 10);
+	return Math.max(1, Math.ceil(filteredDoctorPatients.value.length / size));
+});
+
+const pagedDoctorPatients = computed(() => {
+	const size = Math.max(1, Number(doctorPatientsPageSize.value) || 10);
+	const currentPage = Math.min(Math.max(1, Number(doctorPatientsPage.value) || 1), doctorPatientsTotalPages.value);
+	const start = (currentPage - 1) * size;
+	return filteredDoctorPatients.value.slice(start, start + size);
+});
 
 const updateProfile = async () => {
 	await patients.updateProfile(profile);
@@ -205,6 +329,72 @@ const refreshAdminPatients = async () => {
 		page: adminPage.value,
 		pageSize: pageSize.value,
 	});
+};
+
+const formatDoctorDateTime = (value) => {
+	const date = value instanceof Date ? value : new Date(value || '');
+	if (Number.isNaN(date.getTime())) return '-';
+	return date.toLocaleString('vi-VN', {
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+	});
+};
+
+const loadDoctorPatientsList = async () => {
+	if (!isDoctor.value) return;
+
+	doctorPatientsLoading.value = true;
+	doctorPatientsError.value = '';
+	try {
+		const actorDoctorId = auth.doctorId || auth.userId;
+		const batchSize = 200;
+		const firstPage = await doctorApi.getSchedule(auth.token, {
+			doctorId: actorDoctorId,
+			page: 1,
+			pageSize: batchSize,
+		});
+
+		const firstItems = Array.isArray(firstPage?.appointments) ? firstPage.appointments : [];
+		const total = Number(firstPage?.total) || firstItems.length;
+		const effectiveBatchSize = Math.max(1, Number(firstPage?.pageSize) || batchSize);
+		const totalPages = Math.max(1, Math.ceil(total / effectiveBatchSize));
+
+		const merged = [...firstItems];
+		for (let page = 2; page <= totalPages; page += 1) {
+			const pageResult = await doctorApi.getSchedule(auth.token, {
+				doctorId: actorDoctorId,
+				page,
+				pageSize: effectiveBatchSize,
+			});
+			const pageItems = Array.isArray(pageResult?.appointments) ? pageResult.appointments : [];
+			merged.push(...pageItems);
+		}
+
+		doctorPatientsRaw.value = merged;
+	} catch (error) {
+		doctorPatientsRaw.value = [];
+		doctorPatientsError.value = error?.message || 'Không thể tải danh sách bệnh nhân của bác sĩ.';
+	} finally {
+		doctorPatientsLoading.value = false;
+	}
+};
+
+const goPrevDoctorPatientsPage = () => {
+	if (doctorPatientsPage.value <= 1) return;
+	doctorPatientsPage.value -= 1;
+};
+
+const goNextDoctorPatientsPage = () => {
+	if (doctorPatientsPage.value >= doctorPatientsTotalPages.value) return;
+	doctorPatientsPage.value += 1;
+};
+
+const openDoctorPatientRecord = async (row) => {
+	patientId.value = row?.patientId || '';
+	await loadRecords();
 };
 
 const isPatientDisabled = (row) => ['disabled', 'inactive'].includes(String(row?.status || '').toLowerCase());
@@ -285,6 +475,19 @@ watch(adminTotalPages, (pages) => {
 	}
 });
 
+watch([doctorPatientSearch, doctorPatientsPageSize], () => {
+	doctorPatientsPage.value = 1;
+});
+
+watch(doctorPatientsTotalPages, (pages) => {
+	if (doctorPatientsPage.value > pages) {
+		doctorPatientsPage.value = pages;
+	}
+	if (doctorPatientsPage.value < 1) {
+		doctorPatientsPage.value = 1;
+	}
+});
+
 const handleRefresh = async () => {
 	if (isAdmin.value) {
 		isRefreshingAdmin.value = true;
@@ -299,12 +502,22 @@ const handleRefresh = async () => {
 		}
 		return;
 	}
+
+	if (isDoctor.value) {
+		await loadDoctorPatientsList();
+	}
+
 	await loadRecords();
 };
 
 onMounted(async () => {
 	if (isAdmin.value) {
 		await refreshAdminPatients();
+		return;
+	}
+
+	if (isDoctor.value) {
+		await loadDoctorPatientsList();
 	}
 });
 </script>
@@ -433,6 +646,10 @@ onMounted(async () => {
 	align-items: center;
 	gap: 4px;
 	width: 100%;
+}
+
+.table-actions.single-action {
+	grid-template-columns: 1fr;
 }
 
 .table-actions button {

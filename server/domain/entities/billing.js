@@ -6,6 +6,7 @@ export class Billing extends BaseEntity {
     id,
     invoiceNumber,
     patientId,
+    doctorId = null,
     charges,
     status = 'draft',
     dueDate,
@@ -28,6 +29,7 @@ export class Billing extends BaseEntity {
 
     this.invoiceNumber = invoiceNumber.trim();
     this.patientId = patientId;
+    this.doctorId = doctorId;
     this.charges = charges.map((line) => ({ ...line, description: line.description.trim() }));
     this.status = status;
     this.dueDate = dueDate;
@@ -39,6 +41,10 @@ export class Billing extends BaseEntity {
 
   getPatientId() {
     return this.patientId;
+  }
+
+  getDoctorId() {
+    return this.doctorId;
   }
 
   getCharges() {

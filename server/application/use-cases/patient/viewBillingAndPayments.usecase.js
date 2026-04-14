@@ -49,8 +49,11 @@ const toPaymentItem = (payment) => ({
 	id: payment?.id ?? null,
 	patientId: payment?.patientId ?? null,
 	invoiceId: payment?.invoiceId ?? null,
+	invoiceNumber: payment?.invoiceNumber ?? null,
 	amount: Number(payment?.amount) || 0,
 	method: payment?.method ?? null,
+	rawMethod: payment?.rawMethod ?? null,
+	transferReference: payment?.transferReference ?? null,
 	status: payment?.status ?? 'initiated',
 	createdAt: payment?.createdAt ?? null,
 });

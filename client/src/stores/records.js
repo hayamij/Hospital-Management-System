@@ -87,6 +87,7 @@ export const useRecordsStore = defineStore('records', {
 					role: auth.role,
 					token: auth.token,
 					userId: auth.userId,
+					doctorId: auth.doctorId,
 					patientId,
 					note,
 				});
@@ -111,6 +112,7 @@ export const useRecordsStore = defineStore('records', {
 					role: auth.role,
 					token: auth.token,
 					userId: auth.userId,
+					doctorId: auth.doctorId,
 					patientId: normalizedPatientId,
 				});
 

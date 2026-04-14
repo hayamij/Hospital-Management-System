@@ -1,6 +1,7 @@
 import { DomainError } from '../../../domain/exceptions/domainError.js';
 import { LoginInput } from '../../dto/auth/loginInput.js';
 import { LoginOutput } from '../../dto/auth/loginOutput.js';
+import { isValidEmail, normalizeEmail } from '../../utils/email.js';
 
 export class LoginUseCase {
 	constructor({ userRepository, authService }) {
@@ -10,15 +11,19 @@ export class LoginUseCase {
 
 	async execute(inputDto) {
 		const input = inputDto instanceof LoginInput ? inputDto : new LoginInput(inputDto);
+		const email = normalizeEmail(input.email);
 
-		if (!input.email || !String(input.email).trim()) {
+		if (!email) {
 			throw new DomainError('Email is required.');
+		}
+		if (!isValidEmail(email)) {
+			throw new DomainError('Email format is invalid. Expected format: name@abc.xyz.');
 		}
 		if (!input.password || !String(input.password)) {
 			throw new DomainError('Password is required.');
 		}
 
-		const user = await this.userRepository.findByEmail(input.email.trim());
+		const user = await this.userRepository.findByEmail(email);
 		if (!user) {
 			throw new DomainError('Invalid credentials.');
 		}
@@ -38,6 +43,7 @@ export class LoginUseCase {
 		return new LoginOutput({
 			userId: user.id,
 			patientId: user.patientId ?? null,
+			doctorId: user.doctorId ?? null,
 			role,
 			accessToken: tokens.accessToken,
 			refreshToken: tokens.refreshToken,

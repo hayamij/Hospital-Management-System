@@ -56,6 +56,10 @@ const toEntity = (row) => {
     appointment.doctorName = row.doctor_name;
   }
 
+  if (row.patient_name) {
+    appointment.patientName = row.patient_name;
+  }
+
   return appointment;
 };
 
@@ -114,9 +118,10 @@ export class SqlAppointmentRepository extends AppointmentRepositoryPort {
     }
     const where = `WHERE ${conditions.join(' AND ')}`;
     const { rows } = await this.pool.query(
-      `SELECT a.*, d.full_name AS doctor_name
+      `SELECT a.*, d.full_name AS doctor_name, p.full_name AS patient_name
        FROM appointments a
        LEFT JOIN doctors d ON d.id = a.doctor_id
+       LEFT JOIN patients p ON p.id = a.patient_id
        ${where}
        ORDER BY a.start_at ASC`,
       values,

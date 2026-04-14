@@ -63,17 +63,26 @@ JWT_SECRET=change-me
 ## 4) Run commands
 
 ```powershell
-# API
-npm run dev:api
-
-# Frontend
+# Full stack (API + Frontend)
 npm run dev
+
+# Frontend only
+npm run dev:web
+
+# API only
+npm run dev:api
 
 # Test
 npm test
 
 # Production build
 npm run build
+
+# Generate backend vs frontend route matrix
+npm run report:route-matrix
+
+# Generate use case activation matrix
+npm run report:usecase-matrix
 ```
 
 ## 5) Architecture and patterns

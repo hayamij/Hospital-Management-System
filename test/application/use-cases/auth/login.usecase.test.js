@@ -65,6 +65,12 @@ async function run() {
     'Password is required.',
   );
 
+  // Invalid email format
+  await expectThrows(
+    () => new LoginUseCase({ userRepository: new FakeUserRepository(baseUser), authService: new FakeAuthService() }).execute({ email: 'user@invalid', password: 'x' }),
+    'Email format is invalid. Expected format: name@abc.xyz.',
+  );
+
   // User not found
   await expectThrows(
     () => new LoginUseCase({ userRepository: new FakeUserRepository(null), authService: new FakeAuthService() }).execute({ email: 'none@example.com', password: 'x' }),

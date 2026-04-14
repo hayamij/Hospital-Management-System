@@ -61,29 +61,219 @@
             <h3>{{ item.patientName }}</h3>
             <p><strong>Lý do:</strong> {{ item.reason }}</p>
             <p><strong>Trạng thái:</strong> {{ item.statusLabel }}</p>
-            <RouterLink
-              v-if="item.patientId"
-              class="consult-link"
-              :to="`/doctor/consultation/${encodeURIComponent(item.patientId)}`"
-            >
-              Vào ca khám
-            </RouterLink>
+
+            <div class="row consult-actions">
+              <RouterLink
+                v-if="item.patientId"
+                class="consult-link"
+                :to="`/doctor/consultation/${encodeURIComponent(item.patientId)}`"
+              >
+                Vào ca khám
+              </RouterLink>
+
+              <button
+                v-if="canDecide(item)"
+                type="button"
+                :disabled="isAppointmentActionBusy(item.id)"
+                @click="decideAppointment(item, 'accept')"
+              >
+                Chấp nhận lịch
+              </button>
+              <button
+                v-if="canDecide(item)"
+                type="button"
+                class="reject-btn"
+                :disabled="isAppointmentActionBusy(item.id)"
+                @click="decideAppointment(item, 'reject')"
+              >
+                Từ chối
+              </button>
+
+              <button
+                v-if="canComplete(item)"
+                type="button"
+                class="confirm-btn"
+                :disabled="isAppointmentActionBusy(item.id)"
+                @click="openCompletionModal(item)"
+              >
+                Hoàn tất + tạo hóa đơn
+              </button>
+              <button
+                v-if="canComplete(item)"
+                type="button"
+                class="secondary-btn"
+                :disabled="isAppointmentActionBusy(item.id)"
+                @click="markAppointmentNoShow(item)"
+              >
+                Vắng mặt
+              </button>
+            </div>
+
+            <p v-if="appointmentActionId === item.id && appointmentActionError" class="msg err compact-msg">
+              {{ appointmentActionError }}
+            </p>
+            <p v-if="appointmentActionId === item.id && appointmentActionMessage" class="msg ok compact-msg">
+              {{ appointmentActionMessage }}
+            </p>
           </div>
         </article>
       </div>
+    </section>
+
+    <section class="panel completion-panel">
+      <div class="timeline-head">
+        <h2>Xác nhận đã khám xong và tạo hóa đơn</h2>
+        <small>{{ completionRows.length }} ca sẵn sàng hoàn tất</small>
+      </div>
+
+      <p class="muted">
+        Bác sĩ nhập tay dịch vụ, số tiền và ghi chú trước khi xác nhận hoàn tất ca khám để tạo hóa đơn cho bệnh nhân.
+      </p>
+
+      <DataTable
+        :columns="completionColumns"
+        :rows="completionRows"
+        row-key="id"
+        empty-text="Không có ca nào cần hoàn tất lúc này."
+      >
+        <template #cell-actions="{ row }">
+          <div class="row actions">
+            <RouterLink
+              v-if="row.patientId"
+              class="consult-link"
+              :to="`/doctor/consultation/${encodeURIComponent(row.patientId)}`"
+            >
+              Vào ca khám
+            </RouterLink>
+            <button
+              type="button"
+              class="confirm-btn"
+              :disabled="isAppointmentActionBusy(row.id)"
+              @click="openCompletionModal(row)"
+            >
+              Hoàn tất + tạo hóa đơn
+            </button>
+          </div>
+        </template>
+      </DataTable>
+    </section>
+
+    <div v-if="invoiceModalOpen" class="invoice-modal-backdrop" @click.self="closeCompletionModal">
+      <section class="panel invoice-modal">
+        <div class="invoice-modal-head">
+          <div>
+            <h2>Tạo hóa đơn dịch vụ</h2>
+            <p>
+              Bệnh nhân: <strong>{{ invoiceTargetAppointment?.patientName || '-' }}</strong>
+              · Khung giờ: <strong>{{ invoiceTargetAppointment?.timeRange || '-' }}</strong>
+            </p>
+          </div>
+          <button type="button" @click="closeCompletionModal" :disabled="appointmentActionLoading">Đóng</button>
+        </div>
+
+        <form class="invoice-form" @submit.prevent="submitCompletionAndCreateInvoice">
+          <label>
+            <span>Dịch vụ</span>
+            <input v-model.trim="invoiceForm.serviceName" type="text" placeholder="Ví dụ: Khám tổng quát" required />
+          </label>
+
+          <label>
+            <span>Số tiền (VND)</span>
+            <input v-model="invoiceForm.amount" type="number" min="1000" step="1000" required />
+          </label>
+
+          <label>
+            <span>Hạn thanh toán</span>
+            <input v-model="invoiceForm.dueDate" type="date" />
+          </label>
+
+          <label>
+            <span>Ghi chú</span>
+            <textarea v-model.trim="invoiceForm.note" rows="3" placeholder="Thông tin bổ sung cho hóa đơn"></textarea>
+          </label>
+
+          <div class="row actions">
+            <button type="submit" class="confirm-btn" :disabled="appointmentActionLoading">
+              {{ appointmentActionLoading ? 'Đang xử lý...' : 'Xác nhận khám xong + tạo hóa đơn' }}
+            </button>
+            <button type="button" :disabled="appointmentActionLoading" @click="closeCompletionModal">Hủy</button>
+          </div>
+
+          <p v-if="invoiceModalError" class="msg err compact-msg">{{ invoiceModalError }}</p>
+        </form>
+      </section>
+    </div>
+
+    <section class="panel payments-panel">
+      <div class="timeline-head">
+        <h2>Yêu cầu xác nhận chuyển khoản</h2>
+        <small>{{ pendingPaymentRows.length }} yêu cầu chờ bác sĩ xử lý</small>
+      </div>
+
+      <p v-if="billing.doctorPendingLoading" class="muted">Đang tải yêu cầu thanh toán...</p>
+      <p v-else-if="billing.doctorPendingError" class="msg err">{{ billing.doctorPendingError }}</p>
+
+      <DataTable
+        v-else
+        :columns="paymentColumns"
+        :rows="pendingPaymentRows"
+        row-key="id"
+        empty-text="Không có yêu cầu thanh toán cần xác nhận."
+      >
+        <template #cell-amount="{ value }">{{ formatMoney(value) }}</template>
+        <template #cell-submittedAt="{ value }">{{ formatDateTime(value) }}</template>
+        <template #cell-actions="{ row }">
+          <div class="row actions">
+            <button
+              type="button"
+              class="confirm-btn"
+              :disabled="billing.reviewingPayment"
+              @click="reviewPayment(row, 'confirm')"
+            >
+              Xác nhận
+            </button>
+            <button
+              type="button"
+              class="reject-btn"
+              :disabled="billing.reviewingPayment"
+              @click="reviewPayment(row, 'reject')"
+            >
+              Từ chối
+            </button>
+          </div>
+        </template>
+      </DataTable>
     </section>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useAppointmentsStore } from '../../stores/appointments.js';
+import { useBillingStore } from '../../stores/billing.js';
+import DataTable from '../../components/shared/DataTable.vue';
 
 const appointments = useAppointmentsStore();
+const billing = useBillingStore();
 const statusFilter = ref('all');
+const appointmentActionId = ref('');
+const appointmentActionLoading = ref(false);
+const appointmentActionMessage = ref('');
+const appointmentActionError = ref('');
+const invoiceModalOpen = ref(false);
+const invoiceModalError = ref('');
+const invoiceTargetAppointment = ref(null);
+const invoiceForm = reactive({
+  serviceName: '',
+  amount: '',
+  dueDate: '',
+  note: '',
+});
 const DASHBOARD_REFRESH_INTERVAL_MS = 30_000;
 let dashboardRefreshTimer = null;
 
+const decisionStatuses = new Set(['pending', 'requested']);
+const completableStatuses = new Set(['scheduled', 'in_progress', 'confirmed', 'rescheduled']);
 const waitingStatuses = new Set(['pending', 'scheduled', 'rescheduled', 'requested', 'confirmed']);
 const inProgressStatuses = new Set(['in_progress']);
 const completedStatuses = new Set(['completed', 'done']);
@@ -139,6 +329,7 @@ const normalizedItems = computed(() => {
         id: raw.id || raw.appointmentId || `appointment-${index + 1}`,
         start,
         end,
+        status,
         startDate: toDate(start),
         patientId: raw.patientId || raw.patient?.id || '',
         patientName,
@@ -169,9 +360,207 @@ const totalToday = computed(() => todayItems.value.length);
 const waitingCount = computed(() => todayItems.value.filter((item) => item.visualStatus === 'waiting' || item.visualStatus === 'in-progress').length);
 const completedCount = computed(() => todayItems.value.filter((item) => item.visualStatus === 'completed').length);
 
+const completionColumns = [
+  { key: 'timeRange', label: 'Khung giờ', width: '180px' },
+  { key: 'patientName', label: 'Bệnh nhân', width: '190px' },
+  { key: 'reason', label: 'Lý do khám' },
+  { key: 'statusLabel', label: 'Trạng thái', width: '150px' },
+  { key: 'actions', label: 'Thao tác', width: '280px' },
+];
+
+const completionRows = computed(() => {
+  return normalizedItems.value.filter((item) => canComplete(item));
+});
+
+const paymentColumns = [
+  { key: 'invoiceNumber', label: 'Hóa đơn', width: '160px' },
+  { key: 'patientName', label: 'Bệnh nhân', width: '180px' },
+  { key: 'amount', label: 'Số tiền', width: '150px', align: 'right' },
+  { key: 'transferReference', label: 'Mã giao dịch', width: '170px' },
+  { key: 'submittedAt', label: 'Thời gian gửi', width: '170px' },
+  { key: 'actions', label: 'Thao tác', width: '210px' },
+];
+
+const pendingPaymentRows = computed(() => {
+  return billing.doctorPendingPayments.map((item, index) => ({
+    id: item.id || item.paymentId || `pending-payment-${index + 1}`,
+    invoiceNumber: item.invoiceNumber || item.invoiceId || '-',
+    patientName: item.patientName || item.patientId || '-',
+    amount: Number(item.amount) || 0,
+    transferReference: item.transferReference || '-',
+    submittedAt: item.createdAt || null,
+  }));
+});
+
+const formatMoney = (value) => {
+  const amount = Number(value);
+  if (Number.isNaN(amount)) return '-';
+  return `${amount.toLocaleString('vi-VN')} VND`;
+};
+
+const formatDateTime = (value) => {
+  const d = new Date(value || '');
+  if (Number.isNaN(d.getTime())) return '-';
+  return d.toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const buildTodayScheduleFilters = () => {
+  return {
+    page: 1,
+    pageSize: 200,
+  };
+};
+
+const isAppointmentActionBusy = (appointmentId) => {
+  return appointmentActionLoading.value && appointmentActionId.value === appointmentId;
+};
+
+const canDecide = (item) => decisionStatuses.has(String(item?.status || '').toLowerCase());
+
+const canComplete = (item) => completableStatuses.has(String(item?.status || '').toLowerCase());
+
+const runAppointmentAction = async ({ item, payload, successMessage }) => {
+  if (!item?.id || appointmentActionLoading.value) return;
+
+  appointmentActionId.value = item.id;
+  appointmentActionLoading.value = true;
+  appointmentActionMessage.value = '';
+  appointmentActionError.value = '';
+
+  try {
+    const result = await appointments.updateStatus(item.id, payload);
+    appointmentActionMessage.value = typeof successMessage === 'function'
+      ? successMessage(result)
+      : successMessage;
+    return { ok: true, result };
+  } catch (error) {
+    appointmentActionError.value = error?.message || 'Không thể cập nhật trạng thái lịch hẹn.';
+    return { ok: false, error };
+  } finally {
+    appointmentActionLoading.value = false;
+  }
+};
+
+const resetInvoiceForm = () => {
+  invoiceForm.serviceName = '';
+  invoiceForm.amount = '';
+  invoiceForm.dueDate = '';
+  invoiceForm.note = '';
+};
+
+const openCompletionModal = (item) => {
+  if (!item?.id) return;
+  invoiceTargetAppointment.value = item;
+  invoiceModalOpen.value = true;
+  invoiceModalError.value = '';
+  resetInvoiceForm();
+  invoiceForm.serviceName = item.reason || '';
+};
+
+const closeCompletionModal = () => {
+  invoiceModalOpen.value = false;
+  invoiceModalError.value = '';
+  invoiceTargetAppointment.value = null;
+};
+
+const decideAppointment = async (item, decision) => {
+  const successMessage = decision === 'accept'
+    ? 'Đã chấp nhận lịch hẹn.'
+    : 'Đã từ chối lịch hẹn.';
+
+  await runAppointmentAction({
+    item,
+    payload: { decision },
+    successMessage,
+  });
+};
+
+const submitCompletionAndCreateInvoice = async () => {
+  const item = invoiceTargetAppointment.value;
+  if (!item?.id) return;
+
+  const serviceName = String(invoiceForm.serviceName || '').trim();
+  const amount = Number(invoiceForm.amount);
+  if (!serviceName) {
+    invoiceModalError.value = 'Vui lòng nhập tên dịch vụ.';
+    return;
+  }
+  if (!Number.isFinite(amount) || amount <= 0) {
+    invoiceModalError.value = 'Vui lòng nhập số tiền hợp lệ lớn hơn 0.';
+    return;
+  }
+
+  invoiceModalError.value = '';
+
+  const actionResult = await runAppointmentAction({
+    item,
+    payload: {
+      status: 'completed',
+      invoiceDetails: {
+        serviceName,
+        amount,
+        note: String(invoiceForm.note || '').trim() || undefined,
+        dueDate: invoiceForm.dueDate || undefined,
+      },
+    },
+    successMessage: (result) => {
+      if (result?.billingCreated && result?.invoiceNumber) {
+        return `Đã xác nhận khám xong và tạo hóa đơn ${result.invoiceNumber}.`;
+      }
+      if (result?.invoiceNumber) {
+        return `Đã xác nhận khám xong. Hóa đơn ${result.invoiceNumber} đã tồn tại từ trước.`;
+      }
+      return 'Đã xác nhận khám xong và tạo hóa đơn dịch vụ cho bệnh nhân.';
+    },
+  });
+
+  if (!actionResult?.ok) {
+    invoiceModalError.value = appointmentActionError.value || 'Không thể tạo hóa đơn cho ca khám này.';
+    return;
+  }
+
+  closeCompletionModal();
+};
+
+const markAppointmentNoShow = async (item) => {
+  await runAppointmentAction({
+    item,
+    payload: { status: 'no_show' },
+    successMessage: 'Đã đánh dấu bệnh nhân vắng mặt cho lịch hẹn này.',
+  });
+};
+
 const refresh = async () => {
-  if (appointments.loading) return;
-  await appointments.fetchAppointments();
+  if (!appointments.loading) {
+    try {
+      await appointments.fetchAppointments(buildTodayScheduleFilters());
+    } catch {
+      // Error state is handled inside appointments store.
+    }
+  }
+
+  if (!billing.doctorPendingLoading) {
+    try {
+      await billing.fetchDoctorPendingPayments();
+    } catch {
+      // Error state is handled inside billing store.
+    }
+  }
+};
+
+const reviewPayment = async (row, decision) => {
+  if (!row?.id) return;
+  try {
+    await billing.reviewDoctorPayment(row.id, { decision });
+  } catch {
+    // Error state is handled inside billing store.
+  }
 };
 
 onMounted(() => {
@@ -373,6 +762,101 @@ onUnmounted(() => {
   background: #dbeafe;
   color: #1e3a8a;
   text-decoration: none;
+}
+
+.consult-actions {
+  margin-top: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.consult-actions .consult-link {
+  margin-top: 0;
+}
+
+.compact-msg {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.completion-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.invoice-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 80;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  padding: 20px;
+}
+
+.invoice-modal {
+  width: min(640px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.invoice-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.invoice-modal-head h2 {
+  margin: 0;
+}
+
+.invoice-modal-head p {
+  margin: 8px 0 0;
+  color: #334155;
+}
+
+.invoice-form {
+  display: grid;
+  gap: 12px;
+}
+
+.invoice-form label {
+  display: grid;
+  gap: 8px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.payments-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.actions {
+  gap: 8px;
+}
+
+.confirm-btn {
+  border-color: #22c55e;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.secondary-btn {
+  border-color: #f59e0b;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.reject-btn {
+  border-color: #ef4444;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 @media (max-width: 1100px) {

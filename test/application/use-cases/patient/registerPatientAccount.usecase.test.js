@@ -81,6 +81,11 @@ async function run() {
   );
 
   await expectThrows(
+    () => new RegisterPatientAccountUseCase({ userRepository: new FakeUserRepository(), patientRepository: new FakePatientRepository(), authService: new FakeAuthService() }).execute({ ...baseInput, email: 'guest@invalid' }),
+    'Email format is invalid. Expected format: name@abc.xyz.',
+  );
+
+  await expectThrows(
     () => new RegisterPatientAccountUseCase({ userRepository: new FakeUserRepository(), patientRepository: new FakePatientRepository(), authService: new FakeAuthService() }).execute({ ...baseInput, password: '' }),
     'Password is required.',
   );

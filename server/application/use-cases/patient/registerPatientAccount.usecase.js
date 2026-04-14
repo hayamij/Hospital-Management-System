@@ -2,6 +2,7 @@ import { DomainError } from '../../../domain/exceptions/domainError.js';
 import { MedicalRecord } from '../../../domain/entities/medicalRecord.js';
 import { RegisterPatientAccountInput } from '../../dto/patient/registerPatientAccountInput.js';
 import { RegisterPatientAccountOutput } from '../../dto/patient/registerPatientAccountOutput.js';
+import { isValidEmail, normalizeEmail } from '../../utils/email.js';
 
 export class RegisterPatientAccountUseCase {
 	constructor({ userRepository, patientRepository, medicalRecordRepository, authService }) {
@@ -23,6 +24,9 @@ export class RegisterPatientAccountUseCase {
 		if (!input.email || !String(input.email).trim()) {
 			throw new DomainError('Email is required.');
 		}
+		if (!isValidEmail(input.email)) {
+			throw new DomainError('Email format is invalid. Expected format: name@abc.xyz.');
+		}
 		if (!input.password || !String(input.password)) {
 			throw new DomainError('Password is required.');
 		}
@@ -33,7 +37,7 @@ export class RegisterPatientAccountUseCase {
 			throw new DomainError('Phone is required.');
 		}
 
-		const email = String(input.email).trim().toLowerCase();
+		const email = normalizeEmail(input.email);
 		const existingUser = await this.userRepository.findByEmail(email);
 		if (existingUser) {
 			throw new DomainError('Email already registered.');

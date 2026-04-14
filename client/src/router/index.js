@@ -24,6 +24,7 @@ import AdminStaffPage from '../pages/admin/AdminStaffPage.vue';
 import AdminServicesPage from '../pages/admin/AdminServicesPage.vue';
 import ConsultationPage from '../pages/doctor/ConsultationPage.vue';
 import DoctorDashboard from '../pages/doctor/DoctorDashboard.vue';
+import DoctorBillingPage from '../pages/doctor/DoctorBillingPage.vue';
 import DoctorLabResultsPage from '../pages/doctor/DoctorLabResultsPage.vue';
 import DoctorProfilePage from '../pages/doctor/DoctorProfilePage.vue';
 import HomePage from '../pages/public/HomePage.vue';
@@ -95,6 +96,8 @@ const routes = [
 			{ path: 'dashboard', component: DoctorDashboard },
 			{ path: 'consultation/:patientId?', component: ConsultationPage },
 			{ path: 'appointments', component: AppointmentsPage },
+			{ path: 'billing', component: DoctorBillingPage },
+			{ path: 'invoices', component: DoctorBillingPage },
 			{ path: 'lab-results', component: DoctorLabResultsPage },
 			{ path: 'patients', component: PatientsPage },
 			{ path: 'records', component: BackofficeMedicalRecordsPage },

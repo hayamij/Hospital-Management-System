@@ -23,8 +23,9 @@ export const useDoctorLabResultsStore = defineStore('doctorLabResults', {
 			this.reviewing = true;
 
 			try {
+				const actorDoctorId = auth.doctorId || auth.userId;
 				const result = await doctorApi.reviewLabResult(auth.token, payload.labResultId, {
-					doctorId: auth.userId,
+					doctorId: actorDoctorId,
 					notes: payload.notes,
 				});
 

@@ -33,6 +33,7 @@ export function buildDoctorScheduleControllers({ viewDoctorScheduleUseCase, mana
         doctorId: resolveDoctorId(req, req.body?.doctorId),
         appointmentId: req.params?.appointmentId,
         status: req.body?.status,
+        invoiceDetails: req.body?.invoiceDetails,
       }),
       mapOutput: (result) => new UpdateAppointmentStatusViewModel(result),
     }),

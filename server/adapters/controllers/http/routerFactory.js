@@ -6,12 +6,11 @@ import { buildPatientMessagesControllers } from './patient/patientMessagesContro
 import { buildPatientProfileControllers } from './patient/patientProfileControllers.js';
 import { buildPatientDiscoveryControllers } from './patient/patientDiscoveryControllers.js';
 import { buildAuthControllers } from './auth/authControllers.js';
-import { buildDoctorAccessControllers } from './doctor/doctorAccessControllers.js';
 import { buildDoctorScheduleControllers } from './doctor/doctorScheduleControllers.js';
 import { buildDoctorRecordsControllers } from './doctor/doctorRecordsControllers.js';
 import { buildDoctorProfileControllers } from './doctor/doctorProfileControllers.js';
 import { buildDoctorMessagesControllers } from './doctor/doctorMessagesControllers.js';
-import { buildAdminAccessControllers } from './admin/adminAccessControllers.js';
+import { buildDoctorBillingControllers } from './doctor/doctorBillingControllers.js';
 import { buildAdminUsersControllers } from './admin/adminUsersControllers.js';
 import { buildAdminSchedulingControllers } from './admin/adminSchedulingControllers.js';
 import { buildAdminBillingControllers } from './admin/adminBillingControllers.js';
@@ -40,15 +39,14 @@ export function createHttpRouter(deps) {
   const patientProfile = buildPatientProfileControllers(deps);
   const patientDiscovery = buildPatientDiscoveryControllers(deps);
   const auth = buildAuthControllers(deps);
-  const doctorAccess = buildDoctorAccessControllers(deps);
   const doctorSchedule = buildDoctorScheduleControllers(deps);
   const doctorRecords = buildDoctorRecordsControllers(deps);
   const doctorProfile = buildDoctorProfileControllers(deps);
   const doctorMessages = buildDoctorMessagesControllers(deps);
+  const doctorBilling = buildDoctorBillingControllers(deps);
   const guests = buildGuestControllers(deps);
 
   // Admin controllers by bounded concern
-  const adminAccess = buildAdminAccessControllers(deps);
   const adminUsers = buildAdminUsersControllers(deps);
   const adminScheduling = buildAdminSchedulingControllers({
     ...deps,
@@ -75,6 +73,7 @@ export function createHttpRouter(deps) {
   router.get('/patients/appointments', requireRole(['patient']), patientAppointments.viewAppointments);
   router.get('/patients/billing', requireRole(['patient']), patientBilling.viewBillingAndPayments);
   router.get('/patients/invoices/:id/download', requireRole(['patient']), patientBilling.downloadInvoice);
+  router.post('/patients/invoices/:invoiceId/payments/transfer', requireRole(['patient']), patientBilling.submitTransferPayment);
   router.get('/patients/medical-records', requireRole(['patient']), patientRecords.viewMedicalRecords);
   router.get('/patients/prescriptions/:id/download', requireRole(['patient']), patientRecords.downloadPrescription);
   router.get('/patients/messages', requireRole(['patient']), patientMessages.viewMessages);
@@ -90,9 +89,6 @@ export function createHttpRouter(deps) {
   router.post('/guests/registration', guests.startRegistration);
   router.post('/guests/contact', guests.submitContactForm);
   router.get('/guests/doctors/:doctorId/available-slots', guests.viewAvailableSlots);
-
-  // Doctor access
-  router.post('/doctors/login', doctorAccess.doctorLogin);
 
   // Doctor schedule & appointments
   router.get('/doctors/schedule', requireRole(['doctor']), doctorSchedule.viewSchedule);
@@ -113,9 +109,9 @@ export function createHttpRouter(deps) {
   // Doctor messages
   router.get('/doctors/messages', requireRole(['doctor']), doctorMessages.viewMessages);
   router.post('/doctors/messages', requireRole(['doctor']), doctorMessages.sendMessage);
-
-  // Admin access
-  router.post('/admin/login', adminAccess.adminLogin);
+  router.get('/doctors/billing', requireRole(['doctor']), doctorBilling.viewBilling);
+  router.get('/doctors/payments/pending', requireRole(['doctor']), doctorBilling.viewPendingPayments);
+  router.post('/doctors/payments/:paymentId/review', requireRole(['doctor']), doctorBilling.reviewTransferPayment);
 
   // Admin users & roles
   router.get('/admin/users', requireRole(['admin']), adminUsers.listUsers);

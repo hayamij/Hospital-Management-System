@@ -19,10 +19,14 @@ export function buildAuthMiddleware({ userRepository } = {}) {
       if (userRepository && req.user?.id) {
         const dbUser = await userRepository.findById(req.user.id);
         if (dbUser) {
+          const role = String(dbUser.role ?? req.user.role ?? '').toLowerCase();
+          const fallbackPatientId = role === 'patient' ? dbUser.id : null;
+          const fallbackDoctorId = role === 'doctor' ? dbUser.id : null;
+
           req.user = {
             ...req.user,
-            patientId: dbUser.patientId ?? null,
-            doctorId: dbUser.doctorId ?? null,
+            patientId: dbUser.patientId ?? fallbackPatientId,
+            doctorId: dbUser.doctorId ?? fallbackDoctorId,
           };
         }
       }

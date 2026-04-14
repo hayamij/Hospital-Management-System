@@ -14,4 +14,8 @@ export class BillingRepositoryPort {
 	async list({ status, patientId, page, pageSize } = {}) {
 		throw new Error('BillingRepositoryPort.list not implemented');
 	}
+
+	async listByDoctor(doctorId, { status, page, pageSize } = {}) {
+		throw new Error('BillingRepositoryPort.listByDoctor not implemented');
+	}
 }

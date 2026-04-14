@@ -4,6 +4,7 @@ import { RescheduleAppointmentUseCase } from '../../../application/use-cases/pat
 import { CancelAppointmentUseCase } from '../../../application/use-cases/patient/cancelAppointment.usecase.js';
 import { ViewAppointmentsUseCase } from '../../../application/use-cases/patient/viewAppointments.usecase.js';
 import { ViewBillingAndPaymentsUseCase } from '../../../application/use-cases/patient/viewBillingAndPayments.usecase.js';
+import { SubmitTransferPaymentUseCase } from '../../../application/use-cases/patient/submitTransferPayment.usecase.js';
 import { ViewMedicalRecordsUseCase } from '../../../application/use-cases/patient/viewMedicalRecords.usecase.js';
 import { DownloadPrescriptionUseCase } from '../../../application/use-cases/patient/downloadPrescription.usecase.js';
 import { SendPatientMessageUseCase } from '../../../application/use-cases/patient/sendPatientMessage.usecase.js';
@@ -47,6 +48,11 @@ export const createPatientUseCases = ({
     appointmentRepository,
   });
   const viewBillingAndPaymentsClass = new ViewBillingAndPaymentsUseCase({
+    patientRepository,
+    billingRepository,
+    paymentRepository,
+  });
+  const submitTransferPaymentClass = new SubmitTransferPaymentUseCase({
     patientRepository,
     billingRepository,
     paymentRepository,
@@ -109,6 +115,7 @@ export const createPatientUseCases = ({
     cancelAppointmentUseCase: cancelAppointmentClass,
     viewAppointmentsUseCase: viewAppointmentsClass,
     viewBillingAndPaymentsUseCase: viewBillingAndPaymentsClass,
+    submitTransferPaymentUseCase: submitTransferPaymentClass,
     downloadInvoiceUseCase,
     viewMedicalRecordsUseCase: viewMedicalRecordsClass,
     downloadPrescriptionUseCase: downloadPrescriptionClass,
