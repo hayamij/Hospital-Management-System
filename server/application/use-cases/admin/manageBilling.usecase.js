@@ -55,8 +55,10 @@ export class ManageBillingUseCase {
 
 		await this.billingRepository.save(billing);
 
+		const billingId = billing.id ?? billing.getId?.() ?? input.invoiceId;
+
 		return new ManageBillingOutput({
-			invoiceId: billing.getInvoiceNumber(),
+			invoiceId: billingId,
 			status: billing.getStatus(),
 			total: billing.calculateTotal(),
 			dueDate: billing.getDueDate(),

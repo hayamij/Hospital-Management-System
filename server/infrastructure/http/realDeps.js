@@ -13,7 +13,6 @@ import { SqlSettingsRepository } from '../db/repositories/settingsRepository.js'
 import { SqlLabResultRepository } from '../db/repositories/labResultRepository.js';
 import { SqlContactLeadRepository } from '../db/repositories/contactLeadRepository.js';
 import { SqlAuditLogRepository } from '../db/repositories/auditLogRepository.js';
-import { Billing } from '../../domain/entities/billing.js';
 import { AssignRolesUseCase } from '../../application/use-cases/admin/assignRoles.usecase.js';
 import { ManageUsersUseCase } from '../../application/use-cases/admin/manageUsers.usecase.js';
 import { ManageDoctorSchedulesUseCase } from '../../application/use-cases/admin/manageDoctorSchedules.usecase.js';
@@ -178,34 +177,14 @@ export function createRealDeps() {
       if (String(input?.status ?? '').toLowerCase() === 'cancelled') {
         return { ...input, action: 'cancel' };
       }
-      return {
-        ...input,
-        action: 'reschedule',
-        startAt: input?.startAt ?? new Date().toISOString(),
-        endAt:
-          input?.endAt ??
-          new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-      };
+      // Keep input unchanged so use-case validation can fail fast on missing action.
+      return input;
     }
   );
 
   const manageBillingUseCase = adaptUseCase(
     new ManageBillingUseCase({ billingRepository, userRepository }),
-    async (input) => {
-      const existing = await billingRepository.findById(input?.invoiceId);
-      if (!existing) {
-        const seed = new Billing({
-          id: input?.invoiceId,
-          invoiceNumber: input?.invoiceId ?? `INV-${Date.now()}`,
-          patientId: input?.patientId ?? 'pat-1',
-          charges: [{ description: 'Manual', amount: Number(input?.amount ?? 0) }],
-          status: 'draft',
-          createdAt: new Date(),
-        });
-        await billingRepository.save(seed);
-      }
-      return input;
-    },
+    undefined,
     (result, input) => ({
       invoiceId: input?.invoiceId,
       status: result?.status,

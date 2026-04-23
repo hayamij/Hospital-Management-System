@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 // Auth middleware with strict JWT verification.
-export function buildAuthMiddleware({ userRepository } = {}) {
+export function buildAuthMiddleware({ userRepository, doctorRepository } = {}) {
   const secret = process.env.JWT_SECRET || 'dev-secret-change-me';
 
   const parseBearer = (header) => {
@@ -21,12 +21,24 @@ export function buildAuthMiddleware({ userRepository } = {}) {
         if (dbUser) {
           const role = String(dbUser.role ?? req.user.role ?? '').toLowerCase();
           const fallbackPatientId = role === 'patient' ? dbUser.id : null;
-          const fallbackDoctorId = role === 'doctor' ? dbUser.id : null;
+          let resolvedDoctorId = dbUser.doctorId ?? null;
+
+          if (!resolvedDoctorId && role === 'doctor' && doctorRepository) {
+            if (dbUser.id && typeof doctorRepository.findById === 'function') {
+              const doctorByUserId = await doctorRepository.findById(dbUser.id);
+              resolvedDoctorId = doctorByUserId?.id ?? doctorByUserId?.getId?.() ?? null;
+            }
+
+            if (!resolvedDoctorId && dbUser.email && typeof doctorRepository.findByEmail === 'function') {
+              const doctorByEmail = await doctorRepository.findByEmail(dbUser.email);
+              resolvedDoctorId = doctorByEmail?.id ?? doctorByEmail?.getId?.() ?? null;
+            }
+          }
 
           req.user = {
             ...req.user,
             patientId: dbUser.patientId ?? fallbackPatientId,
-            doctorId: dbUser.doctorId ?? fallbackDoctorId,
+            doctorId: resolvedDoctorId,
           };
         }
       }

@@ -1,6 +1,7 @@
 export class AddVisitNoteOutput {
-	constructor({ patientId, entryCount }) {
+	constructor({ patientId, recordId, entryCount }) {
 		this.patientId = patientId;
+		this.recordId = recordId;
 		this.entryCount = entryCount;
 	}
 }

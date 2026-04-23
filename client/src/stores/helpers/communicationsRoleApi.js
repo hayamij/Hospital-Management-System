@@ -13,10 +13,16 @@ export const sendMessageByRole = async ({ role, token, userId, patientId, doctor
   }
 
   if (isRole(role, 'doctor')) {
-    await doctorApi.sendMessage(token, {
-      doctorId: doctorId || userId,
+    const payloadWithDoctor = {
       patientId: payload?.patientId,
       content: payload?.message,
+    };
+    if (doctorId) {
+      payloadWithDoctor.doctorId = doctorId;
+    }
+
+    await doctorApi.sendMessage(token, {
+      ...payloadWithDoctor,
     });
     return true;
   }
@@ -33,10 +39,13 @@ export const fetchMessagesByRole = async ({ role, token, userId, patientId, doct
   }
 
   if (isRole(role, 'doctor')) {
-    return doctorApi.listMessages(token, {
+    const params = {
       ...filters,
-      doctorId: doctorId || userId,
-    });
+    };
+    if (doctorId) {
+      params.doctorId = doctorId;
+    }
+    return doctorApi.listMessages(token, params);
   }
 
   return null;

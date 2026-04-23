@@ -31,6 +31,15 @@ export class SqlDoctorRepository extends DoctorRepositoryPort {
     return toEntity(rows[0]);
   }
 
+  async findByEmail(email) {
+    if (!email) return null;
+    const { rows } = await this.pool.query(
+      'SELECT * FROM doctors WHERE LOWER(contact_email) = LOWER($1) LIMIT 1',
+      [email],
+    );
+    return toEntity(rows[0]);
+  }
+
   async save(doctor) {
     const id = ensureId(doctor.id);
     const updatePayload = [

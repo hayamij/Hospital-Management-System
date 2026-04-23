@@ -40,6 +40,7 @@ describe('communicationsRoleApi helper', () => {
       role: 'doctor',
       token: 'token-doctor',
       userId: 'doc-2',
+      doctorId: 'doc-2',
       payload: {
         patientId: 'pat-2',
         message: 'Vui long den dung gio',
@@ -98,6 +99,7 @@ describe('communicationsRoleApi helper', () => {
       role: 'doctor',
       token: 'token-doctor',
       userId: 'doc-3',
+      doctorId: 'doc-3',
       filters: { limit: 5, patientId: 'should-be-overridden' },
     });
 

@@ -16,7 +16,12 @@
         <article
           v-for="appointment in upcomingAppointments"
           :key="appointment.key"
-          class="appointment-card"
+          class="appointment-card clickable-card"
+          role="button"
+          tabindex="0"
+          @click="openAppointmentDetail(appointment)"
+          @keydown.enter.prevent="openAppointmentDetail(appointment)"
+          @keydown.space.prevent="openAppointmentDetail(appointment)"
         >
           <h2>{{ appointment.serviceName }}</h2>
           <p><strong>Bác sĩ:</strong> {{ appointment.doctorName }}</p>
@@ -27,7 +32,7 @@
               type="button"
               class="danger"
               :disabled="cancelingAppointmentId === appointment.key"
-              @click="cancelAppointment(appointment)"
+              @click.stop="cancelAppointment(appointment)"
             >
               {{ cancelingAppointmentId === appointment.key ? 'Đang hủy lịch...' : 'Hủy lịch hẹn' }}
             </button>
@@ -73,7 +78,16 @@
       <p v-else-if="summaryError" class="message err">{{ summaryError }}</p>
 
       <div v-else-if="latestSummary.length > 0" class="summary-list">
-        <article v-for="item in latestSummary" :key="item.key" class="summary-item">
+        <article
+          v-for="item in latestSummary"
+          :key="item.key"
+          class="summary-item clickable-card"
+          role="button"
+          tabindex="0"
+          @click="openSummaryDetail(item)"
+          @keydown.enter.prevent="openSummaryDetail(item)"
+          @keydown.space.prevent="openSummaryDetail(item)"
+        >
           <p class="meta">{{ item.type }} · {{ formatDate(item.date) }}</p>
           <h3>{{ item.title }}</h3>
           <p>{{ item.description }}</p>
@@ -83,6 +97,25 @@
 
       <p v-else class="message">Chưa có dữ liệu kết quả khám hoặc hóa đơn gần đây.</p>
     </section>
+
+    <div v-if="detailModalOpen" class="detail-modal-backdrop" @click.self="closeDetailModal">
+      <section class="panel detail-modal">
+        <header class="detail-modal-head">
+          <div>
+            <p class="eyebrow">Chi tiết</p>
+            <h2>{{ detailModalTitle }}</h2>
+          </div>
+          <button type="button" @click="closeDetailModal">Đóng</button>
+        </header>
+
+        <dl class="detail-grid">
+          <div v-for="row in detailModalRows" :key="row.key" class="detail-row">
+            <dt>{{ row.label }}</dt>
+            <dd>{{ row.value }}</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -110,6 +143,8 @@ const upcomingError = ref('');
 const summaryError = ref('');
 const cancelError = ref('');
 const upcomingPage = ref(1);
+const detailModalOpen = ref(false);
+const detailModalPayload = ref(null);
 let dashboardRefreshTimer = null;
 
 const formatDate = (value) => {
@@ -209,6 +244,75 @@ const latestSummary = computed(() => {
     .reverse()
     .slice(0, 3);
 });
+
+const toSafeText = (value, fallback = 'Đang cập nhật') => {
+  const text = String(value ?? '').trim();
+  return text || fallback;
+};
+
+const detailModalTitle = computed(() => {
+  if (detailModalPayload.value?.kind === 'appointment') {
+    return 'Chi tiết lịch hẹn';
+  }
+  if (detailModalPayload.value?.kind === 'summary') {
+    return 'Chi tiết thẻ tóm tắt';
+  }
+  return 'Chi tiết';
+});
+
+const detailModalRows = computed(() => {
+  const payload = detailModalPayload.value;
+  if (!payload) return [];
+
+  if (payload.kind === 'appointment') {
+    const item = payload.item || {};
+    return [
+      { key: 'appointment-id', label: 'Mã lịch hẹn', value: toSafeText(item.key, '-') },
+      { key: 'appointment-service', label: 'Dịch vụ', value: toSafeText(item.serviceName) },
+      { key: 'appointment-doctor', label: 'Bác sĩ', value: toSafeText(item.doctorName) },
+      { key: 'appointment-date', label: 'Ngày khám', value: formatDate(item.date) },
+      { key: 'appointment-status', label: 'Trạng thái', value: toSafeText(item.status) },
+    ];
+  }
+
+  const item = payload.item || {};
+  const rows = [
+    { key: 'summary-key', label: 'Mã tham chiếu', value: toSafeText(item.key, '-') },
+    { key: 'summary-type', label: 'Loại', value: toSafeText(item.type) },
+    { key: 'summary-date', label: 'Ngày cập nhật', value: formatDate(item.date) },
+    { key: 'summary-title', label: 'Tiêu đề', value: toSafeText(item.title) },
+    { key: 'summary-desc', label: 'Mô tả', value: toSafeText(item.description) },
+  ];
+
+  if (item.amount !== null && item.amount !== undefined && !Number.isNaN(Number(item.amount))) {
+    rows.push({ key: 'summary-amount', label: 'Số tiền', value: formatMoney(item.amount) });
+  }
+
+  return rows;
+});
+
+const openAppointmentDetail = (appointment) => {
+  if (!appointment) return;
+  detailModalPayload.value = {
+    kind: 'appointment',
+    item: appointment,
+  };
+  detailModalOpen.value = true;
+};
+
+const openSummaryDetail = (item) => {
+  if (!item) return;
+  detailModalPayload.value = {
+    kind: 'summary',
+    item,
+  };
+  detailModalOpen.value = true;
+};
+
+const closeDetailModal = () => {
+  detailModalOpen.value = false;
+  detailModalPayload.value = null;
+};
 
 const loadDashboard = async () => {
   if (loading.value) return;
@@ -329,6 +433,22 @@ onUnmounted(() => {
   padding: 18px;
 }
 
+.clickable-card {
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.clickable-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 10px 20px rgba(30, 64, 175, 0.08);
+  transform: translateY(-2px);
+}
+
+.clickable-card:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
 .appointment-card h2 {
   margin: 0 0 12px;
   font-size: 22px;
@@ -409,6 +529,63 @@ onUnmounted(() => {
   background: #f8fafc;
   border-radius: 12px;
   padding: 16px;
+}
+
+.detail-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.detail-modal {
+  width: min(640px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  margin: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.detail-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.detail-modal-head h2 {
+  margin: 8px 0 0;
+}
+
+.detail-grid {
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.detail-row {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid #dbe2ea;
+  background: #f8fafc;
+}
+
+.detail-row dt {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.detail-row dd {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 600;
 }
 
 .meta {

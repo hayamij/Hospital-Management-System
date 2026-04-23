@@ -26,7 +26,14 @@ export function createHttpRouter(deps) {
   const router = express.Router();
 
   // Attach auth middleware; req.user is filled when Authorization header is provided.
-  const { authenticate, requireRole } = buildAuthMiddleware(deps._repos ? { userRepository: deps._repos.userRepository } : {});
+  const { authenticate, requireRole } = buildAuthMiddleware(
+    deps._repos
+      ? {
+        userRepository: deps._repos.userRepository,
+        doctorRepository: deps._repos.doctorRepository,
+      }
+      : {}
+  );
   router.use(authenticate);
 
   const patientAppointments = buildPatientAppointmentsControllers({
@@ -60,7 +67,7 @@ export function createHttpRouter(deps) {
 
   // Auth
   router.post('/auth/login', auth.login);
-  router.post('/auth/logout', auth.logout);
+  router.post('/auth/logout', requireRole(['patient', 'doctor', 'admin']), auth.logout);
   router.post('/auth/reset-password', auth.resetPassword);
 
   // Patients (registration and doctor search remain public; others require patient role)

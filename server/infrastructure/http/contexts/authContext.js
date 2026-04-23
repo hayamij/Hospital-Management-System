@@ -37,7 +37,12 @@ export const createAuthService = ({ userRepository, pool }) => {
     return { token, expiresAt };
   };
 
-  const revokeRefreshToken = async (token) => {
+  const revokeRefreshToken = async ({ token, userId }) => {
+    if (!token) return;
+    if (userId) {
+      await pool.query('DELETE FROM refresh_tokens WHERE token = $1 AND user_id = $2', [token, userId]);
+      return;
+    }
     await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [token]);
   };
 
@@ -60,8 +65,10 @@ export const createAuthService = ({ userRepository, pool }) => {
         expiresAt: refresh.expiresAt,
       };
     },
-    revokeTokens: async ({ refreshToken }) => {
-      if (refreshToken) await revokeRefreshToken(refreshToken);
+    revokeTokens: async ({ userId, refreshToken }) => {
+      if (refreshToken) {
+        await revokeRefreshToken({ token: refreshToken, userId });
+      }
     },
   };
 };

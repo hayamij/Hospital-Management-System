@@ -349,7 +349,12 @@ const loadDoctorPatientsList = async () => {
 	doctorPatientsLoading.value = true;
 	doctorPatientsError.value = '';
 	try {
-		const actorDoctorId = auth.doctorId || auth.userId;
+		const actorDoctorId = auth.doctorId || null;
+		if (!actorDoctorId) {
+			doctorPatientsRaw.value = [];
+			doctorPatientsError.value = 'Tài khoản bác sĩ chưa được liên kết hồ sơ chuyên môn.';
+			return;
+		}
 		const batchSize = 200;
 		const firstPage = await doctorApi.getSchedule(auth.token, {
 			doctorId: actorDoctorId,

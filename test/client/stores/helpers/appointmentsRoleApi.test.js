@@ -56,6 +56,7 @@ describe('appointmentsRoleApi helper', () => {
       role: 'doctor',
       token: 'token-doctor',
       userId: 'doc-1',
+      doctorId: 'doc-1',
       filters: { status: 'scheduled' },
       page: 1,
       pageSize: 10,
@@ -130,6 +131,7 @@ describe('appointmentsRoleApi helper', () => {
       role: 'doctor',
       token: 'token-doctor',
       userId: 'doc-1',
+      doctorId: 'doc-1',
       appointmentId: 'apt-3',
       payload: { decision: 'accept' },
     });
@@ -151,6 +153,7 @@ describe('appointmentsRoleApi helper', () => {
       role: 'doctor',
       token: 'token-doctor',
       userId: 'doc-2',
+      doctorId: 'doc-2',
       appointmentId: 'apt-4',
       payload: { status: 'completed' },
     });

@@ -29,12 +29,16 @@ export const fetchAppointmentsByRole = async ({
   }
 
   if (isRole(role, 'doctor')) {
-    const response = await doctorApi.getSchedule(token, {
+    const params = {
       ...filters,
       page: filters.page || page,
       pageSize: filters.pageSize || pageSize,
-      doctorId: doctorId || userId,
-    });
+    };
+    if (doctorId) {
+      params.doctorId = doctorId;
+    }
+
+    const response = await doctorApi.getSchedule(token, params);
     return { response, ...toPagedResult(response, pageSize) };
   }
 
@@ -58,13 +62,17 @@ export const updateAppointmentStatusByRole = async ({
   appointmentId,
   payload,
 }) => {
-  const actorDoctorId = doctorId || userId;
+  const actorDoctorId = doctorId || null;
 
   if (isRole(role, 'doctor')) {
+    const doctorPayload = actorDoctorId
+      ? { ...payload, doctorId: actorDoctorId }
+      : { ...payload };
+
     if (payload?.decision) {
-      return doctorApi.updateAppointmentDecision(token, appointmentId, { ...payload, doctorId: actorDoctorId });
+      return doctorApi.updateAppointmentDecision(token, appointmentId, doctorPayload);
     } else {
-      return doctorApi.updateAppointmentStatus(token, appointmentId, { ...payload, doctorId: actorDoctorId });
+      return doctorApi.updateAppointmentStatus(token, appointmentId, doctorPayload);
     }
   }
 

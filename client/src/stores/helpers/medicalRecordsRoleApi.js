@@ -15,22 +15,30 @@ export const fetchRecordsByRole = async ({ role, token, userId, patientId, filte
 
 export const addVisitNoteByRole = async ({ role, token, userId, doctorId, patientId, note }) => {
   if (!isRole(role, 'doctor')) return false;
-  const actorDoctorId = doctorId || userId;
+  const actorDoctorId = doctorId || null;
 
-  await doctorApi.addVisitNote(token, patientId, {
+  const payload = {
     note,
-    doctorId: actorDoctorId,
-  });
+  };
+  if (actorDoctorId) {
+    payload.doctorId = actorDoctorId;
+  }
+
+  await doctorApi.addVisitNote(token, patientId, payload);
 
   return true;
 };
 
 export const createMedicalRecordByRole = async ({ role, token, userId, doctorId, patientId }) => {
   if (!isRole(role, 'doctor')) return false;
-  const actorDoctorId = doctorId || userId;
+  const actorDoctorId = doctorId || null;
 
-  return doctorApi.createMedicalRecord(token, patientId, {
-    doctorId: actorDoctorId,
+  const payload = {
     patientId,
-  });
+  };
+  if (actorDoctorId) {
+    payload.doctorId = actorDoctorId;
+  }
+
+  return doctorApi.createMedicalRecord(token, patientId, payload);
 };
