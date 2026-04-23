@@ -23,11 +23,14 @@ export const useDoctorLabResultsStore = defineStore('doctorLabResults', {
 			this.reviewing = true;
 
 			try {
-				const actorDoctorId = auth.doctorId || auth.userId;
-				const result = await doctorApi.reviewLabResult(auth.token, payload.labResultId, {
-					doctorId: actorDoctorId,
+				const actorDoctorId = auth.doctorId || null;
+				const reviewPayload = {
 					notes: payload.notes,
-				});
+				};
+				if (actorDoctorId) {
+					reviewPayload.doctorId = actorDoctorId;
+				}
+				const result = await doctorApi.reviewLabResult(auth.token, payload.labResultId, reviewPayload);
 
 				const reviewedAt = result?.reviewedAt
 					? new Date(result.reviewedAt).toLocaleString('vi-VN')

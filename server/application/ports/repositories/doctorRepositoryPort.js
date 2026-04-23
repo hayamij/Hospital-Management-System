@@ -4,6 +4,10 @@ export class DoctorRepositoryPort {
 		throw new Error('DoctorRepositoryPort.findById not implemented');
 	}
 
+	async findByEmail(email) {
+		throw new Error('DoctorRepositoryPort.findByEmail not implemented');
+	}
+
 	async save(doctor) {
 		throw new Error('DoctorRepositoryPort.save not implemented');
 	}

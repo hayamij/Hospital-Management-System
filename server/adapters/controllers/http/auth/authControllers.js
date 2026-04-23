@@ -14,7 +14,7 @@ export function buildAuthControllers({ loginUseCase, logoutUseCase, resetPasswor
     logout: createHandler({
       useCase: logoutUseCase,
       mapInput: (req) => ({
-        userId: req.user?.id ?? req.body?.userId,
+        userId: req.user?.id,
         refreshToken: req.body?.refreshToken,
         accessToken: req.body?.accessToken,
       }),

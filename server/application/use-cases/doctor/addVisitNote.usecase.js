@@ -47,6 +47,12 @@ export class AddVisitNoteUseCase {
 			record.getEntries?.().length ??
 			record.entries?.length ??
 			0;
-		return new AddVisitNoteOutput({ patientId: input.patientId, entryCount });
+		const recordId =
+			savedRecord?.id ??
+			savedRecord?.getId?.() ??
+			record?.id ??
+			record?.getId?.() ??
+			null;
+		return new AddVisitNoteOutput({ patientId: input.patientId, recordId, entryCount });
 	}
 }

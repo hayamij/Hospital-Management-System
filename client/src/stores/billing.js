@@ -102,15 +102,17 @@ export const useBillingStore = defineStore('billing', {
 			this.doctorPendingLoading = true;
 			this.doctorPendingError = null;
 			try {
-				const actorDoctorId = auth.doctorId || auth.userId;
+				const actorDoctorId = auth.doctorId || null;
 				const hasStatusFilter = Object.prototype.hasOwnProperty.call(filters, 'status');
 				const resolvedStatus = hasStatusFilter ? filters.status : this.doctorPendingStatus;
 				const params = {
 					...filters,
 					page: filters.page || this.doctorPendingPage,
 					pageSize: filters.pageSize || this.doctorPendingPageSize,
-					doctorId: actorDoctorId,
 				};
+				if (actorDoctorId) {
+					params.doctorId = actorDoctorId;
+				}
 				if (resolvedStatus !== undefined && resolvedStatus !== null && resolvedStatus !== '') {
 					params.status = resolvedStatus;
 				} else {
@@ -138,16 +140,20 @@ export const useBillingStore = defineStore('billing', {
 			this.reviewingPayment = true;
 			this.doctorPendingError = null;
 			try {
-				const actorDoctorId = auth.doctorId || auth.userId;
-				const response = await doctorApi.reviewPayment(auth.token, paymentId, {
+				const actorDoctorId = auth.doctorId || null;
+				const reviewPayload = {
 					...payload,
-					doctorId: actorDoctorId,
-				});
+				};
+				if (actorDoctorId) {
+					reviewPayload.doctorId = actorDoctorId;
+				}
+
+				const response = await doctorApi.reviewPayment(auth.token, paymentId, reviewPayload);
 				await this.fetchDoctorPendingPayments({
 					page: this.doctorPendingPage,
 					pageSize: this.doctorPendingPageSize,
 					status: this.doctorPendingStatus,
-					doctorId: actorDoctorId,
+					...(actorDoctorId ? { doctorId: actorDoctorId } : {}),
 				});
 				return response;
 			} catch (error) {
@@ -164,14 +170,16 @@ export const useBillingStore = defineStore('billing', {
 			this.doctorBillingLoading = true;
 			this.doctorBillingError = null;
 			try {
-				const actorDoctorId = auth.doctorId || auth.userId;
+				const actorDoctorId = auth.doctorId || null;
 				const params = {
 					...filters,
 					status: filters.status || undefined,
 					page: filters.page || this.doctorBillingPage,
 					pageSize: filters.pageSize || this.doctorBillingPageSize,
-					doctorId: actorDoctorId,
 				};
+				if (actorDoctorId) {
+					params.doctorId = actorDoctorId;
+				}
 				const response = await doctorApi.listBilling(auth.token, params);
 
 				this.doctorInvoices = response?.billings || [];

@@ -6,7 +6,7 @@ import {
 } from '../../../viewmodels/doctorViewModels.js';
 
 const resolveDoctorId = (req, fallback) =>
-	req.user?.doctorId ?? req.user?.id ?? fallback;
+	req.user?.doctorId ?? fallback ?? null;
 
 export function buildDoctorBillingControllers({
 	viewPendingPaymentsUseCase,

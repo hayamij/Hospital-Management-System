@@ -82,6 +82,7 @@ describe('medicalRecordsRoleApi helper', () => {
       role: 'doctor',
       token: 'token-doctor',
       userId: 'doc-9',
+      doctorId: 'doc-9',
       patientId: 'pat-9',
       note: 'Theo doi sat',
     });
@@ -116,6 +117,7 @@ describe('medicalRecordsRoleApi helper', () => {
       role: 'doctor',
       token: 'token-doctor',
       userId: 'doc-10',
+      doctorId: 'doc-10',
       patientId: 'pat-10',
     });
 

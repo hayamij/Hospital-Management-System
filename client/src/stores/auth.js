@@ -91,7 +91,8 @@ export const useAuthStore = defineStore('auth', {
 					doctorId:
 						data?.doctorId
 						?? decoded?.doctorId
-						?? (this.role === 'doctor' ? (data?.userId ?? decoded?.sub ?? this.userProfile?.doctorId ?? null) : this.userProfile?.doctorId ?? null),
+						?? this.userProfile?.doctorId
+						?? null,
 					email: data?.email ?? decoded?.email ?? credentials?.email ?? credentials?.identifier ?? null,
 					name: data?.fullName ?? null,
 				};
@@ -114,7 +115,7 @@ export const useAuthStore = defineStore('auth', {
 				this.userProfile = {
 					id: this.userProfile?.id ?? payload.sub ?? null,
 					patientId: this.userProfile?.patientId ?? null,
-					doctorId: this.userProfile?.doctorId ?? (this.role === 'doctor' ? (payload.sub ?? null) : null),
+					doctorId: this.userProfile?.doctorId ?? payload.doctorId ?? null,
 					email: this.userProfile?.email ?? payload.email ?? null,
 					name: this.userProfile?.name ?? null,
 				};

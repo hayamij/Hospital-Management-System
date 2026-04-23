@@ -128,6 +128,7 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { jsPDF } from 'jspdf';
 import { useBillingStore } from '../../stores/billing.js';
 import { useAuthStore } from '../../stores/auth.js';
 import { patientApi } from '../../services/api.js';
@@ -305,24 +306,136 @@ const submitTransfer = async () => {
 	}
 };
 
+const resolveInvoiceDownloadPayload = (response, fallbackInvoice, invoiceId) => {
+	const file = response?.file;
+	if (file && typeof file === 'object' && !Array.isArray(file)) {
+		return file;
+	}
+
+	if (typeof file === 'string') {
+		try {
+			const parsed = JSON.parse(file);
+			if (parsed && typeof parsed === 'object') {
+				return parsed;
+			}
+		} catch {
+			// Ignore parsing failure and fallback to invoice object from UI.
+		}
+	}
+
+	const fallback = fallbackInvoice || {};
+	return {
+		invoiceId,
+		invoiceNumber: fallback.invoiceNumber || fallback.id || invoiceId,
+		patientId: fallback.patientId || fallback.patientName || null,
+		status: fallback.status || null,
+		dueDate: fallback.dueDate || null,
+		amount: resolveInvoiceAmount(fallback),
+		charges: Array.isArray(fallback.charges) ? fallback.charges : [],
+	};
+};
+
+const buildInvoicePdfBlob = (invoice) => {
+	const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+	const pageWidth = doc.internal.pageSize.getWidth();
+	const pageHeight = doc.internal.pageSize.getHeight();
+	const marginX = 42;
+	const bottomPadding = 42;
+	const lineHeight = 16;
+	let cursorY = 48;
+
+	const ensureSpace = (heightNeeded = lineHeight) => {
+		if (cursorY + heightNeeded <= pageHeight - bottomPadding) return;
+		doc.addPage();
+		cursorY = 48;
+	};
+
+	const writeText = (text, { bold = false, size = 11, indent = 0, extraGap = 0 } = {}) => {
+		doc.setFont('helvetica', bold ? 'bold' : 'normal');
+		doc.setFontSize(size);
+		const maxWidth = pageWidth - marginX * 2 - indent;
+		const lines = doc.splitTextToSize(String(text || ''), Math.max(80, maxWidth));
+		for (const line of lines) {
+			ensureSpace(lineHeight);
+			doc.text(line, marginX + indent, cursorY);
+			cursorY += lineHeight;
+		}
+		cursorY += extraGap;
+	};
+
+	const formatPdfDate = (value) => {
+		const d = new Date(value || '');
+		if (Number.isNaN(d.getTime())) return '-';
+		return d.toLocaleDateString('vi-VN', {
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+		});
+	};
+
+	const formatPdfMoney = (value) => {
+		const n = Number(value);
+		if (!Number.isFinite(n)) return '0 VND';
+		return `${n.toLocaleString('vi-VN')} VND`;
+	};
+
+	const normalizedStatus = normalizeStatus(invoice?.status);
+	const charges = Array.isArray(invoice?.charges) ? invoice.charges : [];
+	const totalAmount = Number.isFinite(Number(invoice?.amount))
+		? Number(invoice.amount)
+		: charges.reduce((sum, line) => sum + (Number(line?.amount) || 0), 0);
+
+	writeText('HOA DON DICH VU', { bold: true, size: 18, extraGap: 6 });
+	writeText(`Ngay xuat: ${new Date().toLocaleString('vi-VN')}`, { size: 10, extraGap: 6 });
+
+	writeText(`Ma hoa don: ${invoice?.invoiceNumber || invoice?.invoiceId || '-'}`);
+	writeText(`Ma benh nhan: ${invoice?.patientId || '-'}`);
+	writeText(`Trang thai: ${statusLabel(normalizedStatus || invoice?.status || '-')}`);
+	writeText(`Han thanh toan: ${formatPdfDate(invoice?.dueDate)}`, { extraGap: 4 });
+
+	writeText('Chi tiet dich vu', { bold: true, size: 12, extraGap: 2 });
+	if (charges.length === 0) {
+		writeText('- Khong co dong dich vu chi tiet.');
+	} else {
+		charges.forEach((line, index) => {
+			const description = line?.description || line?.serviceName || line?.item || 'Dich vu';
+			const amount = formatPdfMoney(line?.amount);
+			writeText(`${index + 1}. ${description} - ${amount}`);
+			if (line?.note) {
+				writeText(`Ghi chu: ${line.note}`, { size: 10, indent: 16 });
+			}
+		});
+	}
+
+	writeText('', { extraGap: 2 });
+	writeText(`Tong thanh toan: ${formatPdfMoney(totalAmount)}`, { bold: true, size: 12 });
+
+	return doc.output('blob');
+};
+
+const triggerFileDownload = (blob, filename) => {
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement('a');
+	link.href = url;
+	link.download = filename;
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+	URL.revokeObjectURL(url);
+};
+
 const downloadInvoice = async (row) => {
 	const id = row.id;
 	if (!id) return;
 	try {
+		const fallbackInvoice = findInvoiceById(id) || row;
 		const response = await patientApi.downloadInvoice(auth.token, id);
-		const content = typeof response?.file === 'string' ? response.file : JSON.stringify(response?.file ?? {}, null, 2);
-		const filename = response?.filename || `${id}.json`;
-		const contentType = response?.contentType || 'application/json';
+		const payload = resolveInvoiceDownloadPayload(response, fallbackInvoice, id);
+		const blob = buildInvoicePdfBlob(payload);
 
-		const blob = new Blob([content], { type: contentType });
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = filename;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		URL.revokeObjectURL(url);
+		const rawFilename = String(response?.filename || `${id}.pdf`);
+		const normalizedFilename = rawFilename.replace(/\.[a-z0-9]+$/i, '') + '.pdf';
+		triggerFileDownload(blob, normalizedFilename);
 	} catch (error) {
 		billing.error = error?.message || 'Không thể tải hóa đơn.';
 	}

@@ -132,7 +132,7 @@ export const createDoctorUseCases = ({
     addVisitNoteClass,
     undefined,
     (result) => ({
-      recordId: result.patientId,
+      recordId: result.recordId ?? null,
       entryId: `entry-${result.entryCount ?? 0}`,
       addedAt: new Date().toISOString(),
     })

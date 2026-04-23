@@ -54,7 +54,7 @@
       <p v-else-if="filteredTodayItems.length === 0" class="muted">Không có bệnh nhân phù hợp bộ lọc.</p>
 
       <div v-else class="timeline">
-        <article v-for="item in filteredTodayItems" :key="item.id" class="timeline-item" :class="item.visualStatus">
+        <article v-for="item in pagedTodayItems" :key="item.id" class="timeline-item" :class="item.visualStatus">
           <div class="dot"></div>
           <div class="content">
             <p class="time">{{ item.timeRange }}</p>
@@ -64,7 +64,7 @@
 
             <div class="row consult-actions">
               <RouterLink
-                v-if="item.patientId"
+                v-if="canEnterConsultation(item)"
                 class="consult-link"
                 :to="`/doctor/consultation/${encodeURIComponent(item.patientId)}`"
               >
@@ -96,7 +96,7 @@
                 :disabled="isAppointmentActionBusy(item.id)"
                 @click="openCompletionModal(item)"
               >
-                Hoàn tất + tạo hóa đơn
+                Hoàn tất
               </button>
               <button
                 v-if="canComplete(item)"
@@ -118,6 +118,15 @@
           </div>
         </article>
       </div>
+
+      <div
+        v-if="!appointments.loading && !appointments.error && filteredTodayItems.length > 0 && timelineTotalPages > 1"
+        class="row pager timeline-pager"
+      >
+        <button type="button" :disabled="timelinePage <= 1" @click="prevTimelinePage">Trước</button>
+        <span>Trang {{ timelinePage }} / {{ timelineTotalPages }}</span>
+        <button type="button" :disabled="timelinePage >= timelineTotalPages" @click="nextTimelinePage">Sau</button>
+      </div>
     </section>
 
     <section class="panel completion-panel">
@@ -130,7 +139,11 @@
         Bác sĩ nhập tay dịch vụ, số tiền và ghi chú trước khi xác nhận hoàn tất ca khám để tạo hóa đơn cho bệnh nhân.
       </p>
 
+      <p v-if="appointments.loading" class="muted">Đang tải ca khám có thể hoàn tất...</p>
+      <p v-else-if="appointments.error" class="msg err">{{ appointments.error }}</p>
+
       <DataTable
+        v-else
         :columns="completionColumns"
         :rows="completionRows"
         row-key="id"
@@ -139,7 +152,7 @@
         <template #cell-actions="{ row }">
           <div class="row actions">
             <RouterLink
-              v-if="row.patientId"
+              v-if="canEnterConsultation(row)"
               class="consult-link"
               :to="`/doctor/consultation/${encodeURIComponent(row.patientId)}`"
             >
@@ -151,7 +164,7 @@
               :disabled="isAppointmentActionBusy(row.id)"
               @click="openCompletionModal(row)"
             >
-              Hoàn tất + tạo hóa đơn
+              Hoàn tất
             </button>
           </div>
         </template>
@@ -248,7 +261,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useAppointmentsStore } from '../../stores/appointments.js';
 import { useBillingStore } from '../../stores/billing.js';
 import DataTable from '../../components/shared/DataTable.vue';
@@ -263,6 +276,7 @@ const appointmentActionError = ref('');
 const invoiceModalOpen = ref(false);
 const invoiceModalError = ref('');
 const invoiceTargetAppointment = ref(null);
+const timelinePage = ref(1);
 const invoiceForm = reactive({
   serviceName: '',
   amount: '',
@@ -270,19 +284,33 @@ const invoiceForm = reactive({
   note: '',
 });
 const DASHBOARD_REFRESH_INTERVAL_MS = 30_000;
+const TIMELINE_PAGE_SIZE = 3;
 let dashboardRefreshTimer = null;
 
 const decisionStatuses = new Set(['pending', 'requested']);
-const completableStatuses = new Set(['scheduled', 'in_progress', 'confirmed', 'rescheduled']);
+const completableStatuses = new Set([
+  'scheduled',
+  'in_progress',
+  'in-progress',
+  'confirmed',
+  'rescheduled',
+  'accepted',
+  'waiting',
+  'dang_cho',
+  'đang chờ',
+  'dang kham',
+  'đang khám',
+]);
 const waitingStatuses = new Set(['pending', 'scheduled', 'rescheduled', 'requested', 'confirmed']);
 const inProgressStatuses = new Set(['in_progress']);
 const completedStatuses = new Set(['completed', 'done']);
 const cancelledStatuses = new Set(['cancelled', 'canceled', 'rejected']);
 const noShowStatuses = new Set(['no_show']);
+const nonConsultableStatuses = new Set(['cancelled', 'canceled', 'rejected', 'no_show', 'no-show']);
 
 const resolveVisualStatus = (status) => {
   if (waitingStatuses.has(status)) return 'waiting';
-  if (inProgressStatuses.has(status)) return 'in-progress';
+  if (inProgressStatuses.has(status) || status === 'in-progress') return 'in-progress';
   if (completedStatuses.has(status)) return 'completed';
   if (cancelledStatuses.has(status)) return 'cancelled';
   if (noShowStatuses.has(status)) return 'no-show';
@@ -356,6 +384,17 @@ const filteredTodayItems = computed(() => {
   return todayItems.value.filter((item) => item.visualStatus === statusFilter.value);
 });
 
+const timelineTotalPages = computed(() => {
+  const totalItems = filteredTodayItems.value.length;
+  return Math.max(1, Math.ceil(totalItems / TIMELINE_PAGE_SIZE));
+});
+
+const pagedTodayItems = computed(() => {
+  const safePage = Math.min(Math.max(1, timelinePage.value), timelineTotalPages.value);
+  const startIndex = (safePage - 1) * TIMELINE_PAGE_SIZE;
+  return filteredTodayItems.value.slice(startIndex, startIndex + TIMELINE_PAGE_SIZE);
+});
+
 const totalToday = computed(() => todayItems.value.length);
 const waitingCount = computed(() => todayItems.value.filter((item) => item.visualStatus === 'waiting' || item.visualStatus === 'in-progress').length);
 const completedCount = computed(() => todayItems.value.filter((item) => item.visualStatus === 'completed').length);
@@ -413,7 +452,7 @@ const formatDateTime = (value) => {
 const buildTodayScheduleFilters = () => {
   return {
     page: 1,
-    pageSize: 200,
+    pageSize: 500,
   };
 };
 
@@ -421,9 +460,36 @@ const isAppointmentActionBusy = (appointmentId) => {
   return appointmentActionLoading.value && appointmentActionId.value === appointmentId;
 };
 
+const canEnterConsultation = (item) => {
+  if (!item?.patientId) return false;
+  const normalized = String(item?.status || '').toLowerCase();
+  return !nonConsultableStatuses.has(normalized);
+};
+
 const canDecide = (item) => decisionStatuses.has(String(item?.status || '').toLowerCase());
 
 const canComplete = (item) => completableStatuses.has(String(item?.status || '').toLowerCase());
+
+const prevTimelinePage = () => {
+  if (timelinePage.value <= 1) return;
+  timelinePage.value -= 1;
+};
+
+const nextTimelinePage = () => {
+  if (timelinePage.value >= timelineTotalPages.value) return;
+  timelinePage.value += 1;
+};
+
+watch(statusFilter, () => {
+  timelinePage.value = 1;
+});
+
+watch(filteredTodayItems, () => {
+  const maxPage = timelineTotalPages.value;
+  if (timelinePage.value > maxPage) {
+    timelinePage.value = maxPage;
+  }
+});
 
 const runAppointmentAction = async ({ item, payload, successMessage }) => {
   if (!item?.id || appointmentActionLoading.value) return;
@@ -752,7 +818,6 @@ onUnmounted(() => {
 }
 
 .consult-link {
-  margin-top: 10px;
   display: inline-flex;
   min-height: 40px;
   align-items: center;
@@ -839,6 +904,23 @@ onUnmounted(() => {
 
 .actions {
   gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.actions .consult-link {
+  margin-top: 0;
+}
+
+.timeline-pager {
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.timeline-pager span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
 }
 
 .confirm-btn {
